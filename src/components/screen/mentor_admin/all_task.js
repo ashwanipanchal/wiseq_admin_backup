@@ -1,0 +1,234 @@
+import horizontal_img from '../../../img/svg/more-verticals.svg';
+import edit_img from '../../../img/svg/edit.svg';
+import search_img from '../../../img/svg/search1.svg';
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css';
+import Side_Bar from './sidebar';
+import { useEffect, useState } from 'react';
+import Modal from 'react-bootstrap/Modal';
+import Accordion from 'react-bootstrap/Accordion';
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+
+const data = [
+    { id: 1, learning_name: "-", skill_address: "-", category_name: "-", source_type: "External", created_on: "12/12/23" },
+];
+
+const data1 = [
+    { id: 1, learning_name: "-", skill_address: "-", category_name: "-", source_type: "External", assigned_to: "Jane Arora", assigned_on: "12/12/23", finish_by: "12/12/23", status_by: "Assigned" },
+    { id: 2, learning_name: "-", skill_address: "-", category_name: "-", source_type: "External", assigned_to: "Jane Arora", assigned_on: "12/12/23", finish_by: "12/12/23", status_by: "Assigned" },
+];
+
+const data2 = [
+    { id: 1, learning_name: "-", skill_address: "-", category_name: "-", source_type: "External", assigned_to: "Jane Arora", assigned_on: "12/12/23", finish_by: "12/12/23", completed_on: "12/12/23", status_by: "In Progress" },
+];
+
+const data3 = [
+    { id: 1, learning_name: "-", skill_address: "-", category_name: "-", source_type: "-", assigned_to: "Jane Arora", assigned_on: "12/12/23", finish_by: "12/12/23" },
+];
+
+function All_Task() {
+    const {state} = useLocation()
+    const navigate = useNavigate()
+    console.log(state)
+    const [sideBarOpen, setSideBarOpen] = useState(true)
+    const [payload, setPayload] = useState({});
+    const toggle = () => {
+        setSideBarOpen(!sideBarOpen)
+    }
+    const [windowSize, setWindowSize] = useState(getWindowSize());
+    function getWindowSize() {
+        const { innerWidth, innerHeight } = window;
+        return { innerWidth, innerHeight };
+    }
+    useEffect(() => {
+        function handleWindowResize() {
+            setWindowSize(getWindowSize());
+            // console.log(getWindowSize())
+        }
+
+        window.addEventListener('resize', handleWindowResize);
+
+        return () => {
+            window.removeEventListener('resize', handleWindowResize);
+        };
+    }, []);
+
+    const [showHello, setShowHello] = useState(false);
+    const closeModal = () => setShowHello(false);
+    const showModal = () => setShowHello(true);
+
+    const [showHello1, setShowHello1] = useState(false);
+    const closeModal1 = () => setShowHello1(false);
+    const showModal1 = () => setShowHello1(true);
+
+    const goToTask = async(item) => {
+        if(item.type == "connect-mentee"){
+          navigate("/my_mentee")
+        }
+        if(item.type == "explore-community"){
+          navigate("/community_screen")
+        }
+        if(item.type == "complete-profile"){
+          navigate("/my_profile")
+        }
+        if(item.type == "session-request"){
+          console.log(item)
+          setPayload(JSON.parse(item.payloadJson))
+          showModal1()
+        }
+        
+      }
+
+      const acceptSession = async (val) => {
+        // alert(JSON.stringify(val))
+        //     return
+        const token = localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
+        const body = {
+            status: val == 0 ? "rejected" : "accepted"
+        }
+        const res = await fetch(`https://api.wiseqglobal.com/api/session/requests/${payload.sessionId}`, {
+            method: 'PUT',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+            body: JSON.stringify(body)
+        })
+        const response = await res.json()
+        const { success } = response
+        if (success) {
+            // getSessionRequest()
+            closeModal1()
+            navigate(-1)
+            // getNotificationCount()
+        }
+  
+    }
+
+    return (
+
+        <div className="main-content">
+            <div style={{ paddingLeft: sideBarOpen ? "295px" : "93px" }} className="contents expanded">
+                <div className="demo5 mt-30 mb-25">
+                    <div className="container-fluid">
+                        <div className="row">
+                            <div className="col-lg-12">
+                                <div className="breadcrumb-main user-member justify-content-sm-between">
+                                    <div className=" d-flex flex-wrap justify-content-center breadcrumb-main__wrapper">
+                                        <div className="d-flex align-items-center user-member__title justify-content-center me-sm-25">
+                                            <h4 className="text-capitalize fw-500 breadcrumb-title">Tasks To Complete</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="col-12">
+                                <div className="card card-default card-md">
+                                <table className="table table-borderless mb-1">
+                              <tbody>
+                                {state.map((user) => (
+                                  <tr className="project-task-list">
+                                    <td>
+                                      <div style={{cursor:'pointer'}} onClick={() => goToTask(user)} className="box_shadow1 p-15 notifi">
+                                        <div className="event-Wrapper">
+                                          <div className="event-Wrapper__left">
+                                            <div className="event-wrapper-item">
+                                              <img
+                                                src={user.icon}
+                                                className="svg"
+                                              />
+                                            </div>
+                                          </div>
+                                          <div className="event-Wrapper__right">
+                                            <h6>{user.title}</h6>
+                                            {/* <span>{user.task_date}</span> */}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                                                                
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <Side_Bar onClick={toggle} sideBarOpen={windowSize.innerWidth > 768 && sideBarOpen ? true : windowSize.innerWidth > 768 && !sideBarOpen ? false : windowSize.innerWidth < 768 && sideBarOpen ? false : true} />
+
+
+            <Modal show={showHello} onHide={closeModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Assign</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+
+                    <form>
+                        <div className="row">
+
+                            <div className="col-md-12 mb-25">
+                                <div className="countryOption">
+                                    <select className="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example">
+                                        <option selected>Select Mentees</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="col-md-12 mb-25">
+                                <div className="countryOption">
+                                    <select className="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example">
+                                        <option selected>Select Program</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="col-md-12 mb-25">
+                                <input type="date" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Finish By" />
+                            </div>
+
+                            <div className="col-md-12">
+                                <div className="mt-0">
+                                    <button type="button" className="btn btn-petrol btn-default btn-squared m-auto">Submit</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                </Modal.Body>
+            </Modal>
+
+            <Modal show={showHello1} onHide={closeModal1}>
+                <Modal.Header className="mentor_feedback" closeButton>
+                    <Modal.Title>Confirm Action</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className="text-center">
+                        <h4 class="text-capitalize fw-600 mb-10">Do you want to accept this session invitation?</h4>
+                        <h4 class="text-capitalize fw-600 mb-25">Session Details: {new Date(payload.date).toDateString()} {new Date(payload.date).toLocaleTimeString()}</h4>
+
+                        <div class="layout-button justify-content-center">
+                            <button onClick={() => acceptSession(0)} type="button" className="btn btn-no btn-default btn-squared">Reject</button>
+                            <button onClick={() => acceptSession(1)} type="button" className="btn btn-yes btn-default btn-squared">Accept</button>
+                            {/* <button onClick={() => navigate('/edit_calender')} type="button" className="btn btn-yes btn-default btn-squared">Accept</button> */}
+                        </div>
+                    </div>
+
+                </Modal.Body>
+            </Modal>
+        </div>
+
+    );
+}
+
+export default All_Task;
