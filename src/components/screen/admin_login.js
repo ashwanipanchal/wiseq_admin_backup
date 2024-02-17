@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import allconnect_img from '../../img/all_connect.png';
 import google_img from '../../img/google-Icon.svg';
 import microsoft_img from '../../img/microsoft.svg';
 import wise_img from '../../img/wise.png';
 import { NavLink, useNavigate } from "react-router-dom";
-import { BASE_URL } from '../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE } from '../../services/Config';
 import EventEmitter from "reactjs-eventemitter";
 
 function Admin_Login({fcmToken}) {
@@ -14,6 +14,17 @@ function Admin_Login({fcmToken}) {
     const [password, setPassword] = useState('')
     const [wrongCount, setWrongCount] = useState(0)
     const [passwordType, setPasswordType] = useState(true)
+
+    const [ipAddress, setIPAddress] = useState('')
+
+    useEffect(() => {
+      fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => setIPAddress(data.ip))
+        .catch(error => console.log(error))
+    }, []);
+
+    console.log(ipAddress)
     const adminLogin = async(e) => {
         e.preventDefault()
         if(localStorage.getItem("wrong_login") >= 5){
@@ -25,7 +36,7 @@ function Admin_Login({fcmToken}) {
                 password,
                 "deviceToken": fcmToken
             }
-            // console.log(body)
+            console.log(body)
             const res = await fetch(`${BASE_URL}auth/login`,{
                 method:'POST',
                 headers:{
@@ -35,11 +46,29 @@ function Admin_Login({fcmToken}) {
                 body:JSON.stringify(body)
               })
               const response = await res.json()
-            //   console.log(response)
+              console.log(response)
+
+              const body1 = {
+                email
+            }
+            const res1 = await fetch(`${BASE_URL_APPLSURE}password-try`,{
+                method:'POST',
+                headers:{
+                  "Accept": "application/json",
+                  'Content-Type': 'application/json',
+                },
+                body:JSON.stringify(body1)
+              })
+              const response1 = await res1.json()
+              if(response1.accountlocked == "1"){
+                alert("Your account has been locked for 15 minutes.")
+                return
+              }
             const {success, data, err} = response;
             if(success){
                 localStorage.removeItem("wrong_login")
                 localStorage.setItem("token", response.data.token)
+                localStorage.setItem("user_id", response1.userid)
                 localStorage.setItem("user_type", response.data.role)
                 localStorage.setItem("pref", response.data.isFirstLogin)
                 localStorage.setItem("user_info", response.data.name);
@@ -56,16 +85,6 @@ function Admin_Login({fcmToken}) {
                     navigate("/");
                 }
             }else{
-                // console.log(data.err.error)
-                setWrongCount(wrongCount+1)
-                localStorage.setItem("wrong_login", wrongCount+1);
-                if(localStorage.getItem("wrong_login") == 5){
-                    setTimeout(()=>{
-                        setWrongCount(0)
-                        localStorage.removeItem("wrong_login")
-                },900000)
-                // },60000)
-                }
                 alert("Details entered are incorrect")
             }
         }

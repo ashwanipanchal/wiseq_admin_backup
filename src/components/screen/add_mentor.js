@@ -90,11 +90,36 @@ function Add_Mentor() {
             const{success, data} = response
             if(success){
                 if(data){
-                    setLevels(data.levels.split(','))
-                    setFAreas(data.functionalAreas.split(','))
-                    setcountryList(data.countries.split(','))
-                    setworkLocationList(data.locations.split(','))
-                    setdivisionList(data.divisions.split(','))
+                    var arr = data.functionalAreas.split(",").map(function(item) {
+                        return item.trim();
+                      });  
+                    setFAreas(arr)
+
+                    var arr1 = data.levels.split(",").map(function(item) {
+                        return item.trim();
+                      });
+                    setLevels(arr1)
+
+                    var arr2 = data.countries.split(",").map(function(item) {
+                        return item.trim();
+                      });
+                    setcountryList(arr2)
+                    
+                    var arr3 = data.locations.split(",").map(function(item) {
+                        return item.trim();
+                      });
+                    setworkLocationList(arr3)
+
+                    var arr4 = data.divisions.split(",").map(function(item) {
+                        return item.trim();
+                      });
+                    setdivisionList(arr4)
+
+                    // setLevels(data.levels.split(','))
+                    // setFAreas(data.functionalAreas.split(','))
+                    // setcountryList(data.countries.split(','))
+                    // setworkLocationList(data.locations.split(','))
+                    // setdivisionList(data.divisions.split(','))
                     // setLocation(data.locations)
                     // setDivisions(data.divisions)
                     // setFSkills(data.coreSkills)

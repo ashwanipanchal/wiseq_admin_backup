@@ -99,10 +99,10 @@ function Assigned_Learning_Profile() {
                                             <h4 className="fw-500 breadcrumb-title">{learningDetails && learningDetails.learningName}</h4>
                                         </div>
                                     </div>
-                                    <div class="layout-button">
-                                        <NavLink className="navbar-link" to="/create_learning"><button type="button" class="btn btn-outline-petrol btn-squared color-petrol">Edit</button></NavLink>
+                                    {/* <div class="layout-button">
+                                        <NavLink className="navbar-link" to="/create_learning"><button type="button" class="btn btn-outline-petrol btn-squared color-petrol">Edit</button></NavLink> */}
                                         {/* <button type="button" class="btn btn-primary btn-default btn-squared" onClick={showModal}>Assign</button> */}
-                                    </div>
+                                    {/* </div> */}
 
                                 </div>
                             </div>
@@ -156,12 +156,15 @@ function Assigned_Learning_Profile() {
 
                                 <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Finish by</p>
-                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && moment(learningDetails.finishBy).format("DD MMMM YYYY")}</p>
+                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && moment(learningDetails.finishBy?.split('T')[0]).format("DD MMMM YYYY")}</p>
                                 </div>
 
                                 <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Duration</p>
-                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && learningDetails.duration}</p>
+                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && learningDetails.duration}{' '}
+                      {learningDetails &&
+                        learningDetails.durationType?.charAt(0).toUpperCase() +
+                          learningDetails.durationType?.slice(1)}</p>
                                 </div>
 
                                 <div className="col-md-12 mb-20">
@@ -181,7 +184,7 @@ function Assigned_Learning_Profile() {
 
                                 <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Learning’s Rating</p>
-                                    {/* <span className="badge badge-round btn-primary mt-10">4.5 <i className="lar la-star user_star"></i></span> */}
+                                    <span className="badge badge-round btn-primary mt-10">{learningDetails && learningDetails.learningRating}<i className="lar la-star user_star"></i></span>
                                 </div>
 
 
@@ -240,7 +243,7 @@ function Assigned_Learning_Profile() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div onClick={() => navigate("/pending_by",{state:learningDetails.id})} style={{cursor:'pointer'}} className="col-lg-6 col-sm-3 col-md-6 mb-25">
+                                        <div onClick={() => navigate("/pending_by",{state:{data:learningDetails.id, hint: state.status}})} style={{cursor:'pointer'}} className="col-lg-6 col-sm-3 col-md-6 mb-25">
                                             <div className="ap-po-details ap-po-details--2 p-10 radius-xl d-flex justify-content-between box_shadow1">
                                                 <div className="overview-content w-100">
                                                     <div className=" ap-po-details-content d-flex flex-wrap justify-content-between">

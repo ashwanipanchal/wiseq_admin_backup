@@ -3,7 +3,7 @@ import growth_credit from "../../../img/growth_credit.svg";
 import learning_complete from "../../../img/learning_complete.svg";
 import assessment from "../../../img/assessment.svg";
 import { useEffect, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, json, useNavigate } from "react-router-dom";
 import team_img from "../../../img/tm1.png";
 import edit_img from "../../../img/hand_rating.svg";
 import Side_bar from "./sidebar";
@@ -16,7 +16,7 @@ import { DateRangePicker, DateRange } from 'react-date-range';
 import Modal from 'react-bootstrap/Modal';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { BASE_URL } from "../../../services/Config";
+import { BASE_URL, BASE_URL_APPLSURE, BASE_URL_APPLSURE_MENTORING } from "../../../services/Config";
 
 const data = [
   {
@@ -116,6 +116,8 @@ function Home_Screen() {
   const [newGraphData, setnewGraphData] = useState([])
   const [bannerStatus, setBannerStatus] = useState()
   const [value1, onChange1] = useState(new Date());
+  const [programs, setPrograms] = useState([])
+  const [userInfo, setUserInfo] = useState("")
   const [state, setState] = useState([
     {
       startDate: new Date(),
@@ -127,6 +129,36 @@ function Home_Screen() {
     setSideBarOpen(!sideBarOpen);
   };
 
+  useEffect(() => {
+    createToken()
+   
+  },[])
+  
+  const createToken = async() => {
+    const body = {
+        "user_id":localStorage.getItem("user_id")
+    }
+    const res = await fetch(`${BASE_URL_APPLSURE_MENTORING}create-access`, {
+        method: 'POST',
+        headers: {
+            "Accept": "application/json",
+            'Content-Type': 'application/json',
+            // "Authorization": btoken,
+            // "Authentication ": btoken,
+        },
+        body:JSON.stringify(body)
+    })
+    const response = await res.json()
+    console.log(response)
+    const { success } = response
+    // setIsLoading(false)
+    if (success) {
+        localStorage.setItem("program_token_node", response.token)
+        localStorage.setItem("org_id", response.user.org_id)
+        // setMentorList(response.data)
+    }
+    
+  }
   const [showHello, setShowHello] = useState(false);
   const closeModal = () => setShowHello(false);
   const showModal = () => setShowHello(true);
@@ -167,6 +199,7 @@ function Home_Screen() {
   // setnewGraphData(graphdata)
 
   useEffect(() => {
+    getProfile()
     getScores();
     getSessions();
     getTasks();
@@ -242,7 +275,7 @@ function Home_Screen() {
       setWindowSize(getWindowSize());
       // console.log(getWindowSize())
     }
-
+    getMyMentoring()
     window.addEventListener("resize", handleWindowResize);
 
     return () => {
@@ -250,6 +283,27 @@ function Home_Screen() {
     };
   }, []);
 
+//   const getProfile = async() => {
+//     const token = await localStorage.getItem("token")
+//     const btoken = `Bearer ${token}`;
+
+//           const res = await fetch(`${BASE_URL}mentee/profile`,{
+//               method:'GET',
+//               headers:{
+//                 "Accept": "application/json",
+//                 'Content-Type': 'application/json',
+//                 "Authorization": btoken,
+//               },
+//             })
+//             const response = await res.json()
+//           console.log("555555",response)
+//           const {success} = response
+//           if(success){
+//             getTasks(response.data.id)
+//             setUserInfo(response.data.id)
+//           }
+    
+// }
   const getChartData = async() => {
     const token = await localStorage.getItem("token")
     const btoken = `Bearer ${token}`;   
@@ -308,22 +362,69 @@ function Home_Screen() {
         // setnewGraphData(graphdata)
 }
 
+const getProfile = async() => {
+  const token = await localStorage.getItem("token")
+  const btoken = `Bearer ${token}`;
+
+  if(Object.keys(localStorage.getItem("full_details")).length > 0 ){
+
+  }else{
+
+  
+  const res = await fetch(`${BASE_URL_APPLSURE}profile-mentee?id=${localStorage.getItem("user_id")}`,{
+            method:'GET',
+            headers:{
+              "Accept": "application/json",
+              'Content-Type': 'application/json',
+              "Authorization": btoken,
+            },
+          })
+          const response = await res.json()
+        console.log("==========",response)
+        const {status} = response
+        if(status){
+          // console.log(Object.keys(localStorage.getItem("full_details")).length == true)
+          // if(Object.keys(localStorage.getItem("full_details")).length == true){
+
+          // }else{
+
+            localStorage.setItem("full_details", JSON.stringify(response.u))
+          // }
+        }
+      }
+  
+}
+
   const getTasks = async () => {
     const token = await localStorage.getItem("token");
     const btoken = `Bearer ${token}`;
-    const res = await fetch(`${BASE_URL}tasks`, {
-      method: "GET",
+    // const res = await fetch(`${BASE_URL}tasks`, {
+      // let tt = JSON.parse(localStorage.getItem("test") || {})
+      // console.log(tt)
+      const body ={
+        "user_id":localStorage.getItem("user_id")
+    }
+    console.log(body)
+    const res = await fetch(`${BASE_URL_APPLSURE}get-task`, {
+      method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         Authorization: btoken,
       },
+      body:JSON.stringify(body)
     });
     const response = await res.json();
     console.log("Tasks ", response);
     const { success, data } = response;
-    if (success) {
-      setTasks(data);
+    if (response.status) {
+      let temp = []
+      response.task.map((i) => {
+        if(i.status == "not-completed"){
+          temp.push(i)
+        }
+      })
+      setTasks(temp);
     }
   };
 
@@ -487,6 +588,31 @@ function Home_Screen() {
     
   }
 
+  const getMyMentoring = async() => {
+    var myHeaders = new Headers();
+      myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+      myHeaders.append("Content-Type", "application/json");
+
+      var raw = JSON.stringify({
+        "status":"4"
+    });
+
+      var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+      };
+
+      fetch(`${BASE_URL_APPLSURE_MENTORING}user/user-program-list`, requestOptions)
+      .then(response => response.json())
+      .then(result => {
+          console.log("==",result)
+          setPrograms(result?.programs)
+      })
+    
+    }
+
   return (
     <div className="main-content">
       <div
@@ -534,8 +660,20 @@ function Home_Screen() {
                                         <p style={{color:'#2B363B', marginTop:'10px'}}>Begin your journey of personal growth and knowledge enhancement. Whether you are seeking guidance, inspiration, new perspectives, or simply want to learn, your mentors are here to support you every step of the way.</p>
                                     </div>
                                     <div class="layout-button">
-                                        {/* <button type="button" className="btn btn-petrol btn-default btn-squared flex-grow-1">Watch Platform Video</button> */}
                                         <button onClick={() => navigate('/my_profile')} type="button" className="btn btn-light-petrol btn-default btn-squared flex-grow-1" >Complete your profile</button>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                  </div>
+              )}
+              {localStorage.getItem("switch_message_flag") <=5 && localStorage.getItem("switch_message_flag") != "" && (
+              <div className="col-lg-12">
+                    <div className="row">
+                            <div style={{backgroundColor:'#eaf3f3', padding:'15px', borderRadius:'10px'}} className="col-lg-12 col-sm-12 col-md-12 mb-25">
+                                <div style={{display:'flex', justifyContent:'space-between'}}>
+                                    <div style={{width:'100%'}}>
+                                        <p style={{color:'#2B363B', marginTop:'10px'}}><span style={{fontWeight:'bold'}}>Hello {localStorage.getItem("user_info")}</span>, You have also been given mentee access on the platform. Click on the top right profile icon to switch between your dual roles.</p>
                                     </div>
                                 </div>
                             </div>
@@ -700,36 +838,25 @@ function Home_Screen() {
                 </div>
 
                 <div className="col-lg-3 mb-25">
-                  <div style={{backgroundColor:'#f5f5f5'}} className="card border-0 px-20 pb-20 project-task-list--event box_shadow1 mentee_card">
-                    <div style={{backgroundColor:'#f5f5f5'}} className="card-header px-0 border-0">
+                  <div  className="card border-0 px-20 pb-20 project-task-list--event box_shadow1 mentee_card">
+                    <div  className="card-header px-0 border-0">
                       <h6>My Mentoring </h6>
-                      <p className="color-green fw-300 mb-0 fs-14">View All</p>
+                      <p style={{cursor:'pointer'}} onClick={() => navigate("/mentoring_program")} className="color-green fw-300 mb-0 fs-14">View All</p>
                     </div>
-                    <div className="media-body d-flex mb-15 join_requests">
-                      <img
-                        src={authornav_img}
-                        className="me-10 wh-40 rounded-circle bg-opacity-primary"
-                      />
-                      <div className="mt-1">
-                        <h6 className="fw-500">High Potential...</h6>
-                        <p className="fs-12 color-light mb-0">
-                          Mentees: <span className="color-dark">2</span>
-                        </p>
+                    {programs?.slice(0, 2)?.map((i) => (
+                        <div style={{cursor:'pointer'}} onClick={() => navigate("/mentoring_program_progress",{state:i} )} className="media-body d-flex mb-15 mt-2 join_requests">
+                        <img
+                          src={authornav_img}
+                          className="me-10 wh-40 rounded-circle bg-opacity-primary"
+                        />
+                        <div className="mt-1">
+                          <h6 className="fw-500">{i?.program_model?.name}</h6>
+                          <p className="fs-12 color-light mb-0">
+                            Mentees: <span className="color-dark">2</span>
+                          </p>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="media-body d-flex mb-15 join_requests">
-                      <img
-                        src={authornav_img}
-                        className="me-10 wh-40 rounded-circle bg-opacity-primary"
-                      />
-                      <div className="mt-1">
-                        <h6 className="fw-500">Leadership Sessions</h6>
-                        <p className="fs-12 color-light mb-0">
-                          Mentees: <span className="color-dark">15</span>
-                        </p>
-                      </div>
-                    </div>
+                      ))}
                   </div>
                 </div>
 
@@ -822,7 +949,7 @@ function Home_Screen() {
                                             </div>
                                           </div>
                                           <div className="event-Wrapper__right">
-                                            <h6>{user.title}</h6>
+                                            <h6>{user.title}{" "}{user.category == "learnings" && user.status == "not-completed" ?  moment(user.dueDate.split('T')[0]).format("DD/MM/YYYY"): ""}</h6>
                                             <span>{user.task_date}</span>
                                           </div>
                                         </div>

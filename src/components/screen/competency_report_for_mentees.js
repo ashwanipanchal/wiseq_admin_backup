@@ -3,7 +3,7 @@ import Side_Bar from "./sidebar";
 import { useEffect, useState } from "react";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import "react-circular-progressbar/dist/styles.css";
-import { BASE_URL_APPLSURE } from '../../services/Config';
+import { BASE_URL_APPLSURE, BASE_URL } from '../../services/Config';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import Modal from 'react-bootstrap/Modal';
@@ -29,6 +29,7 @@ function Competency_Report_For_Mentees() {
     const [totalNumber, setTotalNumber] = useState("")
     const [filterValue, setFilterValue] = useState("")
     const [value1, onChange1] = useState(new Date());
+    const [fullInfo, setFullInfo] = useState("");
     function getWindowSize() {
       const { innerWidth, innerHeight } = window;
       return { innerWidth, innerHeight };
@@ -50,13 +51,37 @@ function Competency_Report_For_Mentees() {
     }, []);
 
     useEffect(() => {
-      getReportofDevSkill()
+      getFullDetail()
     },[])
 
-    const getReportofDevSkill = async() => {
+    // useEffect(() => {
+    //   getReportofDevSkill()
+    // },[])
+
+    const getFullDetail = async () => {
+      const token = await localStorage.getItem("token");
+      const btoken = `Bearer ${token}`;
+  
+      const res = await fetch(`${BASE_URL}organisations/4324`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: btoken,
+        },
+      });
+      const response = await res.json();
+      console.log(response);
+      getReportofDevSkill(response.data.id)
+      setFullInfo(response.data.id);
+    };
+
+
+    const getReportofDevSkill = async(id) => {
       const btoken = `Bearer ${token}`;
       const body = {
           "condition":"all",//lastmonth//lastweek//all/daterange,
+          "organization_id":id
           // "month":"10",
           // "from":"2023-10-10",
           // "to":"2023-10-20"
@@ -71,7 +96,7 @@ function Competency_Report_For_Mentees() {
           body:JSON.stringify(body)
       })
       const response = await res.json()
-      console.log("getReportofDevSkill", response)
+      console.log("1111", response)
       if(response.status){
         setTop10Dev(response.top10dev)
         setTotalNumber(response.total)
@@ -93,6 +118,7 @@ function Competency_Report_For_Mentees() {
           const btoken = `Bearer ${token}`;
           const body = {
               "condition":"all",//lastmonth//lastweek//all/daterange,
+              "organization_id":fullInfo
           }
           const res = await fetch(`${BASE_URL_APPLSURE}competency-report-for-mentee`, {
               method: 'POST',
@@ -116,6 +142,7 @@ function Competency_Report_For_Mentees() {
           const body = {
               "condition":"lastmonth",//lastmonth//lastweek//all/daterange,
               "month":`${new Date().getMonth()+1}`,
+              "organization_id":fullInfo
           }
           const res = await fetch(`${BASE_URL_APPLSURE}competency-report-for-mentee`, {
               method: 'POST',
@@ -139,6 +166,7 @@ function Competency_Report_For_Mentees() {
           const btoken = `Bearer ${token}`;
           const body = {
               "condition":"lastweek",//lastmonth//lastweek//all/daterange,
+              "organization_id":fullInfo
           }
           const res = await fetch(`${BASE_URL_APPLSURE}competency-report-for-mentee`, {
               method: 'POST',
@@ -162,7 +190,7 @@ function Competency_Report_For_Mentees() {
           showModal()
         }
         if(i == ""){
-          getReportofDevSkill()
+          getReportofDevSkill(fullInfo)
         }
         
       }
@@ -173,6 +201,7 @@ function Competency_Report_For_Mentees() {
           const body = {
               "condition":"daterange",//lastmonth//lastweek//all/daterange,
               // "month":`${new Date().getMonth()+1}`,
+              "organization_id":fullInfo,
               "from":moment(new Date(e[0]).toLocaleDateString()).format("YYYY-MM-DD"),
               "to":moment(new Date(e[1]).toLocaleDateString()).format("YYYY-MM-DD")
           }
@@ -222,7 +251,7 @@ function Competency_Report_For_Mentees() {
                         </div>
                         <span className="sub-title ms-sm-25 ps-sm-25"></span>
                       </div>
-                      <form
+                      {/* <form
                         action="#"
                         className="d-flex align-items-center add-contact__form my-sm-0 my-2 bg-transparent"
                       >
@@ -241,7 +270,7 @@ function Competency_Report_For_Mentees() {
                           <option value="Weekly">Weekly</option>
                           <option value="Custom (Calendar Selection)">Custom (Calendar Selection)</option>
                         </select>
-                      </form>
+                      </form> */}
                     </div>
                   </div>
                 </div>
@@ -297,7 +326,7 @@ function Competency_Report_For_Mentees() {
                       })}
                     />
                      <p  style={{textAlign:'center', fontSize:"14px", color:'#F8A046', marginBottom:"5px"}}>{i.total_mentee} Mentees</p>
-                     <p style={{textAlign:'center', fontSize:"14px", color:'#000'}}>{i.skill_name}</p>
+                     <p style={{textAlign:'center', fontSize:"14px", color:'#000', fontWeight:'bold'}}>{i.skill_name}</p>
                   {/* <CircularProgressbar
                     value={percentage}
                     text={`${percentage}%`}
@@ -364,7 +393,7 @@ function Competency_Report_For_Mentees() {
                       })}
                     />
                     <p  style={{textAlign:'center', fontSize:"14px", color:'#005B5B', marginBottom:"5px"}}>{i.total_mentee} Mentees</p>
-                     <p style={{textAlign:'center', fontSize:"14px", color:'#000'}}>{i.skill_name}</p>
+                     <p style={{textAlign:'center', fontSize:"14px", color:'#000', fontWeight:'bold'}}>{i.skill_name}</p>
                   </div>
                 ))}
 <div></div>

@@ -3,15 +3,20 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { BASE_URL_APPLSURE_MENTORING } from '../../services/Config';
 
 const data = [
     { id: 1, serial_id: "-", eid_id: "-", email: "-", first_name: "-", last_name: "-", division: "-", country: "-", location: "-", function: "-", role: "-" },
 ];
 
 function Confirmed_Participants() {
-
+    const navigate = useNavigate()
+    const {state} = useLocation()
+    console.log(state)
     const [sideBarOpen, setSideBarOpen] = useState(true)
+    const [listOfAcceptedMentee, setListOfAcceptedMentee] = useState([])
+    const [listOfAcceptedMentor, setListOfAcceptedMentor] = useState([])
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -32,6 +37,75 @@ function Confirmed_Participants() {
             window.removeEventListener('resize', handleWindowResize);
         };
     }, []);
+
+    useEffect(() => {
+        getProgramMentee()
+        getProgramMentor()
+    },[])
+
+    const getProgramMentee = async() => {
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+        myHeaders.append("Content-Type", "application/json");
+  
+        var raw = JSON.stringify({
+            "program_id":state?.myState?.id,
+            "role":"mentee" // mentor
+        });
+  
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+  
+        fetch(`${BASE_URL_APPLSURE_MENTORING}program-userslist-accepted`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+        //    let pp = []
+        //     result?.list?.map((i) => {
+        //         pp.push({id: i.user_id, name: i.user_meta?.name, imageUrl: i.user_meta?.image_url, skills: i.user_meta?.user_skills, jobTitle: i?.organisation_user?.job_title, isSelected: "", scores: i.total_score})
+        //     })
+            console.log(result.list)
+            setListOfAcceptedMentee(result?.list)
+
+          })
+        .catch(error => console.log('error', error));
+        
+   } 
+    const getProgramMentor = async() => {
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+        myHeaders.append("Content-Type", "application/json");
+  
+        var raw = JSON.stringify({
+            "program_id":state?.myState?.id,
+            "role":"mentor" // mentor
+        });
+  
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+  
+        fetch(`${BASE_URL_APPLSURE_MENTORING}program-userslist-accepted`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            // console.log("000-----------",result)
+            // let pp = []
+            // result?.list?.map((i) => {
+            //     pp.push({id: i.user_id, name: i.user_meta?.name, imageUrl: i.user_meta?.image_url, skills: i.user_meta?.user_skills, jobTitle: i?.organisation_user?.job_title, isSelected: "", scores: i.total_score})
+            // })
+            // console.log(pp)
+            setListOfAcceptedMentor(result?.list)
+
+          })
+        .catch(error => console.log('error', error));
+        
+   } 
 
     const [showFilter, setShowFilter] = useState(false)
 
@@ -57,8 +131,8 @@ function Confirmed_Participants() {
                                     </div>
 
                                     <div class="layout-button">
-                                        <button type="button" class="btn btn-outline-primary btn-squared color-primary px-15">Match-Make</button>
-                                        <button type="button" class="btn btn-primary btn-default btn-squared px-15">Add</button>
+                                        <button type="button" class="btn btn-outline-primary btn-squared color-primary px-15" onClick={() => navigate("/match_making")}>Match-Make</button>
+                                        <button type="button" class="btn btn-primary btn-default btn-squared px-15"  onClick={() => navigate(-1)}>Add</button>
                                     </div>
                                 </div>
                             </div>
@@ -76,7 +150,8 @@ function Confirmed_Participants() {
 
                                                     <TabPanel className="tab-content">
                                                         <div className="row">
-                                                            <div className="col-lg-12">
+                                                            {listOfAcceptedMentee && listOfAcceptedMentee.map((user) => (
+                                                                <div className="col-lg-12">
                                                                 <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
                                                                     <div className="table-responsive">
                                                                         <table className="table mb-0 table-borderless">
@@ -129,30 +204,30 @@ function Confirmed_Participants() {
                                                                             </thead>
                                                                             <tbody>
 
-                                                                                {data.map((user) => (
+                                                                                {/* {data.map((user) => ( */}
 
                                                                                     <tr>
                                                                                         <td>
                                                                                             <div className="userDatatable-content">
-                                                                                                {user.serial_id}
+                                                                                                -
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content">
-                                                                                                {user.eid_id}
+                                                                                            {user?.organisation_user?.emp_id}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.email}
+                                                                                                {user?.user_meta?.email}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.first_name}
+                                                                                                {user?.user_meta?.name}
                                                                                             </div>
                                                                                         </td>
 
@@ -164,31 +239,31 @@ function Confirmed_Participants() {
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.division}
+                                                                                            {user?.organisation_user?.division}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.country}
+                                                                                            {user?.organisation_user?.country}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.location}
+                                                                                            {user?.organisation_user?.work_location}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.function}
+                                                                                            {user?.organisation_user?.functional_area}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.role}
+                                                                                                {user?.organisation_user?.role}
                                                                                             </div>
                                                                                         </td>
 
@@ -216,18 +291,22 @@ function Confirmed_Participants() {
                                                                                     </tr>
 
 
-                                                                                ))}
+                                                                                 {/* ))}  */}
 
                                                                             </tbody>
                                                                         </table>
                                                                     </div>
                                                                 </div>
                                                             </div>
+                                                            ))}
+                                                            
+                                                            
                                                         </div>
                                                     </TabPanel>
 
                                                     <TabPanel>
                                                         <div className="row">
+                                                        {listOfAcceptedMentor && listOfAcceptedMentor.map((user) => (
                                                             <div className="col-lg-12">
                                                                 <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
                                                                     <div className="table-responsive">
@@ -281,30 +360,30 @@ function Confirmed_Participants() {
                                                                             </thead>
                                                                             <tbody>
 
-                                                                                {data.map((user) => (
+                                                                                {/* {data.map((user) => ( */}
 
-                                                                                    <tr>
+                                                                                <tr>
                                                                                         <td>
                                                                                             <div className="userDatatable-content">
-                                                                                                {user.serial_id}
+                                                                                                -
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content">
-                                                                                                {user.eid_id}
+                                                                                            {user?.organisation_user?.emp_id}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.email}
+                                                                                                {user?.user_meta?.email}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.first_name}
+                                                                                                {user?.user_meta?.name}
                                                                                             </div>
                                                                                         </td>
 
@@ -316,31 +395,31 @@ function Confirmed_Participants() {
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.division}
+                                                                                            {user?.organisation_user?.division}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.country}
+                                                                                            {user?.organisation_user?.country}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.location}
+                                                                                            {user?.organisation_user?.work_location}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.function}
+                                                                                            {user?.organisation_user?.functional_area}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.role}
+                                                                                                {user?.organisation_user?.role}
                                                                                             </div>
                                                                                         </td>
 
@@ -368,13 +447,13 @@ function Confirmed_Participants() {
                                                                                     </tr>
 
 
-                                                                                ))}
+                                                                                {/* ))} */}
 
                                                                             </tbody>
                                                                         </table>
                                                                     </div>
                                                                 </div>
-                                                            </div>
+                                                            </div>))}
                                                         </div>
                                                     </TabPanel>
                                                 </Tabs>

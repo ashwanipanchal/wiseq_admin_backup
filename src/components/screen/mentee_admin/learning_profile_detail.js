@@ -34,7 +34,7 @@ function Learning_Profile_Detail() {
     const [learningDetails, setLearningDetails] = useState({})
     const [worksheetList, setWorksheetList] = useState([])
     const [worksheetUrl, setworksheetUrl] = useState("");
-
+    const [istart, setIsStart] = useState(false);
     const [showWK, setShowWK] = useState(false);
     const [file, setFile] = useState(null);
     const closeModal2 = () => setShowWK(false);
@@ -81,9 +81,20 @@ function Learning_Profile_Detail() {
         getProfile()
     },[])
     
+    const [showCormfirm, setConfirmModal] = useState(false);
+    const hideConfirm = () => setConfirmModal(false);
+    const showConfirmModal = () => setConfirmModal(true);
+
+    const [showCormfirm1, setConfirmModal1] = useState(false);
+    const hideConfirm1 = () => {
+      setConfirmModal1(false);
+      // showModal()
+    }
+    const showConfirmModal1 = () => setConfirmModal1(true);
+
     const getProfile = async() => {
         const btoken = `Bearer ${token}`;
-        const res = await fetch(`${BASE_URL}mentee-learnings/${state.data.learningId}/profile`, {
+        const res = await fetch(`${BASE_URL}mentee-learnings/${state.data?.learning_id}/profile`, {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
@@ -105,6 +116,10 @@ function Learning_Profile_Detail() {
     }
 
     const markAsBegin = async() => {
+      if(new Date(state.data?.finish_by) <  new Date()){
+        showConfirmModal()
+        return
+      }else{
         const btoken = `Bearer ${token}`;
         // const body = {
         //   status: "begin"
@@ -120,9 +135,30 @@ function Learning_Profile_Detail() {
         })
         const response = await res.json()
         console.log("learning started Status", response)
-        window.open(learningDetails.sourceLink, "_blank")
+        if(response.success){
+          // alert("Learning has been started successfully")
+          setIsStart(true)
+          if(learningDetails.sourceType ==  "internal"){
+            // window.open(learningDetails.worksheetFile, "_blank")
+          }else{
+            window.open(learningDetails.sourceLink, "_blank")
+          }
+        }
+        
+      }
+
     }
     const markAsDone = async() => {
+      // console.log(new Date(state.data.finish_by) <  new Date())
+      // return
+      if(new Date(state.data.finish_by) <  new Date()){
+        showConfirmModal()
+        return
+      }else if(state.data.is_worksheet_needed == 1 && worksheetList.length == 0){
+        showConfirmModal1()
+        return
+      }else{
+        // return
         const btoken = `Bearer ${token}`;
         // const body = {
         //   status: "begin"
@@ -139,9 +175,11 @@ function Learning_Profile_Detail() {
         const response = await res.json()
         console.log("learning done Status", response)
         showModal()
+      }
     }
 
     const submitRating = async() => {
+        markAsDone()
         const btoken = `Bearer ${token}`;
         const body = {
             "menteeFeedback": feedbackText,
@@ -149,7 +187,7 @@ function Learning_Profile_Detail() {
           }
           console.log(body)
           // return
-        const res = await fetch(`${BASE_URL}mentee-learnings/${state.data.learningId}/feedback`, {
+        const res = await fetch(`${BASE_URL}mentee-learnings/${state.data.learning_id}/feedback`, {
             method: 'PUT',
             headers: {
                 "Accept": "application/json",
@@ -229,7 +267,7 @@ function Learning_Profile_Detail() {
       //   "worksheet": worksheetUrl,
       // };
       const res = await fetch(
-        `${BASE_URL}mentee-learnings/${state.data.learningId}/remove-worksheet?worksheet=${i}`,
+        `${BASE_URL}mentee-learnings/${state.data.learning_id}/remove-worksheet?worksheet=${i}`,
         {
           method: "DELETE",
           headers: {
@@ -264,6 +302,11 @@ function Learning_Profile_Detail() {
         return word_img
       }
     }
+
+    function capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
     return (
       <div className="main-content">
         <div
@@ -293,7 +336,8 @@ function Learning_Profile_Detail() {
                         </button>
                       ) : state.hint == "progress" ? (
                         <>
-                        <button
+                        {state.data?.source_type == "internal" && state.data?.source_link.length > 0 && (
+                          <button
                           onClick={() =>
                             window.open(learningDetails.sourceLink, "_blank")
                           }
@@ -302,10 +346,13 @@ function Learning_Profile_Detail() {
                         >
                           Resume
                         </button>
+                        )}
+                        
                         <button
                         onClick={() => {
                           markAsDone();
-                          // showModal()
+                          // showConfirmModal1()
+                          // showConfirmModal()
                         }}
                         type="button"
                         class="btn btn-light-petrol btn-default btn-squared"
@@ -344,7 +391,7 @@ function Learning_Profile_Detail() {
                 <div className="col-lg-12 col-12">
                   <div className="">
                     <div className="blog-details-thumbnail mb-25">
-                      <img src={learningDetails.learningImg} />
+                      <img src={state.data?.learning_img} />
                     </div>
                   </div>
                 </div>
@@ -389,7 +436,8 @@ function Learning_Profile_Detail() {
                         Assigned by
                       </p>
                       <p className="color-dark fs-14 fw-300 align-center mb-0">
-                        {learningDetails && learningDetails.assignedBy}
+                      {capitalizeFirstLetter(state?.data?.role == "super_admin" ? "Administrator": state?.data?.role)}({state?.data?.name})
+                      {/* {capitalizeFirstLetter(state?.data?.role)} */}
                       </p>
                     </div>
 
@@ -413,11 +461,44 @@ function Learning_Profile_Detail() {
                       </ul>
                     </div>
 
+                    {learningDetails.otherFiles != "" &&
+                    <div className="col-md-12 mb-20">
+                    <p className="color-gray fs-14 fw-300 align-center mb-0">
+                     File Attached
+                    </p>
+                    {state.hint == "start" && istart == false? 
+                    // <p>
+                        `Click on "Begin" to view files`
+                    // </p>
+                     : state.data.other_files?.split("|").map((i)=>(
+                      <p style={{cursor:'pointer', textDecoration:'underline'}} className="color-dark fs-14 fw-300 align-center mb-0"
+                      onClick={() =>
+                        window.open(i, "_blank")
+                      }
+                    >
+                      {i.split("/")[4]}
+                    </p>
+                    ))}
+                    {/* {state.hint == "progress" &&  
+                    state.data.other_files?.split("|").map((i)=>(
+                      <p style={{cursor:'pointer', textDecoration:'underline'}} className="color-dark fs-14 fw-300 align-center mb-0"
+                      onClick={() =>
+                        window.open(i, "_blank")
+                      }
+                    >
+                      {i}
+                    </p>
+                    ))} */}
+                    
+                  </div>
+                  
+                  }
                     <div className="col-md-12 mb-20">
                       <p className="color-gray fs-14 fw-300 align-center mb-0">
                         Finish by
                       </p>
-                      <p className="color-dark fs-14 fw-300 align-center mb-0">{moment(learningDetails.finishBy).format("DD MMMM YYYY")}</p>
+                      {/* <p className="color-dark fs-14 fw-300 align-center mb-0">{moment(learningDetails.finishBy).format("DD MMMM YYYY")}</p> */}
+                      <p className="color-dark fs-14 fw-300 align-center mb-0">{ moment(learningDetails?.finishBy?.split('T')[0]).format("DD MMMM YYYY")}</p>
                     </div>
 
                     <div className="col-md-12 mb-20">
@@ -425,7 +506,7 @@ function Learning_Profile_Detail() {
                         Duration
                       </p>
                       <p className="color-dark fs-14 fw-300 align-center mb-0">
-                        {learningDetails && learningDetails.duration}{learningDetails && learningDetails.durationType?.charAt(0).toUpperCase() + learningDetails.durationType?.slice(1)}
+                        {learningDetails && learningDetails.duration}{" "}{learningDetails && learningDetails.durationType?.charAt(0).toUpperCase() + learningDetails.durationType?.slice(1)}
                       </p>
                     </div>
 
@@ -440,7 +521,10 @@ function Learning_Profile_Detail() {
                       <p className="color-gray fs-14 fw-300 align-center mb-0">
                         Learning’s Rating
                       </p>
-                      <span className="badge badge-round btn-light-petrol mt-10">{learningDetails && learningDetails.learningRating} <i className="lar la-star user_star"></i></span>
+                      {state.data?.mentee_rating == 0 ? 
+                        "Be the first to rate this learning":
+                        <span className="badge badge-round btn-light-petrol mt-10">{state.data?.mentee_rating} <i className="lar la-star user_star"></i></span>
+                      }
                     </div>
                     {state.hint == "done" && (
                       <>
@@ -454,7 +538,7 @@ function Learning_Profile_Detail() {
                     </div>
                     <div className="col-md-12 mb-20">
                       <p className="color-gray fs-14 fw-300 align-center mb-0">
-                      Mentor Feedback
+                      {state.data?.role == "mentor"? "Mentor": "Administrator"} Feedback
                       </p>
                       <p className="color-dark fs-14 fw-300 align-center mb-0">
                       {learningDetails && learningDetails.menteeFeedback?.assigneeFeedback}
@@ -465,18 +549,18 @@ function Learning_Profile_Detail() {
                     
                   </div>
 
-                  {state.hint == "progress" && learningDetails.isWorksheetNeeded ? (
+                  {state.hint == "progress" && state.data?.is_worksheet_needed == 1 && state.data?.worksheet_file.length > 0? (
                     <div className="col-lg-4 col-md-6 col-sm-6">
                     <div className="col-md-12 mb-20 ">
                       <p className="color-gray fs-14 fw-300 align-center mb-2">
-                        Worksheet/assignment Requested
+                      Worksheets Attached
                       </p>
-                      <div className="row">
+                      {state.data?.worksheet_file.split("|") != undefined  && state.data?.worksheet_file.split("|")?.map((i) => (
+                        <div className="row">
                             <div className="col-md-4">
                               <div className="blog-details-meta">
-                                {/* <img src={word_img} className="me-10" /> */}
                                 <span className="color-dark">
-                                  Worksheet
+                                  {i.substring(i.indexOf('_')+1, i.length).replaceAll('%20', ' ')}
                                 </span>
                               </div>
                             </div>
@@ -488,25 +572,31 @@ function Learning_Profile_Detail() {
                                 }}
                                 className="blog-details-meta"
                               >
-                                {/* <img src={word_img} className="me-10" /> */}
                                 <span className="color-dark">
-                                  {/* Due By {moment(i.dueBy).format("DD.MM.YYYY")} */}
                                 </span>
                               </div>
                             </div>
                             <div className="col-md-4">
                               <div
-                                // onClick={() => {saveAs(learningDetails?.worksheetFile?.image.file, learningDetails?.worksheetFile?.image.file)}}
+                                onClick={() => {window.open(i, "_blank")}}
                                 style={{ float: "right", cursor:'pointer' }}
                                 className="blog-details-meta"
                               >
-                                {/* <img src={word_img} className="me-10" /> */}
                                 <span style={{color:'#508287'}} >Download</span>
                               </div>
                             </div>
                           </div>
+                      ))}
+                      
                       <button
-                        onClick={() => showModal2()}
+                        onClick={() => {
+                          if(new Date(state.data?.finish_by) <  new Date()){
+                            showConfirmModal()
+                            return
+                          }else{
+                            showModal2()
+                          }
+                        }}
                         type="button"
                         className="btn btn-default btn-squared color-light-petrol btn-outline-light-petrol flex-grow-1 mb-10"
                       >
@@ -521,7 +611,6 @@ function Learning_Profile_Detail() {
                         <div className="col-md-6">
                           <div className="blog-details-meta">
                             <img src={getImageIcon(i)} className="me-10" />
-                            {/* <span className="color-dark">{i.file}</span> */}
                             <span className="color-dark">{i.substring(i.indexOf('_')+1, i.length).replaceAll('%20', ' ')}</span>
                           </div>
                         </div>
@@ -531,7 +620,6 @@ function Learning_Profile_Detail() {
                             style={{ float: "right" }}
                             className="blog-details-meta"
                           >
-                            {/* <img src={pdf_img} className="me-10" /> */}
                             <span onClick={() => deleteWorksheet(i)} style={{cursor:'pointer'}} className="color-dark">Delete</span>
                           </div>
                         </div>
@@ -688,6 +776,50 @@ function Learning_Profile_Detail() {
           </form>
         </Modal.Body>
       </Modal>
+
+      <Modal show={showCormfirm} onHide={hideConfirm}>
+      <Modal.Header className="mentee_feedback" closeButton>
+                    <Modal.Title>Alert</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className="text-center">
+                        <h4 class="text-capitalize fw-600 mb-10">You have surpassed the due date for this learning. Please contact "{learningDetails.assignedBy}" to ask for an extention.</h4>
+
+                        {/* <h6 style={{fontWeight:'bold'}} class="text-capitalize mb-25">You have surpassed the due date for this learning. Please contact "{learningDetails.assignedBy}" to ask for an extention.</h6> */}
+
+                        {/* <div class="layout-button justify-content-center">
+                            <button onClick={() =>{
+                                setVideoCall(false)
+                                
+                                endCallAndRecording()
+                                
+                                // endCallAndRecording()
+                            }} type="button" className="btn btn-no btn-default btn-squared">Yes</button>
+                            <button onClick={() => hideConfirm()} type="button" className="btn btn-yes btn-default btn-squared">No</button>
+                        </div> */}
+                    </div>
+
+                </Modal.Body>
+      </Modal>
+      <Modal show={showCormfirm1} onHide={hideConfirm1}>
+      <Modal.Header className="mentee_feedback" closeButton>
+                    <Modal.Title>Alert</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className="text-center">
+                        <h4 class="text-capitalize fw-600 mb-10">This learning requires a worksheet(s) to be submitted. Please attach the necessary worksheet(s) to the learning to mark it as done</h4>
+
+                        {/* <h6 style={{fontWeight:'bold'}} class="text-capitalize mb-25">You have surpassed the due date for this learning. Please contact "{learningDetails.assignedBy}" to ask for an extention.</h6> */}
+
+                        <div class="layout-button justify-content-center">
+                           
+                            <button onClick={() => hideConfirm1()} type="button" className="btn btn-yes btn-default btn-squared">OK</button>
+                        </div>
+                    </div>
+
+                </Modal.Body>
+      </Modal>
+
       </div>
     );
 }

@@ -4,7 +4,7 @@ import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import authornav_img from '../../img/user_pic.png';
-import { BASE_URL } from '../../services/Config'
+import { BASE_URL, BASE_URL_APPLSURE } from '../../services/Config'
 import moment from 'moment'
 
 const data = [
@@ -21,6 +21,7 @@ function Completed_By() {
     const [token, setToken] = useState(localStorage.getItem("token"))
     const [sideBarOpen, setSideBarOpen] = useState(true)
     const [audiencesList, setAudiencesList] = useState([])
+    const [audiencesListNew, setAudiencesListNew] = useState([])
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -43,6 +44,7 @@ function Completed_By() {
     }, []);
 
     useEffect(() => {
+        getCheckedAud()
         getAudiences()
     },[])
     
@@ -59,6 +61,26 @@ function Completed_By() {
         const response = await res.json()
         console.log("audience list", response)
         setAudiencesList(response.data)
+    }
+
+    const getCheckedAud = async() => {
+        const btoken = `Bearer ${token}`;
+        const body = {
+            "learning_id":state
+        }
+        const res = await fetch(`${BASE_URL_APPLSURE}get-learning-verified`, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+            body:JSON.stringify(body)
+        })
+        const response = await res.json()
+        console.log("audience list cehcked", response)
+        setAudiencesListNew(response.getdata)
+        // setLearningDetailsFull({state:state, mentee:response.data})
     }
 
     const removeAudience = async(id) => {
@@ -103,7 +125,47 @@ function Completed_By() {
                                     <input className="me-sm-2 border-0 box-shadow-none ms-10" type="search" placeholder="Search here..." aria-label="Search" />
                                 </div>
                             </div> */}
-                            {audiencesList && audiencesList.map((i) => {
+                            {audiencesList && audiencesList.map((i, index) => {
+                                if(i.completedOn != null){
+                                    return(
+                                        // (
+                                            <div className="col-md-12 mb-15">
+                                            <div className="ap-po-details-content d-flex flex-wrap justify-content-between align-center join_requests">
+                                                <div className="media-body d-flex align-items-center">
+                                                    <img src={i.imageUrl == "" ? authornav_img : i.imageUrl} className="me-20 wh-50 rounded-circle bg-opacity-primary" />
+                                                    <div>
+                                                        <h6 className="fw-500">{i.name}</h6>
+                                                        <p className="fs-12 color-light mb-0">{i.jobTitle}</p>
+                                                        <p className="fs-14 color-light mb-0">Completed on: <span style={{color:"#639FA5"}}>{moment(i.completedOn).format("DD/MM/YY")}</span></p>
+                                                    </div>
+                                                </div>
+                                                {audiencesListNew && audiencesListNew[index]?.verified_on != null ? <button onClick={() => {
+                                                    // setSingle(i.userId),
+                                                    
+                                                    }} style={{ color:'#fff'}} className='btn btn-primary'>Checked</button> :
+                                                    <button onClick={() => {
+                                                        // setSingle(i.userId),
+                                                        navigate("/check_learning_mentee", {state:{menteeId:i.userId,learningId:state}})
+                                                        }} style={{ color:'#fff'}} className='btn btn-primary'>Check</button>
+                                                }
+                                                {/* {i.verified_on != null ? 
+                                                    <button onClick={() => {
+                                                    // setSingle(i.userId),
+                                                    
+                                                    }} style={{ color:'#fff'}} className='btn btn-petrol'>Checked</button>
+
+                                                 : 
+                                                <button onClick={() => {
+                                                    // setSingle(i.userId),
+                                                    navigate("/check_learning_mentee", {state:{menteeId:i.userId,learningId:state}})
+                                                    }} style={{ color:'#fff'}} className='btn btn-petrol'>Check</button>} */}
+                                            </div>
+                                        </div>
+                                        // )
+                                    )
+                                }
+                                })}
+                            {/* {audiencesList && audiencesList.map((i) => {
                                 if(i.completedOn != null){
                                     return(
                                         // (
@@ -123,7 +185,7 @@ function Completed_By() {
                                         // )
                                     )
                                 }
-                                })}
+                                })} */}
                             
 {/* 
                             <div className="col-md-12 mb-15">

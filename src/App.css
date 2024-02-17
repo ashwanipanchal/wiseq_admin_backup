@@ -235,7 +235,7 @@ background-color: #f8a046 !important;
     color: #7a7a7a;
 }
 
-.program_par::after {
+.program_par_org::after {
     background-color: #f8a046;
   bottom: -5px;
   height: 5px;
@@ -243,6 +243,11 @@ background-color: #f8a046 !important;
   position: relative;
   content: "";
   display: block;
+}
+
+.organisation-tab .react-tabs__tab--selected{
+    color: var(--color-primary) !important;
+
 }
 
 .react-tabs__tab--selected {

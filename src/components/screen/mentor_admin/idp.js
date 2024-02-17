@@ -2,6 +2,8 @@ import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
 import { NavLink } from "react-router-dom";
 import Progress_banner from '../../screen_components/progress_banner'
+import { BASE_URL_APPLSURE_MENTORING } from '../../../services/Config';
+import moment from 'moment';
 const data = [
     { id: 1, idp_name: "-", mentee_name: "Jane Arora", skills: "SWOT, +6", experience: "-", start_date: "23/01/23", end_date: "23/01/23", status_by: "Pending" },
 ];
@@ -9,6 +11,7 @@ const data = [
 function Idp_Screen() {
 
     const [sideBarOpen, setSideBarOpen] = useState(true)
+    const [idpList, setIDPList] = useState([])
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -30,6 +33,31 @@ function Idp_Screen() {
         };
     }, []);
 
+
+    useEffect(() => {
+        getIDPList()
+    },[])
+
+    const getIDPList = async() => {
+          // return
+          const token = await localStorage.getItem("program_token_node")
+          const res = await fetch(`${BASE_URL_APPLSURE_MENTORING}user/listidpother`, {
+              method: 'POST',
+              headers: {
+                  "Accept": "application/json",
+                  'Content-Type': 'application/json',
+                  "Authorization": token,
+              },
+          })
+          const response = await res.json()
+          console.log("idp list res", response)
+          if(response.success){
+            setIDPList(response.idp)
+          }else{
+          }
+        
+    }
+
     return (
 
         <div className="main-content">
@@ -48,8 +76,8 @@ function Idp_Screen() {
                             </div>
 
                             <div className="col-12">
-                                {/* <div className="row">
-                                    {data.map((user) => (
+                                <div className="row">
+                                    {idpList && idpList.map((user) => (
                                         <div className="col-lg-12">
                                             <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
                                                 <div className="table-responsive">
@@ -95,49 +123,72 @@ function Idp_Screen() {
                                                             <tr>
                                                                 <td>
                                                                     <div className="userDatatable-content">
-                                                                        {user.idp_name}
+                                                                    {user?.individual_development_plans?.name.substring(0,
+                                                                                                    4
+                                                                                                    )}
+                                                                                                    {user?.individual_development_plans?.name.length >
+                                                                                                    4
+                                                                                                    ? "..."
+                                                                                                    : ""}
+                                                                        {/* {user?.individual_development_plans?.name} */}
                                                                     </div>
                                                                 </td>
 
                                                                 <td>
                                                                     <div className="userDatatable-content">
-                                                                        {user.mentee_name}
+                                                                        {user.individual_development_plans?.user_meta?.name}
                                                                     </div>
                                                                 </td>
 
                                                                 <td>
                                                                     <div className="userDatatable-content">
-                                                                        {user.skills}
+                                                                    {user?.individual_development_plans?.skills?.split(",")
+                                                                        .length > 1
+                                                                        ? `${
+                                                                            user?.individual_development_plans?.skills?.split(
+                                                                                ","
+                                                                            )[0]
+                                                                            } + ${
+                                                                            user?.individual_development_plans?.skills?.split(
+                                                                                ","
+                                                                            )?.length - 1
+                                                                            }`
+                                                                        : user?.individual_development_plans?.skills}
+                                                                       {/* {user?.individual_development_plans?.skills} */}
                                                                     </div>
                                                                 </td>
 
                                                                 <td>
                                                                     <div className="userDatatable-content">
-                                                                        {user.experience}
+                                                                        {user?.individual_development_plans?.experience_gaps}
                                                                     </div>
                                                                 </td>
 
                                                                 <td>
                                                                     <div className="userDatatable-content">
-                                                                        {user.start_date}
+                                                                    {moment(
+                                                                        user?.individual_development_plans?.start_date
+                                                                        ).format("DD/MM/YY")}
                                                                     </div>
                                                                 </td>
 
                                                                 <td>
                                                                     <div className="userDatatable-content">
-                                                                        {user.end_date}
+                                                                    {moment(
+                                                                        user?.individual_development_plans?.end_date
+                                                                        ).format("DD/MM/YY")}
                                                                     </div>
                                                                 </td>
 
                                                                 <td>
                                                                     <div className="userDatatable-content color-danger fw-600">
-                                                                        {user.status_by}
+                                                                        {user.status == "0" ? "Pending" : user.status == "1" ? "Completed" : user.status == "3" ? "Accepted" : "Deleted"}
                                                                     </div>
                                                                 </td>
 
                                                                 <td>
                                                                     <ul className="">
-                                                                        <NavLink className="navbar-link" to="/idp_full_view">
+                                                                        <NavLink className="navbar-link" to="/idp_full_view" state={user}>
                                                                             <li>
                                                                                 <button className="btn btn-petrol btn-squared px-15">
                                                                                     Full View
@@ -154,8 +205,8 @@ function Idp_Screen() {
                                             </div>
                                         </div>
                                     ))}
-                                </div> */}
-                                <Progress_banner/>
+                                </div>
+                                {/* <Progress_banner/> */}
                             </div>
                         </div>
 

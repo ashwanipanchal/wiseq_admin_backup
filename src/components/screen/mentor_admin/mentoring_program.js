@@ -3,8 +3,10 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import Progress_banner from '../../screen_components/progress_banner'
+import { BASE_URL_APPLSURE_MENTORING } from '../../../services/Config';
+import moment from 'moment';
 const data = [
     { id: 1, program_id: "-", program_name: "-", skills: "-", duration: "-", type: "-", program_parti: "-", starting_on: "-", status: "-", finishing: "-", completion_percen: "50%" },
 ];
@@ -14,12 +16,18 @@ const data1 = [
 ];
 
 function Mentoring_Program() {
-
+    const navigate = useNavigate()
     const [sideBarOpen, setSideBarOpen] = useState(true)
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
     const [windowSize, setWindowSize] = useState(getWindowSize());
+    const [publishedList, setPublishedList]=useState([])
+    const [progressList, setProgressList]=useState([])
+    const [pastList, setPastList]=useState([])
+    const [indexValue, setIndexValue] = useState(-1);
+    const [indexValue1, setIndexValue1] = useState(-1);
+    const [indexValue2, setIndexValue2] = useState(-1);
     function getWindowSize() {
         const { innerWidth, innerHeight } = window;
         return { innerWidth, innerHeight };
@@ -44,6 +52,59 @@ function Mentoring_Program() {
         // alert(showFilter)
     }
 
+    useEffect(() => {
+        fetchListData(0)
+    },[])
+
+    const fetchListData = async(index) => {
+        // console.log(index)
+        // return
+    //   let pp = []
+    //   if(index == 0){
+    //     pp.push(0,1)
+    //   }
+    //   if(index == 2){
+    //     pp.push(4)
+    //   }
+    //   if(index == 3){
+    //     pp.push(3)
+    //   }
+
+      var myHeaders = new Headers();
+      myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+      myHeaders.append("Content-Type", "application/json");
+
+      var raw = JSON.stringify({
+        "status":index == 0 ? "1": index == 1 ? "4" : "3"
+    });
+
+      var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+      };
+
+      fetch(`${BASE_URL_APPLSURE_MENTORING}user/user-program-list`, requestOptions)
+      .then(response => response.json())
+      .then(result => {
+          console.log(index,"==",result)
+        //   return
+          if(index == 0){
+            setPublishedList(result.programs)
+          }
+          if(index == 1){
+            setProgressList(result.programs)
+          }
+          if(index == 2){
+            setPastList(result.programs)
+          }
+         
+      })
+      .catch(error => console.log('error', error));
+
+      
+    }
 
     return (
 
@@ -57,15 +118,16 @@ function Mentoring_Program() {
                                     <div className="">
                                         <div className="tab-wrapper">
                                             <div className="dm-tab tab-horizontal">
-                                                <Tabs>
-                                                    <TabList className="nav nav-tabs vertical-tabs">
+                                                <Tabs defaultIndex={0} onSelect={(index) => fetchListData(index)}>
+                                                    <TabList className="nav nav-tabs vertical-tabs mentoring-tabs">
                                                         <Tab>Upcoming Programs</Tab>
                                                         <Tab>Programs in Progress</Tab>
                                                         <Tab>Programs Completed</Tab>
                                                     </TabList>
 
                                                     <TabPanel className="tab-content">
-                                                        {/* <div className="row">
+                                                    {publishedList && publishedList.map((user, index) => (
+                                                        <div className="row">
                                                             <div className="col-lg-12">
                                                                 <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
                                                                     <div className="table-responsive">
@@ -107,48 +169,68 @@ function Mentoring_Program() {
                                                                             </thead>
                                                                             <tbody>
 
-                                                                                {data.map((user) => (
+                                                                                {/* {data.map((user) => ( */}
 
                                                                                     <tr>
                                                                                         <td>
                                                                                             <div className="userDatatable-content">
-                                                                                                {user.program_id}
+                                                                                                {user?.program_model?.program_id}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
-                                                                                            <div className="userDatatable-content">
-                                                                                                {user.program_name}
-                                                                                            </div>
-                                                                                        </td>
-
-                                                                                        <td>
-                                                                                            <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.skills}
-                                                                                            </div>
-                                                                                        </td>
-
-                                                                                        <td>
-                                                                                            <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.duration}
+                                                                                            <div style={{cursor:"pointer"}} onClick={() => navigate("/mentoring_program_upcoming",{state:user})} className="userDatatable-content">
+                                                                                            {/* {user?.program_model?.name} */}
+                                                                                            {user?.program_model?.name.substring(0,
+                                                                                                    4
+                                                                                                    )}
+                                                                                                    {user?.program_model?.name.length >
+                                                                                                    4
+                                                                                                    ? "..."
+                                                                                                    : ""}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.type}
+                                                                                            {user?.program_model?.skills?.split(",")
+                                                                                                .length > 1
+                                                                                                ? `${
+                                                                                                    user?.program_model?.skills?.split(
+                                                                                                        ","
+                                                                                                    )[0]
+                                                                                                    } + ${
+                                                                                                    user?.program_model?.skills?.split(
+                                                                                                        ","
+                                                                                                    )?.length - 1
+                                                                                                    }`
+                                                                                                : user?.program_model?.skills}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.program_parti}
+                                                                                            {user?.program_model?.duration}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.starting_on}
+                                                                                            {user?.program_model?.type}
+                                                                                            </div>
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            <div className="userDatatable-content color-status fw-600">
+                                                                                            {user?.program_model?.participation == 1 ? "Mandatory" : "Optional"}
+                                                                                            </div>
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            <div className="userDatatable-content color-status fw-600">
+                                                                                            {moment(
+                                                                                                user?.program_model?.start_date
+                                                                                                ).format("DD/MM/YY")}
                                                                                             </div>
                                                                                         </td>
 
@@ -158,7 +240,15 @@ function Mentoring_Program() {
                                                                                                     <li>
                                                                                                         <div className="dropdown dropleft">
                                                                                                             <button className="btn-link border-0 bg-transparent p-0">
-                                                                                                                <img src={horizontal_img} className="svg" onClick={() => showModal()} />
+                                                                                                                <img src={horizontal_img} className="svg" onClick={() => {
+                                                                                                                    if(index == indexValue){
+                                                                                                                        setIndexValue(-1)
+                                                                                                                    }else{
+                                                    
+                                                                                                                        setIndexValue(index)
+                                                                                                                    }
+                                                                                                                    // showModal()
+                                                                                                                }} />
                                                                                                             </button>
 
 
@@ -168,27 +258,29 @@ function Mentoring_Program() {
                                                                                                 </ul>
                                                                                             </div>
 
-                                                                                            {showFilter ?
-                                                                                                <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
-                                                                                                    <NavLink className="" to="/mentoring_program_upcoming"><div className="dropdown-item">Action</div></NavLink>
-                                                                                                </div> : ""}
+                                                                                            {index == indexValue && (
+                                                                                                  <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
+                                                                                                  <NavLink className="" to="/mentoring_program_upcoming" state={user}><div className="dropdown-item">View</div></NavLink>
+                                                                                              </div>
+                                                                                                )}
                                                                                         </td>
                                                                                     </tr>
 
 
-                                                                                ))}
+                                                                                {/* ))} */}
 
                                                                             </tbody>
                                                                         </table>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div> */}
-                                                        <Progress_banner/>
+                                                        </div>))}
+                                                        {/* <Progress_banner/> */}
                                                     </TabPanel>
 
                                                     <TabPanel>
-                                                        {/* <div className="row">
+                                                    {progressList && progressList.map((user, index) => (
+                                                        <div className="row">
                                                             <div className="col-lg-12">
                                                                 <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
                                                                     <div className="table-responsive">
@@ -238,60 +330,79 @@ function Mentoring_Program() {
                                                                             </thead>
                                                                             <tbody>
 
-                                                                                {data1.map((user) => (
+                                                                                {/* {data1.map((user) => ( */}
 
                                                                                     <tr>
-                                                                                        <td>
+                                                                                    <td>
                                                                                             <div className="userDatatable-content">
-                                                                                                {user.program_id}
+                                                                                            {user?.program_model?.program_id}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
-                                                                                            <div className="userDatatable-content">
-                                                                                                {user.program_name}
-                                                                                            </div>
-                                                                                        </td>
-
-                                                                                        <td>
-                                                                                            <div className="userDatatable-content0">
-                                                                                                {user.skills}
-                                                                                            </div>
-                                                                                        </td>
-
-                                                                                        <td>
-                                                                                            <div className="userDatatable-content">
-                                                                                                {user.duration}
-                                                                                            </div>
-                                                                                        </td>
-
-                                                                                        <td>
-                                                                                            <div className="userDatatable-content">
-                                                                                                {user.type}
-                                                                                            </div>
-                                                                                        </td>
-
-                                                                                        <td>
-                                                                                            <div className="userDatatable-content">
-                                                                                                {user.program_parti}
-                                                                                            </div>
-                                                                                        </td>
-
-                                                                                        <td>
-                                                                                            <div className="userDatatable-content">
-                                                                                                {user.starting_on}
-                                                                                            </div>
-                                                                                        </td>
-
-                                                                                        <td>
-                                                                                            <div className="userDatatable-content">
-                                                                                                {user.finishing}
+                                                                                            <div style={{cursor:"pointer"}} onClick={() => navigate("/mentoring_program_progress",{state:user})} className="userDatatable-content">
+                                                                                            {user?.program_model?.name.substring(0,
+                                                                                                    4
+                                                                                                    )}
+                                                                                                    {user?.program_model?.name.length >
+                                                                                                    4
+                                                                                                    ? "..."
+                                                                                                    : ""}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.completion_percen}
+                                                                                            {user?.program_model?.skills?.split(",")
+                                                                                                .length > 1
+                                                                                                ? `${
+                                                                                                    user?.program_model?.skills?.split(
+                                                                                                        ","
+                                                                                                    )[0]
+                                                                                                    } + ${
+                                                                                                    user?.program_model?.skills?.split(
+                                                                                                        ","
+                                                                                                    )?.length - 1
+                                                                                                    }`
+                                                                                                : user?.program_model?.skills}
+                                                                                            </div>
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            <div className="userDatatable-content color-status fw-600">
+                                                                                            {user?.program_model?.duration}
+                                                                                            </div>
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            <div className="userDatatable-content color-status fw-600">
+                                                                                            {user?.program_model?.type}
+                                                                                            </div>
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            <div className="userDatatable-content color-status fw-600">
+                                                                                            {user?.program_model?.participation == 1 ? "Mandatory" : "Optional"}
+                                                                                            </div>
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            <div className="userDatatable-content color-status fw-600">
+                                                                                            {moment(
+                                                                                                user?.program_model?.start_date
+                                                                                                ).format("DD/MM/YY")}
+                                                                                            </div>
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <div className="userDatatable-content color-status fw-600">
+                                                                                            {moment(
+                                                                                                user?.program_model?.end_date
+                                                                                                ).format("DD/MM/YY")}
+                                                                                            </div>
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <div className="userDatatable-content color-status fw-600">
+                                                                                            
                                                                                             </div>
                                                                                         </td>
 
@@ -301,7 +412,14 @@ function Mentoring_Program() {
                                                                                                     <li>
                                                                                                         <div className="dropdown dropleft">
                                                                                                             <button className="btn-link border-0 bg-transparent p-0">
-                                                                                                                <img src={horizontal_img} className="svg" onClick={() => showModal()} />
+                                                                                                                <img src={horizontal_img} className="svg" onClick={() => {
+                                                                                                                    if(index == indexValue1){
+                                                                                                                        setIndexValue1(-1)
+                                                                                                                    }else{
+                                                    
+                                                                                                                        setIndexValue1(index)
+                                                                                                                    }
+                                                                                                                }} />
                                                                                                             </button>
 
 
@@ -310,28 +428,33 @@ function Mentoring_Program() {
                                                                                                     </li>
                                                                                                 </ul>
                                                                                             </div>
-
-                                                                                            {showFilter ?
+                                                                                            {index == indexValue1 && (
+                                                                                                  <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
+                                                                                                  <NavLink className="" to="/mentoring_program_progress" state={user}><div className="dropdown-item">View</div></NavLink>
+                                                                                              </div>
+                                                                                                )}
+                                                                                            {/* {showFilter ?
                                                                                                 <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
                                                                                                     <NavLink className="" to="/mentoring_program_progress"><div className="dropdown-item">view Details</div></NavLink>
-                                                                                                </div> : ""}
+                                                                                                </div> : ""} */}
                                                                                         </td>
                                                                                     </tr>
 
 
-                                                                                ))}
+                                                                                {/* ))} */}
 
                                                                             </tbody>
                                                                         </table>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div> */}
-                                                        <Progress_banner/>
+                                                        </div>))}
+                                                        {/* <Progress_banner/> */}
                                                     </TabPanel>
 
                                                     <TabPanel className="tab-content">
-                                                        {/* <div className="row">
+                                                    {pastList && pastList.map((user, index) => (
+                                                        <div className="row">
                                                             <div className="col-lg-12">
                                                                 <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
                                                                     <div className="table-responsive">
@@ -377,54 +500,76 @@ function Mentoring_Program() {
                                                                             </thead>
                                                                             <tbody>
 
-                                                                                {data.map((user) => (
+                                                                                {/* {data.map((user) => ( */}
 
                                                                                     <tr>
-                                                                                        <td>
+                                                                                    <td>
                                                                                             <div className="userDatatable-content">
-                                                                                                {user.program_id}
+                                                                                            {user?.program_model?.program_id}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
-                                                                                            <div className="userDatatable-content">
-                                                                                                {user.program_name}
-                                                                                            </div>
-                                                                                        </td>
-
-                                                                                        <td>
-                                                                                            <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.skills}
-                                                                                            </div>
-                                                                                        </td>
-
-                                                                                        <td>
-                                                                                            <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.duration}
+                                                                                            <div style={{cursor:"pointer"}} onClick={() => navigate("/mentoring_program_completed",{state:user})} className="userDatatable-content">
+                                                                                            {user?.program_model?.name.substring(0,
+                                                                                                    4
+                                                                                                    )}
+                                                                                                    {user?.program_model?.name.length >
+                                                                                                    4
+                                                                                                    ? "..."
+                                                                                                    : ""}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.type}
+                                                                                            {/* {user?.program_model?.skills} */}
+                                                                                            {user?.program_model?.skills?.split(",")
+                                                                                                .length > 1
+                                                                                                ? `${
+                                                                                                    user?.program_model?.skills?.split(
+                                                                                                        ","
+                                                                                                    )[0]
+                                                                                                    } + ${
+                                                                                                    user?.program_model?.skills?.split(
+                                                                                                        ","
+                                                                                                    )?.length - 1
+                                                                                                    }`
+                                                                                                : user?.program_model?.skills}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.program_parti}
+                                                                                            {user?.program_model?.duration}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.starting_on}
+                                                                                            {user?.program_model?.type}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
                                                                                             <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.finishing}
+                                                                                            {user?.program_model?.participation == 1 ? "Mandatory" : "Optional"}
+                                                                                            </div>
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            <div className="userDatatable-content color-status fw-600">
+                                                                                            {moment(
+                                                                                                user?.program_model?.start_date
+                                                                                                ).format("DD/MM/YY")}
+                                                                                            </div>
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            <div className="userDatatable-content color-status fw-600">
+                                                                                            {moment(
+                                                                                                user?.program_model?.end_date
+                                                                                                ).format("DD/MM/YY")}
                                                                                             </div>
                                                                                         </td>
 
@@ -434,7 +579,14 @@ function Mentoring_Program() {
                                                                                                     <li>
                                                                                                         <div className="dropdown dropleft">
                                                                                                             <button className="btn-link border-0 bg-transparent p-0">
-                                                                                                                <img src={horizontal_img} className="svg" onClick={() => showModal()} />
+                                                                                                                <img src={horizontal_img} className="svg" onClick={() => {
+                                                                                                                    if(index == indexValue2){
+                                                                                                                        setIndexValue2(-1)
+                                                                                                                    }else{
+                                                    
+                                                                                                                        setIndexValue2(index)
+                                                                                                                    }
+                                                                                                                }} />
                                                                                                             </button>
 
 
@@ -443,24 +595,28 @@ function Mentoring_Program() {
                                                                                                     </li>
                                                                                                 </ul>
                                                                                             </div>
-
-                                                                                            {showFilter ?
+                                                                                            {index == indexValue2 && (
+                                                                                                  <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
+                                                                                                  <NavLink className="" to="/mentoring_program_completed" state={user}><div className="dropdown-item">View</div></NavLink>
+                                                                                              </div>
+                                                                                                )}
+                                                                                            {/* {showFilter ?
                                                                                                 <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
                                                                                                     <NavLink className="" to="/mentoring_program_completed"><div className="dropdown-item">view Details</div></NavLink>
-                                                                                                </div> : ""}
+                                                                                                </div> : ""} */}
                                                                                         </td>
                                                                                     </tr>
 
 
-                                                                                ))}
+                                                                                {/* ))} */}
 
                                                                             </tbody>
                                                                         </table>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div> */}
-                                                        <Progress_banner/>
+                                                        </div>))}
+                                                        {/* <Progress_banner/> */}
                                                     </TabPanel>
                                                 </Tabs>
                                             </div>

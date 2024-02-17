@@ -4,6 +4,7 @@ import tag_img from '../../../img/tag.svg';
 import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from "react-router-dom";
+import { BASE_URL } from '../../../services/Config';
 
 const data = [
     { id: 1, community_name: "Lorem Ipsum is simply dummy text of the printing", author_name: "By Admin" },
@@ -43,7 +44,7 @@ function Resources_Screen() {
         const getRes = async() => {
             const token = await localStorage.getItem("token")
             const btoken = `Bearer ${token}`;   
-            const res = await fetch(`https://api.wiseqglobal.com/api/resources`,{
+            const res = await fetch(`${BASE_URL}resources`,{
                 method:'GET',
                 headers:{
                   "Accept": "application/json",
@@ -79,7 +80,7 @@ function Resources_Screen() {
                             </div>
 
                             {resourcesList && resourcesList.map((user) => (
-                                <div class="col-lg-4 col-sm-12 col-md-12 mb-25">
+                                <div style={{cursor: "pointer"}} onClick={() => navigate('/resources_detail', {state: user})} class="col-lg-4 col-sm-12 col-md-12 mb-25">
                                     <div class="blog-card blog-card--2 box_shadow1">
                                         <div class="blog-card__thumbnail">
                                             <a href="#">
@@ -90,13 +91,13 @@ function Resources_Screen() {
                                             <div class="blog-card__content">
                                                 <h4 class="blog-card__title">
                                                     
-                                                    <a className="entry-title" style={{cursor: "pointer"}} onClick={() => navigate('/resources_detail', {state: user})}>{user.name}</a>
+                                                    <a className="entry-title" style={{cursor: "pointer"}} >{user.name}</a>
                                                 </h4>
                                             </div>
                                             <div class="blog-card__meta">
                                                 <div class="blog-card__meta-reaction">
                                                     <img src={userdefault_img} className="" />
-                                                    <span class="blog-card__meta-reaction-like">{user.author_name}</span>
+                                                    <span class="blog-card__meta-reaction-like">{user?.organisation?.byWiseQ == false ? "By Org Admin" : "By WiseQ"}</span>
                                                 </div>
                                                 <div class="blog-card__meta-count">
                                                     <ul>
@@ -105,7 +106,7 @@ function Resources_Screen() {
                                                                 <img src={tag_img} className="" />
                                                                 {user.categories.map((i) => (
 
-                                                                <span class="blog-card__meta-reaction-like">{i.category},</span>
+                                                                <span class="blog-card__meta-reaction-like">{i.category?.charAt(0).toUpperCase() + i.category?.slice(1)}</span>
                                                                 ))}
                                                             </div>
                                                         </li>

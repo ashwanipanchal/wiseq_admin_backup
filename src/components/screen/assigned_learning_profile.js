@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import Modal from 'react-bootstrap/Modal';
 import moment from 'moment'
-import { BASE_URL } from '../../services/Config'
+import { BASE_URL, BASE_URL_APPLSURE } from '../../services/Config'
 import mentee_home from '../../img/mentee_home.svg';
 import mentees_home from '../../img/mentees_home.svg';
 
@@ -17,6 +17,10 @@ function Assigned_Learning_Profile() {
     const [learningDetails, setLearningDetails] = useState({})
     const [fAreas, setFAreas] = useState([])
     const [levels, setLevels] = useState([])
+    const [audiencesList, setAudiencesList] = useState([])
+    const [completedList, setCompletedList] = useState([])
+    const [pendingList, setPendingList] = useState([])
+    const [avgRatingScore, setAvgRatingScore] = useState("")
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -45,6 +49,7 @@ function Assigned_Learning_Profile() {
     useEffect(() => {
         getProfile()
         getDetails()
+        getAvgRating()
     },[])
     
     const getProfile = async() => {
@@ -61,6 +66,7 @@ function Assigned_Learning_Profile() {
         console.log("created profile details in org", response)
         if(response.success){
             setLearningDetails(response.data)
+            getAudiences(response.data.id)
         }
     }
 
@@ -85,6 +91,56 @@ function Assigned_Learning_Profile() {
         }
     }
 
+    const getAudiences = async(id) => {
+        const btoken = `Bearer ${token}`;
+        const res = await fetch(`${BASE_URL}learnings/${id}/audience`, {
+            method: 'GET',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+        })
+        const response = await res.json()
+        console.log("audience list", response)
+        setAudiencesList(response.data)
+        let pending = []
+        let completed = []
+        response.data.map((i) => {
+            if(i.completedOn == null){
+                pending.push(i)
+            }else{
+                completed.push(i)
+            }
+
+        })
+        setPendingList(pending)
+        setCompletedList(completed)
+    }
+
+
+    const getAvgRating = async() => {
+        const token = await localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
+        const body = {
+                "learning_id":state.id
+            }
+        const res = await fetch(`${BASE_URL_APPLSURE}ratinglearning?learning_id=${state.id}`,{
+            method:'GET',
+            headers:{
+              "Accept": "application/json",
+              'Content-Type': 'application/json',
+              "Authorization": btoken,
+            },
+            // body:JSON.stringify(body)
+        })
+        const response = await res.json()
+        console.log(response)
+        if(response.status){
+            setAvgRatingScore(response.rating)
+        }
+    }
+
     return (
 
         <div className="main-content">
@@ -99,12 +155,12 @@ function Assigned_Learning_Profile() {
                                             <h4 className="fw-500 breadcrumb-title">{learningDetails && learningDetails.learningName}</h4>
                                         </div>
                                     </div>
-                                    <div class="layout-button">
+                                    {/* <div class="layout-button"> */}
                                         {/* <NavLink className="navbar-link" to="/create_learning"> */}
-                                            <button type="button" onClick={() => navigate("/edit_learning", {state:learningDetails})} class="btn btn-outline-primary btn-squared color-primary">Edit</button>
+                                            {/* <button type="button" onClick={() => navigate("/edit_learning", {state:learningDetails})} class="btn btn-outline-primary btn-squared color-primary">Edit</button> */}
                                             {/* </NavLink> */}
                                         {/* <button type="button" class="btn btn-primary btn-default btn-squared" onClick={showModal}>Assign</button> */}
-                                    </div>
+                                    {/* </div> */}
 
                                 </div>
                             </div>
@@ -158,12 +214,15 @@ function Assigned_Learning_Profile() {
 
                                 <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Finish by</p>
-                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && moment(learningDetails.finishBy).format("DD MMMM YYYY")}</p>
+                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && moment(learningDetails.finishBy?.split('T')[0]).format("DD MMMM YYYY")}</p>
                                 </div>
 
                                 <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Duration</p>
-                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && learningDetails.duration}</p>
+                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && learningDetails.duration}{' '}
+                      {learningDetails &&
+                        learningDetails.durationType?.charAt(0).toUpperCase() +
+                          learningDetails.durationType?.slice(1)}</p>
                                 </div>
 
                                 {/* <div className="col-md-12 mb-20">
@@ -183,7 +242,7 @@ function Assigned_Learning_Profile() {
 
                                 <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Learning’s Rating</p>
-                                    {/* <span className="badge badge-round btn-primary mt-10">4.5 <i className="lar la-star user_star"></i></span> */}
+                                    <span className="badge badge-round btn-primary mt-10">{avgRatingScore && avgRatingScore} <i className="lar la-star user_star"></i></span>
                                 </div>
 
 
@@ -218,7 +277,7 @@ function Assigned_Learning_Profile() {
                                                         <div className="ap-po-details__titlebar">
                                                             <p>Audience</p>
                                                             {/* <h2>{dashboardStat && dashboardStat.mentorCount} <span className="fs-12 fw-400">+0</span></h2> */}
-                                                            <p style={{fontSize:'20px'}} className=" color-dark  fw-700">{learningDetails && learningDetails.audience}</p>
+                                                            <p style={{fontSize:'20px'}} className=" color-dark  fw-700">{learningDetails && audiencesList.length}</p>
                                                         </div>
                                                         <div className="ap-po-details__icon-area">
                                                             <div className="svg-icon">
@@ -236,20 +295,20 @@ function Assigned_Learning_Profile() {
                                                         <div className="ap-po-details__titlebar">
                                                             <p>Completed by</p>
                                                             {/* <h2>{dashboardStat && dashboardStat.mentorCount} <span className="fs-12 fw-400">+0</span></h2> */}
-                                                            <p style={{fontSize:'20px', color:"#005B5B"}} className=" fw-700">{learningDetails && learningDetails.completedAudience}</p>
+                                                            <p style={{fontSize:'20px', color:"#005B5B"}} className=" fw-700">{learningDetails && completedList.length}</p>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div onClick={() => navigate("/pending_by",{state:learningDetails.id})} className="col-lg-6 col-sm-3 col-md-6 mb-25">
+                                        <div onClick={() => navigate("/pending_by",{state:{data:learningDetails.id, hint: state.status}})} className="col-lg-6 col-sm-3 col-md-6 mb-25">
                                             <div className="ap-po-details ap-po-details--2 p-10 radius-xl d-flex justify-content-between box_shadow1">
                                                 <div className="overview-content w-100">
                                                     <div className=" ap-po-details-content d-flex flex-wrap justify-content-between">
                                                         <div className="ap-po-details__titlebar">
                                                             <p>Pending</p>
                                                             {/* <h2>{dashboardStat && dashboardStat.mentorCount} <span className="fs-12 fw-400">+0</span></h2> */}
-                                                            <p style={{fontSize:'20px',color:"#D54654"}} className="fw-700">{learningDetails && learningDetails.pendingAudience}</p>
+                                                            <p style={{fontSize:'20px',color:"#D54654"}} className="fw-700">{learningDetails && pendingList.length}</p>
                                                         </div>
                                                     </div>
                                                 </div>

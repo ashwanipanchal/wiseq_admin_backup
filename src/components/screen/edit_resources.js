@@ -46,29 +46,61 @@ function Edit_Resources() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [sideBarOpen, setSideBarOpen] = useState(true);
   const [name, setName] = useState(state.name);
-  const [aSelectedValue, setaSelectedValue] = useState(state.categories);
+  const [aSelectedValue, setaSelectedValue] = useState(state?.categories[0]?.category);
   const [description, setDescription] = useState(state.description);
-  const [category, setCategory] = useState(state.categories);
-  const [skills, setSkills] = useState(state.skills);
+  const [category, setCategory] = useState(state?.categories[0]?.category);
+  const [sourceName, setSourceName] = useState(state.sourceLink);
+  // const [skills, setSkills] = useState();
   const [totalOrgList, setTotalOrgList] = useState([]);
   const [orgs, setOrgs] = useState([]);
   const [link, setLink] = useState(state.externalLink);
-  const [photoUrl, setPhotoUrl] = useState("");
-  const [fileUrl, setFileUrl] = useState("");
+  const [photoUrl, setPhotoUrl] = useState(state.coverPhoto);
+  const [fileUrl, setFileUrl] = useState(state.fileUrl);
+  const [skills, setSkillsList] = useState([])
+  const [selectedSkill, setSelectedSkill] = useState(state.skills)
   const toggle = () => {
     setSideBarOpen(!sideBarOpen);
   };
 
+  useEffect(() => {
+    getSkills()
+  },[])
+
+  const getSkills = async() => {
+    const btoken = `Bearer ${token}`;
+    const res = await fetch(`${BASE_URL}organisation-info/skills`, {
+        method: 'GET',
+        headers: {
+            "Accept": "application/json",
+            'Content-Type': 'application/json',
+            "Authorization": btoken,
+        },
+    })
+    const response = await res.json()
+    console.log("skill list", response)
+    if(response.success){
+        let tt = []
+        response.data.map((i) => {
+            tt.push(i.skill)
+        })
+        setSkillsList(tt)
+    }
+}
+
   const addRes = async (e) => {
     e.preventDefault();
-   let nn = category.map((i)=> {
-    console.log(i)
-      return i.category
-    })
+    if(photoUrl.length == 0){
+      alert("Please attach a cover photo")
+      return
+    }
+    if(fileUrl.length == 0){
+      alert("Please attach a file")
+      return
+    }
     const body = {
       name,
-      "categories": nn,
-      skills,
+      "categories": [category],
+      skills:selectedSkill,
       description,
       "externalLink": link,
       "coverPhoto": photoUrl,
@@ -79,7 +111,7 @@ function Edit_Resources() {
     const token = await localStorage.getItem("token");
     const btoken = `Bearer ${token}`;
     // console.log(btoken)
-    const res = await fetch(`http://13.235.104.81:8000/api/resources/${state.id}`, {
+    const res = await fetch(`${BASE_URL}resources/${state.id}`, {
       method: "PUT",
       headers: {
         Accept: "application/json",
@@ -120,7 +152,7 @@ const onRemoveCat = (selectedList, removedItem) => {
     formData.append("file", item);
     const btoken = `Bearer ${token}`;
     // console.log(btoken)
-    const res = await fetch(`http://13.235.104.81:8000/api/files/upload?fileType=ressource_file`, {
+    const res = await fetch(`${BASE_URL}files/upload?fileType=ressource_file`, {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -130,7 +162,7 @@ const onRemoveCat = (selectedList, removedItem) => {
       body: formData,
     });
     const response = await res.json();
-    // console.log(response)
+    console.log(response)
     const { success } = response;
     if(success){
         if(index == "1"){
@@ -189,7 +221,7 @@ const onRemoveCat = (selectedList, removedItem) => {
 
                     <div className="col-md-6 mb-25">
                       <div class="countryOption">
-                        <Multiselect
+                        {/* <Multiselect
                           style={{ searchBox: { borderColor: "gray" } }}
                           // isObject={true}
                           options={categoryOption} // Options to display in the dropdown
@@ -198,33 +230,45 @@ const onRemoveCat = (selectedList, removedItem) => {
                           onSelect={onSelectCat} // Function will trigger on select event
                           onRemove={onRemoveCat} // Function will trigger on remove event
                           displayValue="category" // Property name to display in the dropdown options
-                        />
+                        /> */}
+                        <select value={category} onChange={e => setCategory(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
+                                                            <option value="">Category</option>
+                                                            <option value="podcast">Podcast</option>
+                                                            <option value="article">Article</option>
+                                                            <option value="video">Video</option>
+                                                            <option value="case-study">Case Study</option>
+                                                            <option value="course">Course</option>
+                                                        </select>
                       </div>
                     </div>
 
                     <div className="col-md-6 mb-25">
                       <div class="countryOption">
-                        <select
-                          value={skills}
-                          onChange={(e) => setSkills(e.target.value)}
-                          class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15"
-                          aria-label="Default select example"
-                          required
-                        >
-                          <option value="">Select Key Skills</option>
-                          <option value="react">React</option>
-                          <option value="node">Node</option>
-                        </select>
+                      <select value={selectedSkill} onChange={e => setSelectedSkill(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
+                                                            <option value="">Skill(s) Addressed</option>
+                                                            {skills && skills.map((i) => (
+                                                                <option value={i}>{i}</option>
+                                                            ))}
+                                                        </select>
                       </div>
                     </div>
 
-                    <div className="col-md-12 mb-15">
+                    <div className="col-md-6 mb-15">
+                      <input
+                        value={sourceName}
+                        onChange={(e) => setSourceName(e.target.value)}
+                        type="text"
+                        className="form-control ih-medium ip-gray radius-xs b-deep px-15"
+                        placeholder="Source Name"
+                      />
+                    </div>
+                    <div className="col-md-6 mb-15">
                       <input
                         value={link}
                         onChange={(e) => setLink(e.target.value)}
                         type="text"
                         className="form-control ih-medium ip-gray radius-xs b-deep px-15"
-                        placeholder="External Link"
+                        placeholder="Source Link"
                       />
                     </div>
 
@@ -239,8 +283,20 @@ const onRemoveCat = (selectedList, removedItem) => {
                         class="form-control ip-gray radius-xs b-deep px-15"
                         type="file"
                         id="customFile"
-                        required
+                        
                       />
+                      <div  style={{display:'flex', flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+                              <p style={{cursor:'pointer', textDecoration:'underline', width:'70%'}} className="color-dark fs-14 fw-300 align-center mb-0"
+                                  onClick={() =>
+                                    window.open(state.coverPhoto, "_blank")
+                                  }
+                                >
+                                  {photoUrl.split("/")[4]}
+                                </p>
+                                {photoUrl.length> 0 && (
+                                <p style={{color:'red'}} onClick={() => {setPhotoUrl("")}}>Remove</p>
+                                )}
+                                </div>
                     </div>
 
                     <div className="col-md-6 mb-25">
@@ -254,8 +310,22 @@ const onRemoveCat = (selectedList, removedItem) => {
                         class="form-control ip-gray radius-xs b-deep px-15"
                         type="file"
                         id="customFile"
-                        required
+                        
                       />
+
+                    <div  style={{display:'flex', flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+                              <p style={{cursor:'pointer', textDecoration:'underline', width:'70%'}} className="color-dark fs-14 fw-300 align-center mb-0"
+                                  onClick={() =>
+                                    window.open(state.fileUrl, "_blank")
+                                  }
+                                >
+                                  {fileUrl.split("/")[4]}
+                                </p>
+                                {fileUrl.length> 0 && (
+
+                                <p style={{color:'red'}} onClick={() => {setFileUrl("")}}>Remove</p>
+                                )}
+                                </div>
                     </div>
 
                     <div className="col-md-12">

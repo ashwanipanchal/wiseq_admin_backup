@@ -11,7 +11,7 @@ import Iframe from "react-iframe";
 import Modal from "react-bootstrap/Modal";
 import { Rating } from "react-simple-star-rating";
 import moment from "moment";
-import { BASE_URL } from "../../../services/Config";
+import { BASE_URL, BASE_URL_APPLSURE } from "../../../services/Config";
 import { FileUploader } from "react-drag-drop-files";
 import { saveAs } from 'file-saver'
 import ReactHlsPlayer from 'react-hls-player';
@@ -153,7 +153,37 @@ function Past_Session() {
       }
     );
     const response = await res.json();
-    console.log(response);
+
+    const body1 =
+    {
+        // "feedbackFor": state.sessionUsers[0].id,
+        // "contentQuality": rating1,
+        // "metObjective": rating2,
+        // "mentorSkill": rating3,
+        // "feedbackText": feedbackText
+
+        "user_id":state.scheduler?.id,
+        "user_role":"mentee",
+        "feedback_for":state.sessionUsers[0].id,
+        "session_id":state.id,
+        "question_no":[1,2,3],
+        "rating":[rating1,rating2,rating3]
+    }
+    console.log(body1)
+    // return
+    const res1 = await fetch(`${BASE_URL_APPLSURE}add-question-wise-rating`, {
+        method: 'POST',
+        headers: {
+            "Accept": "application/json",
+            'Content-Type': 'application/json',
+            "Authorization": btoken,
+        },
+        body: JSON.stringify(body1)
+    })
+    const response1 = await res1.json()
+    console.log(response1)
+    console.log(response)
+
     const { success } = response;
     if (success) {
       navigate(-1);

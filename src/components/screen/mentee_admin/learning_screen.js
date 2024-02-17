@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import moment from "moment"
 import { NavLink,useLocation, useNavigate } from "react-router-dom";
 import Modal from 'react-bootstrap/Modal';
-import { BASE_URL } from '../../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE } from '../../../services/Config';
 import { Rating } from 'react-simple-star-rating'
 const data = [
   { id: 1, community_name: "Lorem Ipsum is simply dummy text of the printing", author_name: "By Admin" },
@@ -29,6 +29,7 @@ const Learning_Screen = () => {
     const [selectedSkill, setSelectedSkill] = useState("")
     const [feedbackText, setfeedbackText] = useState("")
     const [feedbackText1, setfeedbackText1] = useState("")
+    const [menteeId, setMenteeId] = useState("")
     const [rateID, setRateID] = useState("")
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
@@ -140,7 +141,8 @@ const Learning_Screen = () => {
     const showModal1 = () => setShowHello1(true);
 
     useEffect(() => {
-      getAllLearning()
+      // getAllLearning()
+      getAllLearningNew()
       getMyMentor()
     },[])
 
@@ -160,6 +162,51 @@ const Learning_Screen = () => {
         setcompletedLearning(response.data?.completedLearnings)
         settoStartLearning(response.data?.toStartLearnings)
         setinprogressLearning(response.data?.pendingLearnings)
+      }
+  }
+
+//   const getProfile = async() => {
+//     const token = await localStorage.getItem("token")
+//     const btoken = `Bearer ${token}`;
+
+//           const res = await fetch(`${BASE_URL}mentee/profile`,{
+//               method:'GET',
+//               headers:{
+//                 "Accept": "application/json",
+//                 'Content-Type': 'application/json',
+//                 "Authorization": btoken,
+//               },
+//             })
+//             const response = await res.json()
+//           console.log(response)
+//           const {success} = response
+//           if(success){
+//             setMenteeId(response.data.id)
+//             getAllLearningNew(response.data.id)
+//           }
+    
+// }
+
+    const getAllLearningNew = async() => {
+      const btoken = `Bearer ${token}`;
+      const body = {
+        "mentee_id":localStorage.getItem("user_id")
+    }
+      const res = await fetch(`${BASE_URL_APPLSURE}mentee-learnings`, {
+          method: 'POST',
+          headers: {
+              "Accept": "application/json",
+              'Content-Type': 'application/json',
+              "Authorization": btoken,
+          },
+          body:JSON.stringify(body)
+      })
+      const response = await res.json()
+      console.log("lnew list of leanrinf", response)
+      if(response.status){
+        setcompletedLearning(response?.completedLearnings)
+        settoStartLearning(response?.toStartLearnings)
+        setinprogressLearning(response?.pendingLearnings)
       }
   }
 
@@ -252,6 +299,7 @@ const submitRating = async() => {
                     <div
                       style={{ cursor: "pointer" }}
                       onClick={() => {
+                        navigate("/all_process_learning")
                         // setShowMoreR(!showMoreR);
                       }}
                       class="view_all text-center"
@@ -284,30 +332,34 @@ const submitRating = async() => {
                         lineHeight: "26px",
                     }}
                     >
-                      {capitalizeFirstLetter(user.learning?.category)}
+                      {capitalizeFirstLetter(user?.category)}
                     </div>
-                      <img src={user.learning?.learningImg} />
+                      <img src={user?.learning_img} />
                       {/* </a> */}
                     </div>                    <div class="user-group px-25 pt-25 pb-20 radius-xl">
                       <div class="user-group-people">
                         <p class="">Key Skills</p>
                         <ul class="d-flex flex-wrap mb-10 user-group-people__parent">
-                        {user.learning?.skills?.split(",")?.map((i)=> (
+                        {user?.skills?.split(",")?.map((i)=> (
                                             <span class="badge badge-square btn-outline-emlpoy me-10">{i}</span>
                                         ))}
                           {/* <span class="badge badge-square btn-outline-emlpoy me-10">{user.learning?.skills}</span> */}
                           {/* <span class="badge badge-square btn-outline-emlpoy me-10">MySQL</span> */}
                           </ul>
-                          <p class="color-dark fs-14 fw-600 mb-0">{user.learning?.learningName}</p>
-                          <p class="mb-0 fs-12">Source: <span class="color-dark fs-12 fw-400">{user.learning?.sourceType}</span></p>
-                          <p class="mb-0 fs-12">Assigned by: <span class="color-dark fs-12 fw-400">{user.learning?.creator?.name}</span></p>
-                          <p class="mb-0 fs-12">Finish by: <span class="color-dark fs-12 fw-400">{moment(user.learning?.finishBy).format("DD MMMM YYYY")}</span></p>
+                          <p class="color-dark fs-14 fw-600 mb-0">{user?.learning_name}</p>
+                          <p class="mb-0 fs-12">Source: <span class="color-dark fs-12 fw-400">{user?.sourceType}</span></p>
+                          <p class="mb-0 fs-12">Assigned by: <span class="color-dark fs-12 fw-400">{capitalizeFirstLetter(user?.role == "super_admin" ? "Administrator": user?.role)} ({user?.name})</span></p>
+                          {new Date(user?.finish_by)< new Date() ?
+                            <p class="mb-0 fs-12">Finish by: <span style={{color:'red'}} class="fs-12 fw-400">{moment(user?.finish_by).format("DD MMMM YYYY")} (Overdue)</span></p>
+                          :
+                            <p class="mb-0 fs-12">Finish by: <span class="color-dark fs-12 fw-400">{moment(user?.finish_by).format("DD MMMM YYYY")}</span></p>
+                          }
 
 
                           <div style={{display:'flex',justifyContent:'space-between'}}>
                             <div>
                                       <p class="text-capitalize fw-700 mb-0">Growth Score:</p>
-                                      <span class="badge badge-square btn-outline-emlpoy me-10">{user.learning?.growthScore}</span>
+                                      <span class="badge badge-square btn-outline-emlpoy me-10">{user?.growth_score}</span>
                             </div>
                                         <button  onClick={() =>navigate("/learning_profile_detail", {state:{data:user, hint: "progress"}})} type="button" className="btn btn-light-petrol btn-default btn-squared ment_btn">View</button>
                                     </div>
@@ -332,7 +384,7 @@ const submitRating = async() => {
                     <div
                       style={{ cursor: "pointer" }}
                       onClick={() => {
-                        // setShowMoreR(!showMoreR);
+                        navigate("/all_toStart_learning")
                       }}
                       class="view_all text-center"
                     >
@@ -379,32 +431,37 @@ const submitRating = async() => {
                         lineHeight: "26px",
                     }}
                     >
-                      {capitalizeFirstLetter(user.learning?.category)}
+                      {capitalizeFirstLetter(user?.category)}
                     </div>
                       {/* <a href="#"> */}
-                      <img src={user.learning?.learningImg} />
+                      <img src={user?.learning_img} />
                       {/* </a> */}
                     </div>
                     <div class="user-group px-25 pt-25 pb-20 radius-xl">
                       <div class="user-group-people">
                         <p class="">Key Skills</p>
                         <ul class="d-flex flex-wrap mb-10 user-group-people__parent">
-                          {user.learning?.skills?.split(",")?.map((i)=> (
+                          {user?.skills?.split(",")?.map((i)=> (
                                             <span class="badge badge-square btn-outline-emlpoy me-10">{i}</span>
                                         ))}
                           {/* <span class="badge badge-square btn-outline-emlpoy me-10">{user.learning?.skills}</span> */}
                           {/* <span class="badge badge-square btn-outline-emlpoy me-10">MySQL</span> */}
                           </ul>
-                          <p class="color-dark fs-14 fw-600 mb-0">{user.learning?.learningName}</p>
-                          <p class="mb-0 fs-12">Source: <span class="color-dark fs-12 fw-400">{user.learning?.sourceName}</span></p>
-                          <p class="mb-0 fs-12">Assigned by: <span class="color-dark fs-12 fw-400">{user.learning?.creator?.name}</span></p>
-                          <p class="mb-0 fs-12">Finish by: <span class="color-dark fs-12 fw-400">{moment(user.learning?.finishBy).format("DD MMMM YYYY")}</span></p>
+                          <p class="color-dark fs-14 fw-600 mb-0">{user?.learning_name}</p>
+                          <p class="mb-0 fs-12">Source: <span class="color-dark fs-12 fw-400">{user?.source_name}</span></p>
+                          <p class="mb-0 fs-12">Assigned by: <span class="color-dark fs-12 fw-400">{capitalizeFirstLetter(user?.role == "super_admin" ? "Administrator": user?.role)} ({user?.name})</span></p>
+                          {new Date(user?.finish_by)< new Date() ?
+                            <p class="mb-0 fs-12">Finish by: <span style={{color:'red'}} class="fs-12 fw-400">{moment(user?.finish_by).format("DD MMMM YYYY")} (Overdue)</span></p>
+                          :
+                            <p class="mb-0 fs-12">Finish by: <span class="color-dark fs-12 fw-400">{moment(user?.finish_by).format("DD MMMM YYYY")}</span></p>
+                          }
+                      
 
 
                           <div style={{display:'flex',justifyContent:'space-between'}}>
                             <div>
                                       <p class="text-capitalize fw-700 mb-0">Growth Score:</p>
-                                      <span class="badge badge-square btn-outline-emlpoy me-10">{user.learning?.growthScore}</span>
+                                      <span class="badge badge-square btn-outline-emlpoy me-10">{user?.growth_score}</span>
                             </div>
                                         <button type="button" 
                                         // onClick={() =>makeAsBegin(user)}
@@ -433,7 +490,7 @@ const submitRating = async() => {
                     <div
                       style={{ cursor: "pointer" }}
                       onClick={() => {
-                        navigate("/all_completed_learning")
+                        navigate("/all_completed_learning",{state:{type:"completed"}})
                       }}
                       class="view_all text-center"
                     >
@@ -463,40 +520,42 @@ const submitRating = async() => {
                         lineHeight: "26px",
                     }}
                     >
-                      {capitalizeFirstLetter(user.learning?.category)}
+                      {capitalizeFirstLetter(user?.category)}
                     </div>
-                      <img src={user.learning?.learningImg} />
+                      <img src={user?.learning_img} />
                       {/* </a> */}
                     </div>
                     <div class="user-group px-25 pt-25 pb-20 radius-xl">
                       <div class="user-group-people">
                         <p class="">Key Skills</p>
                         <ul class="d-flex flex-wrap mb-10 user-group-people__parent">
-                        {user.learning?.skills?.split(",")?.map((i)=> (
+                        {user?.skills?.split(",")?.map((i)=> (
                                             <span class="badge badge-square btn-outline-emlpoy me-10">{i}</span>
                                         ))}
                           {/* <span class="badge badge-square btn-outline-emlpoy me-10">{user.learning?.skills}</span> */}
                           {/* <span class="badge badge-square btn-outline-emlpoy me-10">MySQL</span> */}
                           </ul>
-                          <p class="color-dark fs-14 fw-600 mb-0">{user.learning?.learningName}</p>
-                          <p class="mb-0 fs-12">Source: <span class="color-dark fs-12 fw-400">{user.learning?.sourceName}</span></p>
-                          <p class="mb-0 fs-12">Assigned by: <span class="color-dark fs-12 fw-400">{user.learning?.creator?.name}</span></p>
-                          <p class="mb-0 fs-12">Finish by: <span class="color-dark fs-12 fw-400">{moment(user.learning?.finishBy).format("DD MMMM YYYY")}</span></p>
+                          <p class="color-dark fs-14 fw-600 mb-0">{user?.learning_name}</p>
+                          <p class="mb-0 fs-12">Source: <span class="color-dark fs-12 fw-400">{user?.source_name}</span></p>
+                          <p class="mb-0 fs-12">Assigned by: <span class="color-dark fs-12 fw-400">{capitalizeFirstLetter(user?.role == "super_admin" ? "Administrator": user?.role)} ({user?.name})</span></p>
+                          {/* <p class="mb-0 fs-12">Finish by: <span class="color-dark fs-12 fw-400">{moment(user?.finish_by).subtract(1, "days").format("DD MMMM YYYY")}</span></p> */}
+                          <p class="mb-0 fs-12">Finish by: <span class="color-dark fs-12 fw-400">{moment(user?.finish_by).format("DD MMMM YYYY")}</span></p>
+                          <p class="mb-0 fs-12">Rating: <span className="badge badge-round btn-sky">{user.mentee_rating} <i className="lar la-star user_star"></i></span></p>
 
 
                           <div style={{display:'flex',justifyContent:'space-between'}}>
                             <div>
                                       <p class="text-capitalize fw-700 mb-0">Growth Score:</p>
-                                      <span class="badge badge-square btn-outline-emlpoy me-10 mb-10">{user.learning?.growthScore}</span>
+                                      <span class="badge badge-square btn-outline-emlpoy me-10 mb-10">{user?.growth_score}</span>
                             </div>
                                         {/* <button type="button" className="btn btn-light-petrol btn-default btn-squared ment_btn">Resume</button> */}
                                     </div>
                                     <div className="layout-button">
                                         <button onClick={() =>navigate("/learning_profile_detail", {state:{data:user, hint: "done"}})} type="button" className="btn btn-light-petrol btn-default btn-squared flex-grow-1 ment_btn">View</button>
-                                        {user.menteeRating == null || user.menteeRating == 0 && (
+                                        {user.mentee_rating == null || user.mentee_rating == 0 && (
                                           <button onClick={() => {
                                             showModal1()
-                                            setRateID(user.learningId)
+                                            setRateID(user.learning_id)
                                           }}  type="button" className="btn btn-primary btn-default btn-squared flex-grow-1 ment_btn">Rate</button>
                                         )}
                                     </div>

@@ -1,13 +1,14 @@
 import resources_img from '../../../img/programs.png';
 import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
-import { NavLink,useLocation } from "react-router-dom";
+import { NavLink,useLocation, useNavigate } from "react-router-dom";
 import Modal from 'react-bootstrap/Modal';
 import moment from 'moment'
 import { BASE_URL } from '../../../services/Config';
 
 function Created_Learning_Profile() {
     const {state} = useLocation()
+    const navigate = useNavigate()
     console.log(state)
     const [token, setToken] = useState(localStorage.getItem("token"))
     const [sideBarOpen, setSideBarOpen] = useState(true)
@@ -73,7 +74,14 @@ function Created_Learning_Profile() {
                                         </div>
                                     </div>
                                     <div class="layout-button">
-                                        <NavLink className="navbar-link" to="/create_learning"><button type="button" class="btn btn-petrol btn-default btn-squared">Edit</button></NavLink>
+                                        {/* <NavLink className="navbar-link" to="/create_learning"> */}
+                                            <button type="button" onClick={() =>
+                                                          navigate(
+                                                            "/edit_created_learning",
+                                                            { state: learningDetails }
+                                                          )
+                                                        } class="btn btn-petrol btn-default btn-squared">Edit</button>
+                                            {/* </NavLink> */}
                                     </div>
 
                                 </div>
@@ -131,9 +139,64 @@ function Created_Learning_Profile() {
                                     <p className="color-dark fs-14 fw-300 align-center mb-0">{moment(learningDetails.finishBy).format("DD MMMM YYYY")}</p>
                                 </div> */}
 
+                            {/* {learningDetails.worksheetFile != "" &&
+                                                <div className="col-md-12 mb-20">
+                                                <p className="color-gray fs-14 fw-300 align-center mb-0">
+                                                Worksheet File
+                                                </p>
+                                                <p style={{cursor:'pointer'}} className="color-dark fs-14 fw-300 align-center mb-0"
+                                                onClick={() =>
+                                                    window.open(learningDetails.worksheetFile, "_blank")
+                                                }
+                                                >
+                                                {learningDetails && learningDetails.worksheetFile }
+                                                </p>
+                                            </div>
+                                            
+                                            } */}
+
+                        {learningDetails.worksheetFile != "" &&
+                                            <div className="col-md-12 mb-20">
+                                            <p className="color-gray fs-14 fw-300 align-center mb-0">
+                                            Worksheet Files
+                                            </p>
+                                            {learningDetails.worksheetFile?.split("|").map((i)=>(
+                                            <p style={{cursor:'pointer', textDecoration:'underline'}} className="color-dark fs-14 fw-300 align-center mb-0"
+                                            onClick={() =>
+                                                window.open(i, "_blank")
+                                            }
+                                            >
+                                            {i.split("/")[4]}
+                                            </p>
+                                            ))}
+                                            
+                                        </div>
+                                        
+                                        }
+
+{learningDetails.otherFiles != "" &&
+                    <div className="col-md-12 mb-20">
+                    <p className="color-gray fs-14 fw-300 align-center mb-0">
+                     File Attached
+                    </p>
+                    {learningDetails.otherFiles?.split("|").map((i)=>(
+                      <p style={{cursor:'pointer', textDecoration:'underline'}} className="color-dark fs-14 fw-300 align-center mb-0"
+                      onClick={() =>
+                        window.open(i, "_blank")
+                      }
+                    >
+                      {i.split("/")[4]}
+                    </p>
+                    ))}
+                    
+                  </div>
+                  
+                  }
+
+
                                 <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Duration</p>
-                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && learningDetails.duration}{learningDetails && learningDetails.durationType?.charAt(0).toUpperCase() + learningDetails.durationType?.slice(1)}</p>
+                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && learningDetails.duration} {learningDetails && learningDetails.durationType?.charAt(0).toUpperCase() + learningDetails.durationType?.slice(1)}</p>
                                 </div>
 
                                 {/* <div className="col-md-12 mb-20">
@@ -141,10 +204,10 @@ function Created_Learning_Profile() {
                                     <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && learningDetails.duration}</p>
                                 </div> */}
 
-                                <div className="col-md-12 mb-20">
+                                {/* <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Learning’s Rating</p>
-                                    {/* <span className="badge badge-round btn-petrol mt-10">4.5 <i className="lar la-star user_star"></i></span> */}
-                                </div>
+                                    <span className="badge badge-round btn-petrol mt-10">4.5 <i className="lar la-star user_star"></i></span>
+                                </div> */}
 
 
 

@@ -2,6 +2,7 @@ import React from 'react'
 import Side_Bar from "./sidebar";
 import { useEffect, useState } from "react";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import { BASE_URL, BASE_URL_APPLSURE } from '../../services/Config';
 
 const data2 = [
   { id: 1, community_name: "English Speaking", author_name: "Anika Schleifer" },
@@ -16,8 +17,14 @@ const data2 = [
 
 function Adoptation_Report() {
   const percentage = 90;
+  const [token, setToken] = useState(localStorage.getItem("token"));
     const [sideBarOpen, setSideBarOpen] = useState(true);
     const [windowSize, setWindowSize] = useState(getWindowSize());
+    const [yearlyData, setYearlyData] = useState([])
+    const [totalSession, setTotalSession] = useState("")
+    const [top5, setTop5] = useState([])
+    const [overAll, setOverAll] = useState("")
+    const [fullInfo, setFullInfo] = useState("");
     function getWindowSize() {
       const { innerWidth, innerHeight } = window;
       return { innerWidth, innerHeight };
@@ -32,6 +39,69 @@ function Adoptation_Report() {
         window.removeEventListener("resize", handleWindowResize);
       };
     }, []);
+
+    useEffect(() => {
+      getFullDetail()
+    },[])
+
+    const getFullDetail = async () => {
+      const token = await localStorage.getItem("token");
+      const btoken = `Bearer ${token}`;
+  
+      const res = await fetch(`${BASE_URL}organisations/4324`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: btoken,
+        },
+      });
+      const response = await res.json();
+      console.log(response);
+      getReport(response.data.id)
+      setFullInfo(response.data.id);
+    };
+
+    const getReport = async(id) => {
+      const btoken = `Bearer ${token}`;
+      const body = {
+        "year":"2023",
+        "organization_id":id
+    };
+      const res = await fetch(
+        `${BASE_URL_APPLSURE}adaption-report`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: btoken,
+          },
+          body: JSON.stringify(body),
+        }
+      );
+      const response = await res.json();
+      console.log("getReport", response);
+      if(response.status){
+        setYearlyData([
+        { id: 1, community_name: "January", value: response.jan_percent, author_name: "Anika Schleifer" },
+        { id: 2, community_name: "February",value: response.feb_percent, author_name: "Anika Schleifer" },
+        { id: 3, community_name: "March",value: response.march_percent, author_name: "Anika Schleifer" },
+        { id: 4, community_name: "April",value: response.april_percent, author_name: "Anika Schleifer" },
+        { id: 5, community_name: "May",value: response.may_percent, author_name: "Anika Schleifer" },
+        { id: 6, community_name: "June",value: response.june_percent, author_name: "Anika Schleifer" },
+        { id: 7, community_name: "July",value: response.july_percent, author_name: "Anika Schleifer" },
+        { id: 8, community_name: "August",value: response.august_percent, author_name: "Anika Schleifer" },
+        { id: 9, community_name: "September",value: response.sept_percent, author_name: "Anika Schleifer" },
+        { id: 10, community_name: "October",value: response.oct_percent, author_name: "Anika Schleifer" },
+        { id: 11, community_name: "November",value: response.nov_percent, author_name: "Anika Schleifer" },
+        { id: 12, community_name: "December",value: response.dec_percent, author_name: "Anika Schleifer" },
+      ])
+      setOverAll(response.overall)
+      setTop5(response.topfivedev)
+      setTotalSession(response.totalsessions)
+      }
+    }
 
     const toggle = () => {
         setSideBarOpen(!sideBarOpen);
@@ -50,7 +120,7 @@ function Adoptation_Report() {
                 <div className="contact-breadcrumb">
                   <div className="breadcrumb-main add-contact justify-content-sm-between">
                     <h4 className="text-capitalize fw-500 breadcrumb-title">
-                    Competency Report For 2500 Mentees
+                    Adoption Report - 2023
                     </h4>
 
                     <div className=" d-flex flex-wrap justify-content-center breadcrumb-main__wrapper">
@@ -62,7 +132,7 @@ function Adoptation_Report() {
                         </div>
                         <span className="sub-title ms-sm-25 ps-sm-25"></span>
                       </div>
-                      <form
+                      {/* <form
                         action="#"
                         className="d-flex align-items-center add-contact__form my-sm-0 my-2 bg-transparent"
                       >
@@ -81,7 +151,7 @@ function Adoptation_Report() {
                           <option value="Month to Date">Month to Date</option>
                           <option value="Custom (Calendar Selection)">Custom (Calendar Selection)</option>
                         </select>
-                      </form>
+                      </form> */}
                     </div>
                   </div>
                 </div>
@@ -90,48 +160,62 @@ function Adoptation_Report() {
             </div>
           </div>
           <div className="row">
-            <div class="col-lg-5 col-sm-12 col-md-12 mb-25">
+            <div style={{marginLeft:"65px", marginRight:"140px"}} class="col-lg-3 col-sm-12 col-md-12 mb-25">
             <CircularProgressbar
-                      value={percentage}
+                      value={overAll}
+                      text={`${overAll}%`}
                       strokeWidth={20}
-                      text={`${percentage}%`}
                       styles={buildStyles({
                         strokeWidth: 50,
                         strokeLinecap: "butt",
-                        textSize: '8px',
+                        textSize: '16px',
                         pathTransitionDuration: 0.5,
-                        pathColor: `rgb(248, 160, 70, ${
-                            percentage / 100
-                          })`,
-                        textColor: "#000",
-                        trailColor: "red",
-                        backgroundColor: "red",
+                        // pathColor: `rgb(48, 60, 70, ${
+                        //     percentage / 100
+                        //   })`,
+                        pathColor:"#F8A046",
+                        textColor: "#323232",
+                        trailColor: "#fdefe6",
+                        // backgroundColor: "red",
                       })}
                     />
+                     <p
+                  style={{
+                    fontSize: "20px",
+                    color: "black",
+                    textAlign: "center",
+                    fontWeight:'bold',
+                    paddingTop: "20px",
+                  }}
+                >
+                  {totalSession} <br />
+                  # Mentoring Sessions <br />
+                  Conducted
+                </p>
             </div>
             <div class="col-lg-6 col-sm-12 col-md-12 mb-25">
               <div className="row">
-                {data2.map((i) => (
+                {yearlyData.map((i) => (
                   <div class="col-lg-3 mb-10">
                     <CircularProgressbar
-                      value={percentage}
+                      value={i.value}
+                      text={`${i.value}%`}
                       strokeWidth={20}
-                      text={`${percentage}%`}
                       styles={buildStyles({
                         strokeWidth: 50,
                         strokeLinecap: "butt",
-                        textSize: '8px',
+                        textSize: '16px',
                         pathTransitionDuration: 0.5,
-                        pathColor: `rgb(248, 160, 70, ${
-                            percentage / 100
-                          })`,
-                        textColor: "#000",
-                        trailColor: "red",
-                        backgroundColor: "red",
+                        // pathColor: `rgb(48, 60, 70, ${
+                        //     percentage / 100
+                        //   })`,
+                        pathColor:"#F8A046",
+                        textColor: "#323232",
+                        trailColor: "#fdefe6",
+                        // backgroundColor: "red",
                       })}
                     />
-                    <p  style={{textAlign:'center', fontSize:"14px", color:'#F8A046', marginBottom:"5px"}}>100 Mentees</p>
-                    <p style={{textAlign:'center', fontSize:"14px", color:'#000'}}>{i.community_name}</p>
+                     <p style={{textAlign:'center', fontSize:"14px", color:'#000', fontWeight:'bold'}}>{i.community_name}</p>
                   </div>
                 ))}
 <div></div>
@@ -157,35 +241,39 @@ function Adoptation_Report() {
                     paddingTop: "90px",
                   }}
                 >
-                  Top 10 <br />
-                  Proficiency <br />
-                  Skills
+                  Top 5 Skills <br />
+                  nurtured through <br />
+                  Mentoring<br/>
+                  Sessions
                 </p>
               </div>
             </div>
             <div class="col-lg-6 col-sm-12 col-md-12 mb-25">
               <div className="row">
-                {data2.map((i) => (
+                {top5.map((i) => (
                   <div class="col-lg-3 mb-10">
                     <CircularProgressbar
-                      value={percentage}
+                      value={i.percents}
+                      text={`${i.percents}%`}
                       strokeWidth={20}
-                      text={`${percentage}%`}
                       styles={buildStyles({
-                        strokeWidth: 50,
+                        strokeWidth: 40,
                         strokeLinecap: "butt",
-                        textSize: '8px',
+                        textSize: '16px',
                         pathTransitionDuration: 0.5,
-                        pathColor: `rgba(253, 239, 230, ${
-                            percentage / 100
-                          })`,
-                        textColor: "#000",
-                        trailColor: "red",
-                        backgroundColor: "red",
+                        // pathColor: `rgba(253, 239, 230, ${
+                        //     percentage / 100
+                        //   })`,
+                        // textColor: "#000",
+                        // trailColor: "red",
+                        // backgroundColor: "red",
+                        pathColor:"#006666",
+                        textColor: "#323232",
+                        trailColor: "#ebf3f3",
                       })}
                     />
-                    <p  style={{textAlign:'center', fontSize:"14px", color:'#F8A046', marginBottom:"5px"}}>100 Mentees</p>
-                    <p style={{textAlign:'center', fontSize:"14px", color:'#000'}}>{i.community_name}</p>
+                    <p  style={{textAlign:'center', fontSize:"14px", color:'#005B5B', marginBottom:"5px"}}>{i.totalsessions} Sessions</p>
+                    <p style={{textAlign:'center', fontSize:"14px", color:'#000', fontWeight:'bold'}}>{i.skill_name}</p>
                   </div>
                 ))}
 <div></div>

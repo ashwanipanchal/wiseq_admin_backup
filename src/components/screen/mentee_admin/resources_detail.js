@@ -5,6 +5,7 @@ import pdf_img from '../../../img/pdf_file.svg';
 import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from "react-router-dom";
+import { BASE_URL } from '../../../services/Config';
 
 // const data = [
 //     { id: 1, resource_para: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.", external_link: "External Link", link: "www.google.com", file_name: "File", },
@@ -43,7 +44,7 @@ function Resources_Detail(props) {
     const getData = async() => {
         const token = await localStorage.getItem("token")
         const btoken = `Bearer ${token}`;   
-        const res = await fetch(`https://api.wiseqglobal.com/api/resources/${state}`,{
+        const res = await fetch(`${BASE_URL}resources/${state}`,{
             method:'GET',
             headers:{
               "Accept": "application/json",
@@ -91,20 +92,63 @@ function Resources_Detail(props) {
                                                     <li className="blog-author">
 
                                                         <img src={userdefault_img} className="me-10" />
-                                                        <span className="admin_name">By Admin</span>
+                                                        <span className="admin_name">{state?.organisation?.byWiseQ == false ? "By Org Admin" : "By WiseQ"}</span>
 
                                                     </li>
                                                     <li className="cate-tag">
                                                         <img src={tag_img} className="me-10" />
                                                         {state.categories.map((i) => (
-                                                            <span className="admin_name">{i.category},</span>
+                                                            <span className="admin_name">{i.category?.charAt(0).toUpperCase() + i.category?.slice(1)}</span>
                                                         ))}
 
                                                     </li>
                                                 </ul>
-                                                <div className="blog-body">
+                                                {/* <div className="blog-body">
                                                     <p className="">{state.description}</p>
-                                                    {/* <p className="">{user.resource_para}</p> */}
+                                                    
+                                                </div> */}
+
+                                                <div className="col-lg-12 col-md-12 col-sm-12">
+                                                <div className="col-md-12 mb-20">
+                                                    <p className="color-gray fs-14 fw-300 align-center mb-0">
+                                                    Description
+                                                    </p>
+                                                    <p className="color-dark fs-14 fw-300 align-center mb-0">
+                                                    {state.description}
+                                                    </p>
+                                                </div>
+                                                </div>
+
+                                                <div className="col-md-12 mb-20">
+                                                    <p className="color-gray fs-14 fw-300 align-center mb-0">Skill(s) Addressed</p>
+                                                    <ul className="d-flex flex-wrap user-group-people__parent">
+                                                        {/* {learningDetails && learningDetails.skills?.split(",")?.map((i)=> ( */}
+                                                            <span class="badge badge-square btn-outline-orange me-10">{state.skills}</span>
+                                                        {/* ))} */}
+                                                        {/* <span class="badge badge-square btn-outline-orange me-10">Presentation Skill</span> */}
+                                                    </ul>
+                                                </div>
+                                                
+                                                <div className="col-lg-12 col-md-12 col-sm-12">
+                                                <div className="col-md-12 mb-20">
+                                                    <p className="color-gray fs-14 fw-300 align-center mb-0">
+                                                    File Attached
+                                                    </p>
+                                                    <p style={{cursor:'pointer', textDecoration:'underline'}} onClick={() => window.open(state.fileUrl, "_blank")} className="color-dark fs-14 fw-300 align-center mb-0">
+                                                    {state.fileUrl.split("/")[4]}
+                                                    </p>
+                                                </div>
+                                                </div>
+
+                                                <div className="col-lg-12 col-md-12 col-sm-12">
+                                                <div className="col-md-12 mb-20">
+                                                    <p className="color-gray fs-14 fw-300 align-center mb-0">
+                                                    Source Link
+                                                    </p>
+                                                    <p  onClick={() => window.open(state.externalLink, "_blank")} className="color-dark fs-14 fw-300 align-center mb-0">
+                                                    {state.externalLink}
+                                                    </p>
+                                                </div>
                                                 </div>
 
                                             </div>

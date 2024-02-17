@@ -93,7 +93,7 @@ function Past_Session() {
         console.log("session full details", response)
         let temp = []
         let temp1 = []
-        for(let i of response.data.skillRatings){
+        for(let i of response?.data?.skillRatings){
             let dict = {
               "name" : "Prev",
               "value" : i.prevSkillRate,
@@ -226,16 +226,16 @@ function Past_Session() {
   }
 
   const getImageIcon = (i) => {
-    if(i.file.substring(i.file.indexOf('_')+1, i.file.length).replaceAll('%20', ' ').split(".")[1] == "png" || i.file.substring(i.file.indexOf('_')+1, i.file.length).replaceAll('%20', ' ').split(".")[1] == "jpg"){
+    if(i?.file?.substring(i?.file?.indexOf('_')+1, i?.file?.length).replaceAll('%20', ' ').split(".")[1] == "png" || i?.file?.substring(i?.file?.indexOf('_')+1, i?.file?.length).replaceAll('%20', ' ').split(".")[1] == "jpg"){
       return picture_img
     }
-    if(i.file.substring(i.file.indexOf('_')+1, i.file.length).replaceAll('%20', ' ').split(".")[1] == "pdf"){
+    if(i?.file?.substring(i?.file?.indexOf('_')+1, i?.file?.length).replaceAll('%20', ' ').split(".")[1] == "pdf"){
       return pdf_img
     }
-    if(i.file.substring(i.file.indexOf('_')+1, i.file.length).replaceAll('%20', ' ').split(".")[1] == "csv"){
+    if(i?.file?.substring(i?.file?.indexOf('_')+1, i?.file?.length).replaceAll('%20', ' ').split(".")[1] == "csv"){
       return csv_img
     }
-    if(i.file.substring(i.file.indexOf('_')+1, i.file.length).replaceAll('%20', ' ').split(".")[1] == "doc"){
+    if(i?.file?.substring(i?.file?.indexOf('_')+1, i?.file?.length).replaceAll('%20', ' ').split(".")[1] == "doc"){
       return word_img
     }
   }
@@ -480,7 +480,7 @@ function Past_Session() {
                         {fullDetails &&
                           fullDetails.worksheets?.map((i) => {
                             console.log(i);
-                            if (i.submissions.length > 0) {
+                            if (i?.submissions?.length > 0) {
                               console.log("here");
                               let t = i.submissions.map((i) => (
                                 <div className="row">
@@ -562,11 +562,11 @@ function Past_Session() {
           <Modal.Body>
             <div className="text-center">
               <h5 class="text-capitalize fw-600 mb-10">
-                Rate {state.sessionUsers[0].name}'s Skill Progression On A Scale
+                Rate {state?.sessionUsers[0]?.name}'s Skill Progression On A Scale
                 of 1 To 10.
               </h5>
               <h5 class="text-capitalize fw-900 mb-20">
-                ({state.sessionUsers[0].name} Is Currently At ({prevScore}) For {fullDetails && fullDetails.skills})
+                ({state?.sessionUsers[0]?.name} Is Currently At ({prevScore}) For {fullDetails && fullDetails.skills})
               </h5>
               {/* <Rate
                 defaultValue={0}
@@ -574,6 +574,7 @@ function Past_Session() {
                 onChange={(e) => setNumberRating(e)}
                 character={({ index }) => index + 1}
               /> */}
+                <p>1-3 Beginer, 3-5 Competent, 6-8 Proficient, 9-10 Expert</p>
                 <div class="rate">
                 <input type="radio" id="star10" name="rate" value="10" onChange={e => setNumberRating(e.target.value)} />
                 <label for="star10" title="text">10</label>
@@ -606,7 +607,7 @@ function Past_Session() {
                 <label for="star1" title="text">1</label>
               </div>
               <h5 class="text-capitalize fw-600 mb-10 mt-10">
-                Rate {state.sessionUsers[0].name}'s session participation
+                Rate {state?.sessionUsers[0]?.name}'s session participation
               </h5>
               <Rating
                 onClick={handleRating1}
@@ -625,7 +626,7 @@ function Past_Session() {
 
             <h6 class="text-capitalize fw-600 mb-10 mt-25">
               Kindly share your feedback on this session and{" "}
-              {state.sessionUsers[0].name}'s progression?
+              {state?.sessionUsers[0]?.name}'s progression?
             </h6>
             <textarea
               value={feedbackText}

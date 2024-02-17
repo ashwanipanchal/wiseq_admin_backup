@@ -271,6 +271,19 @@ h6 {
   content: "";
   display: block;
 }
+.program_par_mentee::after {
+    background-color: #80CED6 !important;
+  bottom: -5px;
+  height: 5px;
+  width: 60px;
+  position: relative;
+  content: "";
+  display: block;
+}
+
+.menteer-tab .react-tabs__tab--selected{
+    color: #72B8BF !important;
+}
 
 .react-tabs__tab--selected {
     color: var(--color-green-admin) !important;
@@ -13376,7 +13389,7 @@ body.top-menu .navbar-left .customizer-trigger+.top-menu {
     font-size: 14px;
     font-weight: 500;
     color: var(--color-gray);
-    padding-left: 10px;
+    padding-left: 6px;
 }
 
 .projectDatatable-title {
@@ -29752,8 +29765,8 @@ body:after {
 .blog-details-thumbnail img {
     width: 100%;
     max-width: 100%;
-    min-height: 450px;
-    max-height: 450px;
+    height: 500px;
+    width: 100%;
     -o-object-fit: cover;
     object-fit: cover;
     -webkit-border-radius: 10px;

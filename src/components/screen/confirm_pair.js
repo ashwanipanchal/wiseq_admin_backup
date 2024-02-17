@@ -26,8 +26,10 @@ const data1 = [
 ];
 
 function Confirm_Pair() {
-    const {state} = useLocation()
+    const {state, programName, programId} = useLocation()
     console.log(state)
+    console.log(programName)
+    console.log(programId)
     const navigate = useNavigate()
     const [showHello, setShowHello] = useState(false);
     const closeModal = () => setShowHello(false);
@@ -106,12 +108,12 @@ function Confirm_Pair() {
         // return
         closeModal();
         let newM;
-        newM = state.mentee.filter((i) => {
+        newM = state?.dict?.mentee?.filter((i) => {
             return (i.isSelected == "Y")
         })
         // console.log(newM)
         let newMt;
-        newMt = state.mentor.filter((i) => {
+        newMt = state?.dict?.mentor?.filter((i) => {
             return (i.isSelected == "Y")
         })
         // console.log(newMt)
@@ -125,16 +127,20 @@ function Confirm_Pair() {
         let dict1 = []
         for(let i = 0; i < newM.length; i++){
             let tt = dict.map((j) => {
-                return ({...j, menteeId : newM[i].id})
+                return ({...j, menteeId : newM[i].id, program_id:state?.programId})
             })
             dict1.push(...tt)
         }
 
         const btoken = `Bearer ${token}`;
         const body = {
-            data: dict1
+            data: dict1,
+            // program: state.programName,
+            // program_id: state.programId
         }
-        const res = await fetch(`https://api.wiseqglobal.com/api/match-making`,{
+        console.log(body)
+        // return
+        const res = await fetch(`${BASE_URL}match-making`,{
             method:'POST',
             headers:{
               "Accept": "application/json",
@@ -206,7 +212,7 @@ function Confirm_Pair() {
 
 
                         <div className="col-lg-6 col-md-6">
-                            {state && state.mentee.map((user, index) => (
+                            {state && state?.dict?.mentee.map((user, index) => (
                                 <div className="col-lg-12 col-sm-12 col-md-12">
                                     {(user.isSelected == "Y" && (
                                         <div className="user-group px-25 pt-25 pb-20 radius-xl box_shadow1">
@@ -255,7 +261,7 @@ function Confirm_Pair() {
                             ))}
                         </div>
                         <div className="col-lg-6 col-md-6">
-                            {state && state.mentor.map((user, index) => (
+                            {state && state?.dict?.mentor.map((user, index) => (
                                 <div className="col-lg-12 col-sm-12 col-md-12 mb-25">
                                     {(user.isSelected == "Y" && (
                                     <div className="user-group px-25 pt-25 pb-20 radius-xl box_shadow1">
@@ -283,8 +289,8 @@ function Confirm_Pair() {
                                         <div className="user-group-people">
                                             <p className="mt-15">Key Skills</p>
                                             <ul className="d-flex flex-wrap mb-15 user-group-people__parent">
-                                                {user.skills.map((i) => (
-                                                        <span className="badge badge-square btn-outline-emlpoy me-10">{i.skill}</span>
+                                                {user?.skills?.map((i) => (
+                                                        <span className="badge badge-square btn-outline-emlpoy me-10">{i?.skill}</span>
                                                     ))}
                                                 {/* <span className="badge badge-square btn-outline-emlpoy me-10">{user.mentee_employee}</span>
                                                 <span className="badge badge-square btn-outline-emlpoy me-10">{user.mentee_hcm}</span>
@@ -401,14 +407,16 @@ function Confirm_Pair() {
               <img src={confirmation} />
               <h2 class="text-capitalize fw-600 mb-10">Pair Confirmation</h2>
               <p style={{ color: "#7A7A7A", marginBottom: "20px" }}>
-                Would you like to go head pairing {state.mentee.map((i) =>{
+                Would you like to go head pairing 
+                {state?.dict?.mentee.map((i) =>{
                     if(i.isSelected == "Y"){
                         return i.name
                     }
                 })} (Mentee) with {' '}
-                {state.mentor.map((i, index) =>{
+                {state?.dict?.mentor.map((i, index) =>{
                     if(i.isSelected == "Y"){
-                        return index ?    `${i.name}, ` : ''
+                        // return index ?    `${i.name}, ` : ''
+                        return i.name
                     }
                 })} (Mentor)?
               </p>
@@ -446,12 +454,12 @@ function Confirm_Pair() {
               <img src={success_check} />
               <h2 class="text-capitalize fw-600 mb-25">Successfully Done</h2>
               <p style={{ color: "#7A7A7A", marginBottom: "20px" }}>
-                Mentee: {state.mentee.map((i) =>{
+                Mentee: {state?.dict?.mentee.map((i) =>{
                     if(i.isSelected == "Y"){
                         return i.name
                     }
-                })} has been successfully paired with Mentor:
-                {state.mentor.map((i) =>{
+                })} has been successfully paired with Mentor:{" "}
+                {state?.dict?.mentor.map((i) =>{
                     if(i.isSelected == "Y"){
                         return i.name
                     }

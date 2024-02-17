@@ -10,12 +10,14 @@ import Side_bar from './sidebar';
 import moment from 'moment'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useNavigate } from 'react-router-dom';
+
 import { DateRangePicker, DateRange } from 'react-date-range';
 // import 'react-date-range/dist/styles.css'; // main css file
 // import 'react-date-range/dist/theme/default.css'; // theme css file
 import Modal from 'react-bootstrap/Modal';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import { BASE_URL, BASE_URL_APPLSURE, BASE_URL_APPLSURE_MENTORING } from '../../../services/Config';
 
 const graphdata = [
     {
@@ -79,6 +81,7 @@ function Home_Screen() {
     const [payload, setPayload] = useState({});
     const [tasks, setTasks] = useState([])
     const [newGraphData, setnewGraphData] = useState([])
+    const [programs, setPrograms] = useState([])
     const [filterValue, setFilterValue] = useState("")
     const [state, setState] = useState([
       {
@@ -106,16 +109,112 @@ function Home_Screen() {
     const showModal1 = () => setShowHello1(true);
 
     useEffect(() => {
+      createToken()
+     
+    },[])
+    
+    const createToken = async() => {
+      const body = {
+          "user_id":localStorage.getItem("user_id")
+      }
+      const res = await fetch(`${BASE_URL_APPLSURE_MENTORING}create-access`, {
+          method: 'POST',
+          headers: {
+              "Accept": "application/json",
+              'Content-Type': 'application/json',
+              // "Authorization": btoken,
+              // "Authentication ": btoken,
+          },
+          body:JSON.stringify(body)
+      })
+      const response = await res.json()
+      console.log(response)
+      const { success } = response
+      // setIsLoading(false)
+      if (success) {
+          localStorage.setItem("program_token_node", response.token)
+          // setMentorList(response.data)
+      }
+      
+    }
+
+
+
+    useEffect(() => {
+      getProfile()
         getScores()
         getSessions()
         getTasks()
         getChartData()
     },[])
 
+    const getProfile = async() => {
+      const token = await localStorage.getItem("token")
+      const btoken = `Bearer ${token}`;
+
+      if(localStorage.hasOwnProperty("full_details") ){
+        console.log("inside null")
+        if(Object.keys(localStorage.getItem("full_details")).length > 0 ){
+        
+        }else{
+          console.log("first")
+        
+        const res = await fetch(`${BASE_URL_APPLSURE}profile-mentee?id=${localStorage.getItem("user_id")}`,{
+                  method:'GET',
+                  headers:{
+                    "Accept": "application/json",
+                    'Content-Type': 'application/json',
+                    "Authorization": btoken,
+                  },
+                })
+                const response = await res.json()
+              console.log("==========",response)
+              const {status} = response
+              if(status){
+                // console.log(Object.keys(localStorage.getItem("full_details")).length == true)
+                // if(Object.keys(localStorage.getItem("full_details")).length == true){
+  
+                // }else{
+  
+                  localStorage.setItem("full_details", JSON.stringify(response.u))
+                // }
+              }
+            }
+            
+      }else{
+        
+        const res = await fetch(`${BASE_URL_APPLSURE}profile-mentee?id=${localStorage.getItem("user_id")}`,{
+          method:'GET',
+          headers:{
+            "Accept": "application/json",
+            'Content-Type': 'application/json',
+            "Authorization": btoken,
+          },
+        })
+        const response = await res.json()
+      console.log("==========",response)
+      const {status} = response
+      if(status){
+        // console.log(Object.keys(localStorage.getItem("full_details")).length == true)
+        // if(Object.keys(localStorage.getItem("full_details")).length == true){
+
+        // }else{
+
+          localStorage.setItem("full_details", JSON.stringify(response.u))
+        // }
+      }
+
+      }
+
+
+      
+      
+  }
+
     const getSessions = async() => {
         const token = await localStorage.getItem("token")
         const btoken = `Bearer ${token}`;   
-        const res = await fetch(`https://api.wiseqglobal.com/api/session`,{
+        const res = await fetch(`${BASE_URL}session`,{
             method:'GET',
             headers:{
               "Accept": "application/json",
@@ -137,7 +236,7 @@ function Home_Screen() {
       const btoken = `Bearer ${token}`;
       let url = ""
       if(i == 1){
-        url = `https://api.wiseqglobal.com/api/mentor/dashboard-counts?start=${new Date(new Date().getFullYear(), 0, 1).toISOString()}&end=${new Date().toISOString()}`
+        url = `${BASE_URL}mentor/dashboard-counts?start=${new Date(new Date().getFullYear(), 0, 1).toISOString()}&end=${new Date().toISOString()}`
         const res = await fetch(url, {
           method: "GET",
           headers: {
@@ -164,7 +263,7 @@ function Home_Screen() {
         // getTasks(new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString(),new Date().toISOString())
       }
       if(i == 2){
-        url = `https://api.wiseqglobal.com/api/mentor/dashboard-counts?start=${new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()}&end=${new Date().toISOString()}`
+        url = `${BASE_URL}mentor/dashboard-counts?start=${new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()}&end=${new Date().toISOString()}`
         const res = await fetch(url, {
           method: "GET",
           headers: {
@@ -207,8 +306,8 @@ function Home_Screen() {
       // if(state[0].startDate != null && state[0].endDate != null){
         console.log(state)
         // const res = await fetch(`${BASE_URL}dashboard/admin/stats?start=${state[0].startDate.toISOString()}&end=${state[0].endDate.toISOString()}`, {
-          console.log(`https://api.wiseqglobal.com/api/mentor/dashboard-counts?start=${new Date(e[0]).toISOString()}&end=${new Date(e[1]).toISOString()}`)
-          const res = await fetch(`https://api.wiseqglobal.com/api/mentor/dashboard-counts?start=${new Date(e[0]).toISOString()}&end=${new Date(e[1]).toISOString()}`, {
+          console.log(`${BASE_URL}mentor/dashboard-counts?start=${new Date(e[0]).toISOString()}&end=${new Date(e[1]).toISOString()}`)
+          const res = await fetch(`${BASE_URL}mentor/dashboard-counts?start=${new Date(e[0]).toISOString()}&end=${new Date(e[1]).toISOString()}`, {
           method: "GET",
           headers: {
             Accept: "application/json",
@@ -244,7 +343,7 @@ function Home_Screen() {
   //   const token = await localStorage.getItem("token");
   //   const btoken = `Bearer ${token}`;
 
-  //   const res = await fetch(`https://api.wiseqglobal.com/api/mentor/dashboard-counts?start=${state[0].startDate.toISOString()}&end=${state[0].endDate.toISOString()}`, {
+  //   const res = await fetch(`${BASE_URL}mentor/dashboard-counts?start=${state[0].startDate.toISOString()}&end=${state[0].endDate.toISOString()}`, {
   //     method: "GET",
   //     headers: {
   //       Accept: "application/json",
@@ -270,7 +369,7 @@ function Home_Screen() {
     // const getTasks = async() => {
     //     const token = await localStorage.getItem("token")
     //     const btoken = `Bearer ${token}`;   
-    //     const res = await fetch(`https://api.wiseqglobal.com/api/session/evolution-chart?from=2023-01-10T02:00:00Z&to=2023-07-31T02:00:00Z`,{
+    //     const res = await fetch(`${BASE_URL}session/evolution-chart?from=2023-01-10T02:00:00Z&to=2023-07-31T02:00:00Z`,{
     //         method:'GET',
     //         headers:{
     //           "Accept": "application/json",
@@ -326,9 +425,9 @@ function Home_Screen() {
       const token = await localStorage.getItem("token")
       const btoken = `Bearer ${token}`;   
       // 2023-01-10T02:00:00Z from Date
-      // const res = await fetch(`https://api.wiseqglobal.com/api/session/evolution-chart?from=${from != ""? from : "2023-01-10T02:00:00Z"}&to=${to != "" ? to : "2023-07-31T02:00:00Z"}`,{
+      // const res = await fetch(`${BASE_URL}session/evolution-chart?from=${from != ""? from : "2023-01-10T02:00:00Z"}&to=${to != "" ? to : "2023-07-31T02:00:00Z"}`,{
 
-      const res = await fetch(`https://api.wiseqglobal.com/api/session/evolution-chart?from=2023-01-10T02:00:00Z&to=${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString()}`,{
+      const res = await fetch(`${BASE_URL}session/evolution-chart?from=2023-01-10T02:00:00Z&to=${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString()}`,{
           method:'GET',
           headers:{
             "Accept": "application/json",
@@ -384,29 +483,41 @@ function Home_Screen() {
   }
 
     const getChartData = async() => {
-        const token = await localStorage.getItem("token")
-        const btoken = `Bearer ${token}`;   
-        const res = await fetch(`https://api.wiseqglobal.com/api/tasks`,{
-            method:'GET',
-            headers:{
-              "Accept": "application/json",
-              "Content-Type": "application/json",
-              "Authorization": btoken,
-            },
-          })
-          const response = await res.json()
-            console.log("Tasks ",response)
-            const {success, data} = response
-            if(success){
-                setTasks(data)
-            }
+      const token = await localStorage.getItem("token");
+      const btoken = `Bearer ${token}`;
+      // const res = await fetch(`${BASE_URL}tasks`, {
+        const body ={
+          "user_id":localStorage.getItem("user_id")
+      }
+      console.log(body)
+      const res = await fetch(`${BASE_URL_APPLSURE}get-task`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: btoken,
+        },
+        body:JSON.stringify(body)
+      });
+      const response = await res.json();
+      console.log("Tasks ", response);
+      const { success, data } = response;
+      if (response.status) {
+        let temp = []
+        response.task.map((i) => {
+          if(i.status == "not-completed"){
+            temp.push(i)
+          }
+        })
+        setTasks(temp);
+      }
             
     }
 
     const getScores = async() => {
         const token = await localStorage.getItem("token")
         const btoken = `Bearer ${token}`;   
-        const res = await fetch(`https://api.wiseqglobal.com/api/mentor/dashboard-counts`,{
+        const res = await fetch(`${BASE_URL}mentor/dashboard-counts`,{
             method:'GET',
             headers:{
               "Accept": "application/json",
@@ -416,7 +527,7 @@ function Home_Screen() {
           })
           const response = await res.json()
 
-                  const res1 = await fetch(`https://api.wiseqglobal.com/api/mentor/my-mentees`,{
+                  const res1 = await fetch(`${BASE_URL}mentor/my-mentees`,{
                 method:'GET',
                 headers:{
                   "Accept": "application/json",
@@ -445,7 +556,7 @@ function Home_Screen() {
             setWindowSize(getWindowSize());
             // console.log(getWindowSize())
         }
-
+        getMyMentoring()
         window.addEventListener('resize', handleWindowResize);
 
         return () => {
@@ -480,7 +591,7 @@ function Home_Screen() {
       const body = {
           status: val == 0 ? "rejected" : "accepted"
       }
-      const res = await fetch(`https://api.wiseqglobal.com/api/session/requests/${payload.sessionId}`, {
+      const res = await fetch(`${BASE_URL}session/requests/${payload.sessionId}`, {
           method: 'PUT',
           headers: {
               "Accept": "application/json",
@@ -494,11 +605,37 @@ function Home_Screen() {
       if (success) {
           // getSessionRequest()
           closeModal1()
+          getChartData()
           // getNotificationCount()
       }
 
   }
 
+
+  const getMyMentoring = async() => {
+    var myHeaders = new Headers();
+      myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+      myHeaders.append("Content-Type", "application/json");
+
+      var raw = JSON.stringify({
+        "status":"4"
+    });
+
+      var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+      };
+
+      fetch(`${BASE_URL_APPLSURE_MENTORING}user/user-program-list`, requestOptions)
+      .then(response => response.json())
+      .then(result => {
+          console.log("==",result)
+          setPrograms(result?.programs)
+      })
+    
+    }
     return (
       <div className="main-content">
         <div
@@ -554,6 +691,21 @@ function Home_Screen() {
                     </div>
                   </div>
                 )}
+
+          {localStorage.getItem("switch_message_flag") <=5 && localStorage.getItem("switch_message_flag") != "" && (
+                        <div className="col-lg-12">
+                              <div className="row">
+                                      <div style={{backgroundColor:'#eaf3f3', padding:'15px', borderRadius:'10px'}} className="col-lg-12 col-sm-12 col-md-12 mb-25">
+                                          <div style={{display:'flex', justifyContent:'space-between'}}>
+                                              <div style={{width:'100%'}}>
+                                                  <p style={{color:'#2B363B', marginTop:'10px'}}><span style={{fontWeight:'bold'}}>Hello {localStorage.getItem("user_info")}</span>, You have also been given mentor access on the platform. Click on the top right profile icon to switch between your dual roles.</p>
+                                              </div>
+                                              
+                                          </div>
+                                      </div>
+                              </div>
+                            </div>
+                        )}
 
                 <div className="col-lg-12">
                   <div className="row">
@@ -724,14 +876,28 @@ function Home_Screen() {
                   </div>
 
                   <div className="col-lg-3 mb-25">
-                    <div style={{backgroundColor:'#f5f5f5'}} className="card border-0 px-20 pb-20 project-task-list--event box_shadow1 mentee_card">
-                      <div style={{backgroundColor:'#f5f5f5'}} className="card-header px-0 border-0">
+                    <div  className="card border-0 px-20 pb-20 project-task-list--event box_shadow1 mentee_card">
+                      <div  className="card-header px-0 border-0">
                         <h6>My Mentoring </h6>
-                        <p className="color-green fw-500 mb-0 fs-14">
+                        <p style={{cursor:'pointer'}} onClick={() => navigate("/mentoring_program")} className="color-green fw-500 mb-0 fs-14">
                           View All
                         </p>
                       </div>
-                      <div className="media-body d-flex mb-15 mt-2 join_requests">
+                      {programs?.slice(0, 2)?.map((i) => (
+                        <div style={{cursor:'pointer'}} onClick={() => navigate("/mentoring_program_progress",{state:i} )} className="media-body d-flex mb-15 mt-2 join_requests">
+                        <img
+                          src={authornav_img}
+                          className="me-10 wh-40 rounded-circle bg-opacity-primary"
+                        />
+                        <div className="mt-1">
+                          <h6 className="fw-500">{i?.program_model?.name}</h6>
+                          <p className="fs-12 color-light mb-0">
+                            Mentees: <span className="color-dark">2</span>
+                          </p>
+                        </div>
+                      </div>
+                      ))}
+                      {/* <div className="media-body d-flex mb-15 mt-2 join_requests">
                         <img
                           src={authornav_img}
                           className="me-10 wh-40 rounded-circle bg-opacity-primary"
@@ -755,7 +921,7 @@ function Home_Screen() {
                             Mentees: <span className="color-dark">15</span>
                           </p>
                         </div>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 

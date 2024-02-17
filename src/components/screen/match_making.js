@@ -1,10 +1,10 @@
 import search_img from '../../img/svg/search1.svg';
 import team_img from '../../img/user_pic.png';
 import Side_Bar from './sidebar';
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, } from 'react';
 import Accordion from 'react-bootstrap/Accordion';
-import { BASE_URL } from '../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE, BASE_URL_APPLSURE_MENTORING } from '../../services/Config';
 const data = [
     { id: 1, mentee_name: "Marley Donin", mentee_position: "Manager - Talent Development", mentee_number: "4.5", mentee_matching: "92% Match", mentee_skill: "Skills to Develop", mentee_employee: "Talent Startegy", mentee_hcm: "Budgeting", mentee_learning: "Learning", mentee_three: "+3", mentee_profile: "View Profile", mentee_chat: "chat" },
     { id: 2, mentee_name: "Marley Donin", mentee_position: "Manager - Talent Development", mentee_number: "4.5", mentee_matching: "92% Match", mentee_skill: "Skills to Develop", mentee_employee: "Talent Startegy", mentee_hcm: "Budgeting", mentee_learning: "Learning", mentee_three: "+3", mentee_profile: "View Profile", mentee_chat: "Pair" },
@@ -22,15 +22,21 @@ const data1 = [
 ];
 
 function Match_Making() {
+    const {state} = useLocation()
+    console.log(state?.myState?.name)
     const navigate = useNavigate()
     const [sideBarOpen, setSideBarOpen] = useState(true)
     const [allMenteeData, setAllMenteeData] = useState([])
+    const [allMenteeDataProgram, setAllMenteeDataProgram] = useState([])
     const [allMentorData, setAllMentorData] = useState([])
     const [joinList, setJoinList] = useState([])
     const [menteeSearch, setMenteeSearch] = useState('')
     const [mentorSearch, setMentorSearch] = useState('')
+    const [filter0, setFilter0] = useState('');
+    const [programName, setProgramName] = useState("")
     const [selectedMenteeList, setselectedMenteeList] = useState([])
     const [selectedMentorList, setselectedMentorList] = useState([])
+    const [programList, setProgramList] = useState([])
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -59,43 +65,149 @@ function Match_Making() {
     }
 
     useEffect(() => {
-        const token = localStorage.getItem("token")
-        const btoken = `Bearer ${token}`;
-        const fetchData = async () => {
-            const respGlobal = await fetch(`${BASE_URL}mentee`, {
-                method: 'GET',
-                headers: {
-                    "Accept": "application/json",
-                    'Content-Type': 'application/json',
-                    "Authorization": btoken,
-                },
-            })
-            const mentees = await respGlobal.json()
-            let newMentee = mentees.data.map((i) => {
-                return { ...i, isSelected: "" }
-            })
-            setAllMenteeData(newMentee)
-            //   console.log("mentees", mentees)
-            const respRepos = await fetch(`${BASE_URL}mentor`, {
-                method: 'GET',
-                headers: {
-                    "Accept": "application/json",
-                    'Content-Type': 'application/json',
-                    "Authorization": btoken,
-                },
-            })
-            const mentors = await respRepos.json()
-            let newMentor = mentors.data.map((i) => {
-                return { ...i, isSelected: "" }
-            })
-            console.log(newMentor)
-            // setAllData({ mentors : newMentor, mentees: newMentee });
-            // setAllMentorData(newMentor)
-        };
+        const fetchListData = async(index) => {
+        
+          var myHeaders = new Headers();
+          myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+          myHeaders.append("Content-Type", "application/json");
+    
+          var raw = JSON.stringify({
+            "status":[4]
+        });
+    
+          var requestOptions = {
+          method: 'POST',
+          headers: myHeaders,
+          body: raw,
+          redirect: 'follow'
+          };
+    
+          fetch(`${BASE_URL_APPLSURE_MENTORING}program-list-published`, requestOptions)
+          .then(response => response.json())
+          .then(result => {
+              console.log("==",result)
+              setProgramList(result.programList)
+             
+          })
+          .catch(error => console.log('error', error));
+    
+          
+        }
+        fetchListData()
+      },[])
 
+    const getProgramMentee = async(id) => {
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+        myHeaders.append("Content-Type", "application/json");
+  
+        var raw = JSON.stringify({
+            "program_id":id,
+            "role":"mentee" // mentor
+        });
+  
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+  
+        fetch(`${BASE_URL_APPLSURE_MENTORING}program-userslist-accepted`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            console.log("000-----------",result)
+            let pp = []
+            // result.userlist?.map((i) => {
+            //   pp.push({id: i.user_id, name: i.user_meta?.name})
+            // })
+            // setMenteeList(pp)
+
+            result?.list?.map((i) => {
+                pp.push({id: i.user_id, name: i.user_meta?.name, imageUrl: i.user_meta?.image_url, skills: i.user_meta?.user_skills, jobTitle: i?.organisation_user?.job_title, isSelected: "", scores: i.total_score})
+                // return { ...i, isSelected: "" }
+            })
+            console.log(pp)
+            setAllMenteeData(pp)
+
+          })
+        .catch(error => console.log('error', error));
+        
+   } 
+//     const getProgramMentors = async(id) => {
+//         var myHeaders = new Headers();
+//         myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+//         myHeaders.append("Content-Type", "application/json");
+  
+//         var raw = JSON.stringify({
+//             "program_id":id,
+//             "role":"mentor" // mentor
+//         });
+  
+//         var requestOptions = {
+//         method: 'POST',
+//         headers: myHeaders,
+//         body: raw,
+//         redirect: 'follow'
+//         };
+  
+//         fetch(`${BASE_URL_APPLSURE_MENTORING}program-userslist-accepted`, requestOptions)
+//         .then(response => response.json())
+//         .then(result => {
+//             console.log(result)
+//             let pp = []
+//             // result.userlist?.map((i) => {
+//             //   pp.push({id: i.user_id, name: i.user_meta?.name})
+//             // })
+//             // setMenteeList(pp)
+//             result?.list?.map((i) => {
+//                 pp.push({id: i.user_id, name: i.user_meta?.name, imageUrl: i.user_meta?.image_url, skills: i.user_meta?.user_skills, jobTitle: i?.organisation_user?.job_title, isSelected: "", scores: i.total_score})
+//                 // return { ...i, isSelected: "" }
+//             })
+//             setAllMentorData(pp)
+//           })
+//         .catch(error => console.log('error', error));
+        
+//    } 
+
+    useEffect(() => {
+        
         fetchData();
     }, [])
-
+    
+    const fetchData = async () => {
+        const token = localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
+        const respGlobal = await fetch(`${BASE_URL}mentee`, {
+            method: 'GET',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+        })
+        const mentees = await respGlobal.json()
+        let newMentee = mentees.data.map((i) => {
+            return { ...i, isSelected: "" }
+        })
+        setAllMenteeData(newMentee)
+        //   console.log("mentees", mentees)
+        const respRepos = await fetch(`${BASE_URL}mentor`, {
+            method: 'GET',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+        })
+        const mentors = await respRepos.json()
+        let newMentor = mentors.data.map((i) => {
+            return { ...i, isSelected: "" }
+        })
+        console.log(newMentor)
+        // setAllData({ mentors : newMentor, mentees: newMentee });
+        // setAllMentorData(newMentor)
+    };
     const updateList = (item, index) => {
 
     }
@@ -114,7 +226,11 @@ function Match_Making() {
         console.log(selectedMentee)
         setAllMenteeData(allMenteeData)
         console.log(allMenteeData)
-        getRecomended(user.id)
+        if(filter0.length > 0){
+            getRecomendedForProgramMentor(user.id)
+        }else{
+            getRecomended(user.id)
+        }
     }
 
     const addToList1 = (index, user) => {
@@ -155,7 +271,43 @@ function Match_Making() {
         let newMentor = mentors.data.map((i) => {
             return { ...i, isSelected: "" }
         })
+        console.log(newMentor)
         setAllMentorData(newMentor)
+    }
+    const getRecomendedForProgramMentor = async (id) => {
+        // console.log(filter0)
+        // console.log(id)
+        // return
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        var raw = JSON.stringify({
+        "mentee_id": id,
+        "program_id": filter0
+        });
+
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+
+        fetch("https://www.wiseq.co/ndwiseqbackend/api/matchmaking", requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            console.log(result.mentor)
+            let pp = []
+            result?.mentor?.map((i) => {
+                pp.push({id: i.user_id, name: i.userDetail?.name, imageUrl: i.userDetail?.image_url, skills: i.userDetail?.skills, jobTitle: i?.userDetail?.mentordatainfo?.job_title, isSelected: "", percentageMatch: i.percentageMatch, rating: i?.userDetail?.rating})
+                // return { ...i, isSelected: "" }
+            })
+            console.log("pp", pp)
+            setAllMentorData(pp)
+        })
+        .catch(error => console.log('error', error));
+        
+
     }
 
     const goToConfirm = () => {
@@ -175,29 +327,48 @@ function Match_Making() {
                 mentor: gg
                 // mentor: allMentorData
             }
-            navigate('/confirm_pair', { state: dict })
+            navigate('/confirm_pair', { state: {dict, programName, programId:filter0 }})
         }
         
     }
 
     const filteredDataMentee = menteeSearch
+    // console.log(allMenteeData)
         ? allMenteeData.filter(x =>
             // alert(JSON.stringify(x,null,2))
             x.name.toLowerCase().includes(menteeSearch.toLowerCase())
         )
-        : allMenteeData.slice(0, 0);
+        : filter0.length > 0 ? allMenteeData: allMenteeData.slice(0, 0);
 
     const filteredDataMentor = mentorSearch
         ? allMentorData.filter(x =>
             // alert(JSON.stringify(x,null,2))
             x.name.toLowerCase().includes(mentorSearch.toLowerCase())
         )
-        : allMentorData.slice(0, 3);
+        : filter0.length > 0 ? allMentorData:  allMentorData.slice(0, 3);
+
+
+    const handleChangeFilter0 = event => {
+        console.log(event.target.value)
+        // return
+
+        if(event.target.value.length == 0){
+            fetchData()
+        }else{
+            programList.map((i) => {
+                if(i.id == event.target.value){
+                setProgramName(i.name)
+                }
+            })
+            setFilter0(event.target.value);
+            getProgramMentee(event.target.value)
+        }
+        
+        }
+
+        // console.log(allMenteeData)
 
     return (
-
-
-
         <div className="main-content">
             <div style={{ paddingLeft: sideBarOpen ? "295px" : "93px" }} className="contents expanded mt-30">
                 <div className="container-fluid ">
@@ -220,10 +391,15 @@ function Match_Making() {
                                         <div className="row">
                                             <div className="col-md-6 mb-25">
                                                 <div className="countryOption">
-                                                    <select className="form-select ih-medium" aria-label="Default select example">
-                                                        <option selected>Select Program Code</option>
-                                                        <option value="1">457832</option>
-                                                        <option value="2">890348</option>
+                                                    <select 
+                                                        className="form-select ih-medium" aria-label="Default select example"
+                                                        value={filter0}
+                                                        onChange={handleChangeFilter0}
+                                                        >
+                                                        <option value={state?.myState?.name == undefined ? "" : state?.myState?.name}>Select Program Code</option>
+                                                        {programList.map((i) => (
+                                                            <option value={i.id}>{`${i.program_id} - ${i.name}`}</option>
+                                                        ))}
                                                     </select>
                                                 </div>
                                             </div>
@@ -282,10 +458,10 @@ function Match_Making() {
                                         <div className="user-group-people">
                                             <p className="mt-15">Skill to Develop</p>
                                             <ul className="d-flex flex-wrap mb-15 user-group-people__parent">
-                                                {user.skills.map((i) => (
-                                                    <span className="badge badge-square btn-outline-emlpoy me-10 mb-10">{i.toDevelop && i.skill}</span>
+                                                {user?.skills?.map((i) => (
+                                                    <span className="badge badge-square btn-outline-emlpoy me-10 mb-10">{i?.toDevelop && i?.skill || i.to_develop == 1 && i.skill}</span>
                                                 ))}
-                                                {user.skills.length == "0" && (
+                                                {user?.skills?.length == "0" && (
                                                     <div style={{ height: '28px' }}></div>
                                                 )}
                                                 {/* <span className="badge badge-square btn-outline-emlpoy me-10">{user.mentee_hcm}</span>
@@ -315,7 +491,7 @@ function Match_Making() {
                                                         <h6 className="mt-0  fw-500">{user.name}</h6>
                                                     </a>
                                                     <p className="fs-13 color-light mb-0">{user.jobTitle}</p>
-                                                    <span className="badge badge-round btn-sky mt-10">{user.rating.toFixed(1)} <i className="lar la-star user_star"></i></span>
+                                                    <span className="badge badge-round btn-sky mt-10">{user?.rating?.toFixed(1)} <i className="lar la-star user_star"></i></span>
                                                 </div>
 
                                             </div>
@@ -332,10 +508,10 @@ function Match_Making() {
                                         <div className="user-group-people">
                                             <p className="mt-15">Key Skills</p>
                                             <ul className="d-flex flex-wrap mb-15 user-group-people__parent">
-                                                {user.skills.map((i) => (
-                                                    <span className="badge badge-square btn-outline-emlpoy me-10 mb-10">{i.toDevelop == false && i.skill}</span>
+                                                {user?.skills?.map((i) => (
+                                                    <span className="badge badge-square btn-outline-emlpoy me-10 mb-10">{i?.toDevelop == false && i?.skill || i.to_develop == 0 && i.skill}</span>
                                                 ))}
-                                                {user.skills.length == "0" && (
+                                                {user?.skills?.length == "0" && (
                                                     <div style={{ height: '28px' }}></div>
                                                 )}
                                                 {/* <span className="badge badge-square btn-outline-emlpoy me-10">{user.mentee_employee}</span>

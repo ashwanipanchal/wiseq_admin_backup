@@ -7,7 +7,7 @@ import { Calendar as CalenderBig, momentLocalizer } from 'react-big-calendar'
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import 'react-calendar/dist/Calendar.css';
 import Calendar from 'react-calendar';
-import { BASE_URL } from '../../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE_MENTORING } from '../../../services/Config';
 
 function Calendar_Open() {
     const {state} = useLocation()
@@ -25,6 +25,8 @@ function Calendar_Open() {
     const [selectedMenteeID, setselectedMenteeID] = useState(state == null ? [state] : [])
     const [skillList, setSkillList] = useState([])
     const [programName, setProgramName] = useState("")
+    const [programID, setProgramID] = useState("")
+    const [programList, setProgramList] = useState([])
     const [date, setDate] = useState("")
     const [time, setTime] = useState("")
     const [objective, setObjective] = useState("")
@@ -47,6 +49,38 @@ function Calendar_Open() {
         getMyMentorList()
         // getSkills()
     },[])
+
+    useEffect(() => {
+        const fetchListData = async(index) => {
+        
+          var myHeaders = new Headers();
+          myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+          myHeaders.append("Content-Type", "application/json");
+    
+          var raw = JSON.stringify({
+            "status":"4"
+        });
+    
+          var requestOptions = {
+          method: 'POST',
+          headers: myHeaders,
+          body: raw,
+          redirect: 'follow'
+          };
+    
+          fetch(`${BASE_URL_APPLSURE_MENTORING}user/user-program-list`, requestOptions)
+          .then(response => response.json())
+          .then(result => {
+              console.log("==",result)
+              setProgramList(result.programs)
+             
+          })
+          .catch(error => console.log('error', error));
+    
+          
+        }
+        fetchListData()
+      },[])
 
     const menteeSessions = async() => {
         const token = await localStorage.getItem("token")
@@ -146,6 +180,7 @@ function Calendar_Open() {
         };
     }, []);
 
+
     const onSelectBSkillDev = (selectedList, selectedItem) => {
         let temp = []
         selectedList.map((i) =>(
@@ -183,15 +218,21 @@ function Calendar_Open() {
         return
     }
         const btoken = `Bearer ${token}`;
+        if(programID == "WSH - Skill Growth" || programID == "WSH - Guidance" || programID == "WSH - Collaboration" || programID == "WSH - Wellbeing"){
+            // console.log("static")
+            setProgramID("")
+        }
         const body = {
             "users": selectedMenteeID,
             programName,
+            "program_id": programID,
             "scheduleTime":availableTime[timeValue].startTime ,
             "skills": selectedSkill,
             objective,
             timeZone: availableTime[timeValue].timeZone == "Asia/Kuala_Lumpur" ? "SGT" :  moment().tz(availableTime[timeValue].timeZone).zoneAbbr()
         }
         console.log(body)
+        // console.log(availableTime)
         // return
         const res = await fetch(`${BASE_URL}session`,{
                 method:'POST',
@@ -294,12 +335,18 @@ function Calendar_Open() {
 
                                                 <div className="col-md-12 mb-25">
                                                     <div class="countryOption">
-                                                        <select value={programName} onChange={e => setProgramName(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
+                                                        <select value={programName} onChange={e => {
+                                                            setProgramName(e.target.value)
+                                                            setProgramID(e.target.value)
+                                                            }} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
                                                             <option value="">Select Program Name</option>
                                                             <option value="WSH - Skill Growth">WSH - Skill Growth</option>
                                                             <option value="WSH - Guidance">WSH - Guidance</option>
                                                             <option value="WSH - Collaboration">WSH - Collaboration</option>
                                                             <option value="WSH - Wellbeing">WSH - Wellbeing</option>
+                                                            {programList?.map((i) => (
+                                                                <option value={i?.id}>{i?.program_model?.name}</option>
+                                                            ))}
                                                         </select>
                                                     </div>
                                                 </div>

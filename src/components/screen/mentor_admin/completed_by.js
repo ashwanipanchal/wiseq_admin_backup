@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import authornav_img from '../../../img/user_pic.png';
 import moment from 'moment'
-import { BASE_URL } from '../../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE } from '../../../services/Config';
 
 const data = [
     { id: 1, community_name: "Anika Schleifer", author_name: "Senior Director - Human Resources" },
@@ -24,6 +24,7 @@ function Completed_By() {
     const [single, setSingle] = useState("")
     const [sideBarOpen, setSideBarOpen] = useState(true)
     const [audiencesList, setAudiencesList] = useState([])
+    const [audiencesListNew, setAudiencesListNew] = useState([])
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -46,6 +47,7 @@ function Completed_By() {
     }, []);
 
     useEffect(() => {
+        getCheckedAud()
         getAudiences()
     },[])
     
@@ -63,6 +65,25 @@ function Completed_By() {
         console.log("audience list", response)
         setAudiencesList(response.data)
         setLearningDetailsFull({state:state, mentee:response.data})
+    }
+    const getCheckedAud = async() => {
+        const btoken = `Bearer ${token}`;
+        const body = {
+            "learning_id":state
+        }
+        const res = await fetch(`${BASE_URL_APPLSURE}get-learning-verified`, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+            body:JSON.stringify(body)
+        })
+        const response = await res.json()
+        console.log("audience list cehcked", response)
+        setAudiencesListNew(response.getdata)
+        // setLearningDetailsFull({state:state, mentee:response.data})
     }
 
     const removeAudience = async(id) => {
@@ -107,7 +128,7 @@ function Completed_By() {
                                     <input className="me-sm-2 border-0 box-shadow-none ms-10" type="search" placeholder="Search here..." aria-label="Search" />
                                 </div>
                             </div> */}
-                            {audiencesList && audiencesList.map((i) => {
+                            {audiencesList && audiencesList.map((i, index) => {
                                 if(i.completedOn != null){
                                     return(
                                         // (
@@ -121,10 +142,26 @@ function Completed_By() {
                                                         <p className="fs-14 color-light mb-0">Completed on: <span style={{color:"#639FA5"}}>{moment(i.completedOn).format("DD/MM/YY")}</span></p>
                                                     </div>
                                                 </div>
+                                                {audiencesListNew && audiencesListNew[index]?.verified_on != null ? <button onClick={() => {
+                                                    // setSingle(i.userId),
+                                                    
+                                                    }} style={{ color:'#fff'}} className='btn btn-petrol'>Checked</button> :
+                                                    <button onClick={() => {
+                                                        // setSingle(i.userId),
+                                                        navigate("/check_learning_mentee", {state:{menteeId:i.userId,learningId:state}})
+                                                        }} style={{ color:'#fff'}} className='btn btn-petrol'>Check</button>
+                                                }
+                                                {/* {i.verified_on != null ? 
+                                                    <button onClick={() => {
+                                                    // setSingle(i.userId),
+                                                    
+                                                    }} style={{ color:'#fff'}} className='btn btn-petrol'>Checked</button>
+
+                                                 : 
                                                 <button onClick={() => {
                                                     // setSingle(i.userId),
                                                     navigate("/check_learning_mentee", {state:{menteeId:i.userId,learningId:state}})
-                                                    }} style={{ color:'#fff'}} className='btn btn-petrol'>Check</button>
+                                                    }} style={{ color:'#fff'}} className='btn btn-petrol'>Check</button>} */}
                                             </div>
                                         </div>
                                         // )

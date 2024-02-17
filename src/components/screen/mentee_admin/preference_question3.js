@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import next_img from '../../../img/next.svg';
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { BASE_URL } from '../../../services/Config';
 
 function Preferences_Question3() {
     const { state } = useLocation()
@@ -81,7 +82,8 @@ function Preferences_Question3() {
 
         const token = localStorage.getItem("token")
         const btoken = `Bearer ${token}`;
-        const res = await fetch(`https://api.wiseqglobal.com/api/mentee/preferences`, {
+        const url = localStorage.getItem("user_type") == "mentor" ? `${BASE_URL}mentor/preferences` : `${BASE_URL}mentee/preferences`
+        const res = await fetch(url, {
             method: 'PUT',
             headers: {
                 "Accept": "application/json",

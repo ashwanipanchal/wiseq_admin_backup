@@ -121,7 +121,7 @@ function Check_Learning() {
                                 </div>
                             </div>
 
-                            <div className="col-lg-12 col-md-12 col-sm-12">
+                            <div className="col-lg-6 col-md-12 col-sm-12">
 
                                 <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Title</p>
@@ -223,7 +223,7 @@ function Check_Learning() {
                                 </div>
                             </div> */}
 
-<div className="col-lg-6 col-md-12 col-sm-12">
+                            <div className="col-lg-6 col-md-12 col-sm-12">
                                 <div className='row'>
 
                                 

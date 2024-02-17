@@ -12,10 +12,10 @@ import team_img from '../../../img/tm1.png';
 import Side_bar from './sidebar';
 import { useEffect, useState } from 'react';
 import Modal from 'react-bootstrap/Modal';
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, json, useNavigate } from "react-router-dom";
 import { BASE_URL } from '../../../services/Config';
 import moment from 'moment/moment';
-import { CircularProgressbar } from 'react-circular-progressbar';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
 import Slider from "react-slick";
@@ -82,7 +82,13 @@ function My_Profile() {
     const navigate = useNavigate()
     const [showHello, setShowHello] = useState(false);
     const [sideBarOpen, setSideBarOpen] = useState(true)
+    const [storeData, setStoreData] = useState({})
     const [userInfo, setUserInfo] = useState()
+    const [education, setEducation] = useState([])
+    const [workHistory, setWorkHistory] = useState([])
+    const [keyAchivements, setKeyAchivements] = useState([])
+    const [prefrences, setPrefrences] = useState([])
+    const [testimonials, setTestimonials] = useState([])
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -121,6 +127,15 @@ function My_Profile() {
               const {success} = response
               if(success){
                 setUserInfo(response.data)
+                setEducation(response.data.hasOwnProperty("education") ? response.data.education.length == 0 ?JSON.parse(localStorage.getItem("full_details")).mongodata?.education : response.data.education : JSON.parse(localStorage.getItem("full_details")).mongodata?.education)
+
+                setWorkHistory(response.data.hasOwnProperty("workHistory") ? response.data.workHistory.length == 0 ?JSON.parse(localStorage.getItem("full_details")).mongodata?.workHistory : response.data.workHistory : JSON.parse(localStorage.getItem("full_details")).mongodata?.workHistory)
+                setKeyAchivements(response.data.hasOwnProperty("keyAchievements") ? response.data.keyAchievements.length == 0 ?JSON.parse(localStorage.getItem("full_details")).mongodata?.keyAchievements : response.data.keyAchievements : JSON.parse(localStorage.getItem("full_details")).mongodata?.keyAchievements)
+                setTestimonials(response.data.hasOwnProperty("userTestimonials") ? response.data.userTestimonials.length == 0 ?JSON.parse(localStorage.getItem("full_details")).userTestimonials : response.data.userTestimonials : JSON.parse(localStorage.getItem("full_details")).userTestimonials)
+                // setPrefrences(response.data.hasOwnProperty("prefrences") ? response.data.preferences.length == 0 ?JSON.parse(localStorage.getItem("full_details")).mongodata?.prefrences : response.data.preferences : JSON.parse(localStorage.getItem("full_details")).mongodata?.prefrences)
+                // setWorkHistory(response.data.hasOwnProperty("workHistory") ? response.data.workHistory : JSON.parse(localStorage.getItem("full_details")).mongodata?.workHistory)
+                // setKeyAchivements(response.data.hasOwnProperty("keyAchievements") ? response.data.keyAchievements : JSON.parse(localStorage.getItem("full_details")).mongodata?.keyAchievements)
+                setPrefrences(response.data.hasOwnProperty("prefrences") ? response.data.preferences : JSON.parse(localStorage.getItem("full_details")).mongodata?.preferences)
               }
         
     }
@@ -131,6 +146,13 @@ function My_Profile() {
         return a < b ? -1 : (a > b ? 1 : 0);
     }
 
+    useEffect(() => {
+        fetchStoreData()
+    },[])
+    const fetchStoreData =()=>{
+        setStoreData(JSON.parse(localStorage.getItem("full_details")))
+    }
+    // console.log(JSON.parse(localStorage.getItem("full_details")).education)
     return (
 
         <div className="main-content">
@@ -173,9 +195,9 @@ function My_Profile() {
                                                                                             <CircularProgressbar
                                                                                                 value={userInfo.profilePercentage}
                                                                                                 text={`${userInfo.profilePercentage}%`}
-                                                                                                styles={{
+                                                                                                styles={buildStyles({
                                                                                                     // Rotation of path and trail, in number of turns (0-1)
-                                                                                                    rotation: 0.25,
+                                                                                                
 
                                                                                                     // Whether to use rounded or flat corners on the ends - can use 'butt' or 'round'
                                                                                                     strokeLinecap: 'butt',
@@ -192,9 +214,8 @@ function My_Profile() {
                                                                                                     // Colors
                                                                                                     pathColor: '#72b8bf',
                                                                                                     textColor: '#72b8bf',
-                                                                                                    trailColor: '#72b8bf',
-                                                                                                    backgroundColor: '#72b8bf',
-                                                                                                }}
+                                                                                                    trailColor: 'lightgray',
+                                                                                                })}
                                                                                             />
                                                                                         </div>
                                                                                     </div>
@@ -325,7 +346,7 @@ function My_Profile() {
                             </div>
 
                             <h5 className="text-capitalize fw-500 mb-20">Language</h5>
-                            {userInfo && userInfo.languages?.map((i)=>(
+                            {userInfo?.languages?.length > 0 ?  userInfo?.languages?.map((i)=>(
                                 <div className="row line mt-3">
                                 <div className="col-md-2 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Languages</p>
@@ -365,7 +386,50 @@ function My_Profile() {
                                     )}
                                 </div>
                             </div>
-                            ))}
+                            )):
+                            
+                            storeData?.languages?.map((i)=>(
+                                <div className="row line mt-3">
+                                <div className="col-md-2 mb-20">
+                                    <p className="color-gray fs-14 fw-300 align-center mb-0">Languages</p>
+                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{i.language}</p>
+                                </div>
+
+                                <div className="col-md-2 mb-20">
+                                    <p className="color-gray fs-14 fw-300 align-center mb-0">Proficiency</p>
+                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{i.proficiency}</p>
+                                </div>
+
+                                <div className="col-md-2 mb-20">
+                                    <p className="color-gray fs-14 fw-300 align-center mb-0">Read</p>
+                                    {i.canRead &&(
+                                        <div className="svg-icon">
+                                        <img src={checks_img} className="svg" />
+                                    </div>
+                                    )}
+                                    
+                                </div>
+
+                                <div className="col-md-2 mb-20">
+                                    <p className="color-gray fs-14 fw-300 align-center mb-0">Write</p>
+                                    {i.canWrite &&(
+                                        <div className="svg-icon">
+                                        <img src={checks_img} className="svg" />
+                                    </div>
+                                    )}
+                                </div>
+
+                                <div className="col-md-2 mb-20">
+                                    <p className="color-gray fs-14 fw-300 align-center mb-0">Speak</p>
+                                    {i.canSpeak &&(
+                                        <div className="svg-icon">
+                                        <img src={checks_img} className="svg" />
+                                    </div>
+                                    )}
+                                </div>
+                            </div>
+                            ))
+                            }
                             
                             <h5 className="text-capitalize fw-500 mb-20 mt-3">Location</h5>
 
@@ -391,7 +455,7 @@ function My_Profile() {
                                     <div className="project-task table-responsive table-responsive--dynamic">
                                         <table className="table table-borderless mb-1">
                                             <tbody>
-                                            {userInfo && userInfo.education?.map((user) => (
+                                            {education && education?.map((user) => (
                                                     <tr className="project-task-list">
                                                         <td>
                                                             <div className="box_shadow1 p-15">
@@ -411,7 +475,9 @@ function My_Profile() {
                                                     </tr>
 
 
-                                                ))}
+                                                )
+                                                )
+                                                }
 
                                             </tbody>
                                         </table>
@@ -426,7 +492,7 @@ function My_Profile() {
                                     <div className="project-task table-responsive table-responsive--dynamic">
                                         <table className="table table-borderless mb-1">
                                             <tbody>
-                                            {userInfo && userInfo.workHistory?.map((user) => (
+                                            {workHistory && workHistory?.map((user) => (
                                                     <tr className="project-task-list">
                                                         <td>
                                                             <div className="box_shadow1 p-15">
@@ -446,7 +512,30 @@ function My_Profile() {
                                                     </tr>
 
 
-                                                ))}
+                                                ))
+                                                // :
+                                                // storeData?.workHistory?.map((user)=>(
+                                                //     <tr className="project-task-list">
+                                                //         <td>
+                                                //             <div className="box_shadow1 p-15">
+                                                //                 <div className="event-Wrapper">
+                                                //                     <div className="event-Wrapper__left">
+                                                //                         <div className="event-wrapper-item">
+                                                //                             <img src={suitcase_img} className="svg" />
+                                                //                         </div>
+                                                //                     </div>
+                                                //                     <div className="event-Wrapper__right">
+                                                //                         <h6 className="mb-1 fw-600">{user.jobRole}</h6>
+                                                //                         <span className="fs-14">{user.companyName}</span> <span className="ms-4 fs-14">{moment(user.startDate).format('YYYY')}-{ user.isMyCurrentRole ? "Present":  moment(user.endDate ).format('YYYY')}</span>
+                                                //                     </div>
+                                                //                 </div>
+                                                //             </div>
+                                                //         </td>
+                                                //     </tr>
+                                                // ))
+                                                }
+                                                
+                                                
 
                                             </tbody>
                                         </table>
@@ -462,7 +551,7 @@ function My_Profile() {
                                     <div className="project-task table-responsive table-responsive--dynamic">
                                         <table className="table table-borderless mb-1">
                                             <tbody>
-                                                {userInfo && userInfo.keyAchievements?.map((user) => (
+                                                {keyAchivements && keyAchivements?.map((user) => (
                                                     <tr className="project-task-list">
                                                         <td>
                                                             <div className="box_shadow1 p-15">
@@ -481,7 +570,29 @@ function My_Profile() {
                                                     </tr>
 
 
-                                                ))}
+                                                ))
+                                                // : 
+                                                
+                                                // storeData?.keyAchievements?.map((user)=>(
+                                                //     <tr className="project-task-list">
+                                                //         <td>
+                                                //             <div className="box_shadow1 p-15">
+                                                //                 <div className="event-Wrapper">
+                                                //                     <div className="event-Wrapper__left">
+                                                //                         <div className="event-wrapper-item">
+                                                //                             <img src={achievement_img} className="svg" />
+                                                //                         </div>
+                                                //                     </div>
+                                                //                     <div className="event-Wrapper__right">
+                                                //                         <h6 className="mb-1 fw-600">{user}</h6>
+                                                //                     </div>
+                                                //                 </div>
+                                                //             </div>
+                                                //         </td>
+                                                //     </tr>
+                                                // ))
+
+                                                }
 
                                             </tbody>
                                         </table>
@@ -490,8 +601,8 @@ function My_Profile() {
                             </div>
                             <h5 className="text-capitalize fw-500 mb-15">Testimonials</h5>
                             <Slider {...settings}>
-                {userInfo &&
-                  userInfo.userTestimonials?.map((user) => (
+                {testimonials &&
+                  testimonials?.map((user) => (
 
                         <div className="swiper-slide">
                             <div className="testimonial-item bg-white1">
@@ -519,7 +630,7 @@ function My_Profile() {
                             ))} */}
 
                             <h5 className="text-capitalize fw-500 mb-15">Your Preferences<span onClick={() => navigate('/preference_one')} style={{fontSize:'12px', textDecoration:'underline', cursor:'pointer', marginLeft:'10px'}}>Edit</span></h5>
-                            {userInfo && userInfo.preferences?.map((i,index) => (
+                            {prefrences && prefrences?.map((i,index) => (
                                 <div className="col-lg-6 col-sm-12 col-md-12 mb-25">
                                 <div className="card border-0 px-20 pb-10 project-task-list--event box_shadow1">
                                     <div className="card-header px-0 border-0">
@@ -561,7 +672,53 @@ function My_Profile() {
                                     </div>
                                 </div>
                             </div>
-                            ))}
+                            ))
+                            // :
+                            
+                            // storeData?.preferences?.map((i,index)=>(
+                            //     <div className="col-lg-6 col-sm-12 col-md-12 mb-25">
+                            //     <div className="card border-0 px-20 pb-10 project-task-list--event box_shadow1">
+                            //         <div className="card-header px-0 border-0">
+                            //             <h6 className="color-dark fs-16 fw-600">Q{index+1}. {i.question}</h6>
+                            //         </div>
+                            //         <div className="card-body p-0">
+                            //             <div className="tab-content">
+                            //                 <div className="project-task table-responsive table-responsive--dynamic">
+                            //                     <table className="table table-borderless mb-1">
+                            //                         <tbody>
+                            //                         {i.answers.map((user) => (
+                            //                                 <tr className="project-task-list">
+                            //                                     <td>
+                            //                                         <div className="notifi1">
+                            //                                             <div className="event-Wrapper">
+                            //                                                 <div className="event-Wrapper__left">
+                            //                                                     <div className="event-wrapper-item">
+                            //                                                         {i.questionType == "priority" ?
+                            //                                                             <h6 style={{backgroundColor:'#D5ECEF', padding:'25px', borderRadius:14}}>{user.priority}</h6>:
+                            //                                                             <img src={edit_img} className="svg" />
+                            //                                                         }
+                            //                                                         {/* <h6>{user.answer}</h6> */}
+                            //                                                     </div>
+                            //                                                 </div>
+                            //                                                 <div className="event-Wrapper__right">
+                            //                                                     <h6>{user.answer}</h6>
+                            //                                                 </div>
+                            //                                             </div>
+                            //                                         </div>
+                            //                                     </td>
+                            //                                 </tr>
+
+                            //                             ))}
+
+                            //                         </tbody>
+                            //                     </table>
+                            //                 </div>
+                            //             </div>
+                            //         </div>
+                            //     </div>
+                            // </div>
+                            // ))
+                            }
                             
                         </div>
                     </div>

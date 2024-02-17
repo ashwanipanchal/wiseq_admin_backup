@@ -10,6 +10,7 @@ import Accordion from 'react-bootstrap/Accordion';
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import path from "../../../img/Path.png";
 import notificationbell_img from '../../../img/notification_bells.svg';
+import { BASE_URL_APPLSURE } from '../../../services/Config';
 
 const data = [
     { id: 1, learning_name: "-", skill_address: "-", category_name: "-", source_type: "External", created_on: "12/12/23" },
@@ -31,8 +32,9 @@ const data3 = [
 function All_Notification() {
     const navigate = useNavigate()
     const {state} = useLocation()
-    console.log(state)
+    // console.log(state)
     const [sideBarOpen, setSideBarOpen] = useState(true)
+    const [notificationData, setNotificationData] = useState([])
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -54,6 +56,31 @@ function All_Notification() {
         };
     }, []);
 
+    useEffect(() => {
+      getNewNotification()
+    },[])
+    const getNewNotification = async (id) => {
+      const token = localStorage.getItem("token")
+      const btoken = `Bearer ${token}`;
+      const body ={
+          "user_id":localStorage.getItem("user_id")
+      }
+      const res = await fetch(`${BASE_URL_APPLSURE}get-notification`, {
+          method: 'POST',
+          headers: {
+              "Accept": "application/json",
+              'Content-Type': 'application/json',
+              "Authorization": btoken,
+          },
+          body:JSON.stringify(body)
+      })
+      const response = await res.json()
+      console.log("Notifications", response)
+      if (response.status) {
+          setNotificationData(response.notifications)
+      }
+
+  }
     const [showHello, setShowHello] = useState(false);
     const closeModal = () => setShowHello(false);
     const showModal = () => setShowHello(true);
@@ -117,7 +144,7 @@ function All_Notification() {
                                 <div className="card card-default card-md">
                                 <table className="table table-borderless mb-1">
                               <tbody>
-                                {state.map((user) => (
+                                {notificationData && notificationData.map((i) => (
                                   <tr className="project-task-list">
                                     <td>
                                       <div style={{cursor:'pointer'}} className="box_shadow1 p-15 notifi">
@@ -131,8 +158,12 @@ function All_Notification() {
                                             </div>
                                           </div>
                                           <div className="event-Wrapper__right">
-                                            <h6>{user.message}</h6>
-                                            <span>{new Date(user.updatedAt).toDateString()} {new Date(user.updatedAt).toTimeString().split(" ")[0]}</span>
+                                            <h6>{i.message}</h6>
+                                            {'createdAt' in i && (
+
+                                              <span className="time-posted">{new Date(parseInt(i?.createdAt['$date']['$numberLong'])).toDateString()} {new Date(parseInt(i?.createdAt['$date']['$numberLong'])).toTimeString().split(" ")[0]}</span>
+                                              )}
+                                            {/* <span>{new Date(user.updatedAt).toDateString()} {new Date(user.updatedAt).toTimeString().split(" ")[0]}</span> */}
                                           </div>
                                         </div>
                                       </div>

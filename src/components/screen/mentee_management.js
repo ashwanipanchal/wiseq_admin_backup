@@ -86,7 +86,7 @@ function Mentee_Management() {
         })
         const response = await res.json()
         const { data } = response
-        // console.log(data)
+        console.log(data)
         let tempCArr = []
         let tempBArr = []
         data.map((i) => {
@@ -103,12 +103,12 @@ function Mentee_Management() {
     }
 
     const handleInput = async (e) => {
-        console.log(e)
+        // console.log(e)
         // return
         set_minValue(e.minValue)
         set_maxValue(e.maxValue)
-        console.log(`${BASE_URL}mentor?minYearsOfExperience=${e.minValue}&maxYearsOfExperience=${e.maxValue}`)
-        console.log(e)
+        // console.log(`${BASE_URL}mentor?minYearsOfExperience=${e.minValue}&maxYearsOfExperience=${e.maxValue}`)
+        // console.log(e)
         if(e == ""){
             workExp="" 
         }else{
@@ -220,7 +220,7 @@ function Mentee_Management() {
             furl = workExp
         }
 
-        console.log(furl)
+        // console.log(furl)
 
         const token = await localStorage.getItem("token")
         // console.log(token)
@@ -235,7 +235,7 @@ function Mentee_Management() {
             },
         })
         const response = await res.json()
-        console.log(response)
+        // console.log(response)
         const { success } = response
         if (success) {
             setMenteeList(response.data)
@@ -276,7 +276,7 @@ function Mentee_Management() {
             },
         })
         const response = await res.json()
-        console.log(response)
+        // console.log(response)
         const { success } = response
         setIsLoading(false)
         if (success) {
@@ -327,8 +327,8 @@ function Mentee_Management() {
             furl = workExp
         }
 
-        console.log(furl)
-        console.log(e)
+        // console.log(furl)
+        // console.log(e)
         const token = await localStorage.getItem("token")
         // console.log(token)
         const btoken = `Bearer ${token}`;
@@ -342,7 +342,7 @@ function Mentee_Management() {
             },
         })
         const response = await res.json()
-        console.log(response)
+        // console.log(response)
         const { success } = response
         if (success) {
             setMenteeList(response.data)
@@ -356,7 +356,7 @@ function Mentee_Management() {
         }else{
             
         
-            locc = `workLocation=${e}`
+            locc = `workLocation=${e.trim()}`
     }
         // locc = `workLocation=${e}`
         let furl;
@@ -399,73 +399,93 @@ function Mentee_Management() {
 
         if (workExp != "" || bSkilll != "" || cSkilll != "" || bSGkilll != "" || cSGkilll != "") {
             if (workExp != "" || bSkilll == "" || cSkilll == "" || bSGkilll == "" || cSGkilll == "") {
+                console.log(1)
                 furl = workExp + "&" + locc
+                console.log(furl)
             }
             if (workExp == "" || bSkilll != "" || cSkilll == ""|| bSGkilll == "" || cSGkilll == "") {
+                console.log(2)
                 furl = bSkilll + "&" + locc
-
+                console.log(furl)
             }
             if (workExp == "" || bSkilll == "" || cSkilll != ""|| bSGkilll == "" || cSGkilll == "") {
+                console.log(3)
                 furl = cSkilll + "&" + locc
-
+                console.log(furl)
             }
             if (workExp == "" || bSkilll == "" || cSkilll == ""|| bSGkilll != "" || cSGkilll == "") {
+                console.log(4)
                 furl = bSGkilll + "&" + locc
-
+                console.log(furl)
             }
             if (workExp == "" || bSkilll == "" || cSkilll == ""|| bSGkilll == "" || cSGkilll != "") {
+                console.log(5)
                 furl = locc + "&" + cSGkilll
-
+                console.log(furl)
             }
 
             if (workExp != "" || bSkilll != "" || cSkilll == ""|| bSGkilll == "" || cSGkilll == "") {
+                console.log(6)
                 furl = workExp + "&" + bSkilll + "&" + locc
+                console.log(furl)
             }
             if (workExp != "" || bSkilll == "" || cSkilll != ""|| bSGkilll == "" || cSGkilll == "") {
+                console.log(7)
                 furl = cSkilll + "&" + locc + "&" + workExp
-
+                console.log(furl)
             }
             if (workExp != "" || bSkilll == "" || cSkilll == ""|| bSGkilll != "" || cSGkilll == "") {
+                console.log(8)
                 furl = bSGkilll + "&" + workExp + "&" + locc
-
+                console.log(furl)
             }
             if (workExp != "" || bSkilll == "" || cSkilll == ""|| bSGkilll == "" || cSGkilll != "") {
+                console.log(9)
                 furl = locc + "&" + cSGkilll + "&" + workExp
-
+                console.log(furl)
             }
             if (workExp == "" || bSkilll != "" || cSkilll != ""|| bSGkilll == "" || cSGkilll != "") {
+                console.log(10)
                 furl = bSkilll + "&" + cSkilll + "&" + locc
-
+                console.log(furl)
             }
             if (workExp == "" || bSkilll != "" || cSkilll == ""|| bSGkilll != "" || cSGkilll== "") {
+                console.log(11)
                 furl = bSkilll + "&" + locc + "&" + bSGkilll
-
+                console.log(furl)
             }
             if (workExp == "" || bSkilll != "" || cSkilll == ""|| bSGkilll == "" || cSGkilll != "") {
+                console.log(12)
                 furl = bSkilll + "&" + locc + "&" + cSGkilll
-
+                console.log(furl)
             }
             if (workExp == "" || bSkilll == "" || cSkilll != ""|| bSGkilll != "" || cSGkilll == "") {
+                console.log(13)
                 furl = cSkilll + "&" + locc + "&" + bSGkilll
-
+                console.log(furl)
             }
             if (workExp == "" || bSkilll == "" || cSkilll != ""|| bSGkilll == "" || cSGkilll != "") {
+                console.log(14)
                 furl = cSkilll + "&" + locc + "&" + cSGkilll
-
+                console.log(furl)
             }
             if (workExp == "" || bSkilll == "" || cSkilll == ""|| bSGkilll != "" || cSGkilll != "") {
+                console.log(15)
                 furl = locc + "&" + bSGkilll + "&" + cSGkilll
-
+                console.log(furl)
             }
 
             if (workExp != "" && locc != "" && cSkilll != ""|| bSGkilll != "" || cSGkilll != "") {
+                console.log(16)
                 furl = workExp + "&" + cSkilll + "&" + locc + "&" + bSkilll + "&" + bSGkilll + "&" + cSGkilll
+                console.log(furl)
             }
         } else {
             furl = locc
         }
 
         console.log(furl)
+        // return
         const token = await localStorage.getItem("token")
         // console.log(token)
         const btoken = `Bearer ${token}`;
@@ -479,7 +499,7 @@ function Mentee_Management() {
             },
         })
         const response = await res.json()
-        console.log(response)
+        // console.log(response)
         const { success } = response
         if (success) {
             setMenteeList(response.data)
@@ -680,7 +700,7 @@ function Mentee_Management() {
             },
         })
         const response = await res.json()
-        console.log(response)
+        // console.log(response)
         const { success } = response
         if (success) {
             setMenteeList(response.data)
@@ -696,7 +716,7 @@ function Mentee_Management() {
         
             cSGkilll = `alternateCoreSkills=${e}`
     }
-        console.log(e)
+        // console.log(e)
         // cSkilll = `coreSkills=${e}`
         let furl;
 
@@ -800,7 +820,7 @@ function Mentee_Management() {
             furl = cSGkilll
         }
 
-        console.log(furl)
+        // console.log(furl)
         // return          
         const token = await localStorage.getItem("token")
         // console.log(token)
@@ -815,7 +835,7 @@ function Mentee_Management() {
             },
         })
         const response = await res.json()
-        console.log(response)
+        // console.log(response)
         const { success } = response
         if (success) {
             setMenteeList(response.data)
@@ -890,7 +910,7 @@ function Mentee_Management() {
     // }
 
     const BSFilter = async (e) => {
-        console.log(e)
+        // console.log(e)
 
         if(e == ""){
             bSkilll="" 
@@ -1002,7 +1022,7 @@ function Mentee_Management() {
             furl = bSkilll
         }
 
-        console.log(furl)         
+        // console.log(furl)         
         const token = await localStorage.getItem("token")
         const btoken = `Bearer ${token}`;
 
@@ -1015,7 +1035,7 @@ function Mentee_Management() {
             },
         })
         const response = await res.json()
-        console.log(response)
+        // console.log(response)
         const { success } = response
         if (success) {
             setMenteeList(response.data)
@@ -1023,7 +1043,7 @@ function Mentee_Management() {
     }
 
     const BSGFilter = async (e) => {
-        console.log(e)
+        // console.log(e)
 
         if(e == ""){
             bSGkilll="" 
@@ -1103,7 +1123,7 @@ function Mentee_Management() {
         } else {
             furl = bSGkilll
         }
-        console.log(furl)
+        // console.log(furl)
         // return          
         const token = await localStorage.getItem("token")
         // console.log(token)
@@ -1118,7 +1138,7 @@ function Mentee_Management() {
             },
         })
         const response = await res.json()
-        console.log(response)
+        // console.log(response)
         const { success } = response
         if (success) {
             setMenteeList(response.data)
@@ -1135,7 +1155,7 @@ function Mentee_Management() {
     // (This could be items from props; or items loaded in a local state
     // from an API endpoint with useEffect and useState)
     const endOffset = itemOffset + itemsPerPage;
-    console.log(`Loading items from ${itemOffset} to ${endOffset}`);
+    // console.log(`Loading items from ${itemOffset} to ${endOffset}`);
     const currentItems = menteeList.slice(itemOffset, endOffset);
     const pageCount = Math.ceil(menteeList.length / itemsPerPage);
 
@@ -1143,9 +1163,9 @@ function Mentee_Management() {
       // Invoke when user click to request another page.
   const handlePageClick = (event) => {
     const newOffset = (event.selected * itemsPerPage) % menteeList.length;
-    console.log(
-      `User requested page number ${event.selected}, which is offset ${newOffset}`
-    );
+    // console.log(
+    //   `User requested page number ${event.selected}, which is offset ${newOffset}`
+    // );
     setItemOffset(newOffset);
   };
 
@@ -1200,21 +1220,22 @@ function Mentee_Management() {
                                                 </div>
                                             </div>
 
-                                            <div className="col-lg-2 col-md-4 mb-15">
+                                            {/* <div className="col-lg-2 col-md-4 mb-15">
                                                 <div className="countryOption">
                                                     <select className="form-select custom_selects" aria-label="Default select example">
                                                         <option selected>Growth Score</option>
                                                         <option value="1">9 Score</option>
                                                     </select>
                                                 </div>
-                                            </div>
+                                            </div> */}
 
                                             <div className="col-lg-2 col-md-4 mb-15">
                                                 <div className="countryOption">
                                                     <select onChange={e => CSFilter(e.target.value)} className="form-select custom_selects" aria-label="Default select example">
                                                         <option value="">Core Skills Need to Develop</option>
                                                         {coreSkills.map((i) => (
-                                                                    <option value={i.skill.replace("&",'%26')}>{i.skill}</option>
+                                                                    // <option value={i.skill.replace("&",'%26')}>{i.skill}</option>
+                                                                    <option value={i.skill}>{i.skill}</option>
                                                                 ))}
                                                         {/* <option value="react">React</option>
                                                         <option value="node">Node</option>

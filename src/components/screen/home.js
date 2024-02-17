@@ -11,8 +11,9 @@ import { useEffect, useState } from "react";
 import edit_img from "../../img/edit.svg";
 import Side_Bar from "./sidebar";
 import { useNavigate } from "react-router-dom";
-import { BASE_URL } from "../../services/Config";
+import { BASE_URL, BASE_URL_APPLSURE, BASE_URL_APPLSURE_MENTORING } from "../../services/Config";
 import Modal from 'react-bootstrap/Modal';
+import { Chart } from "react-google-charts";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { DateRangePicker, DateRange } from 'react-date-range';
 // import 'react-date-range/dist/styles.css'; // main css file
@@ -35,6 +36,8 @@ import 'react-calendar/dist/Calendar.css';
 //   Util,
 // } from "bizcharts";
 import DataSet from "@antv/data-set";
+
+
 
 const data = [
   {
@@ -204,6 +207,7 @@ function Home_Screen() {
   // const [value, setValue] = useState(new Date());
   const [value1, onChange1] = useState(new Date());
   const [tasks, setTasks] = useState([])
+  const [evaluationGraph,setEvaluationGraph] = useState([])
   const toggle = () => {
     setSideBarOpen(!sideBarOpen);
   };
@@ -224,6 +228,7 @@ function Home_Screen() {
     const { innerWidth, innerHeight } = window;
     return { innerWidth, innerHeight };
   }
+
   useEffect(() => {
     function handleWindowResize() {
       setWindowSize(getWindowSize());
@@ -242,10 +247,69 @@ function Home_Screen() {
     };
   }, []);
 
+  
+useEffect(() => {
+  createToken()
+  createTokenOld()
+ 
+},[])
+
+const createToken = async() => {
+  const body = {
+      "user_id":localStorage.getItem("user_id")
+  }
+  const res = await fetch(`${BASE_URL_APPLSURE_MENTORING}create-access`, {
+      method: 'POST',
+      headers: {
+          "Accept": "application/json",
+          'Content-Type': 'application/json',
+          // "Authorization": btoken,
+          // "Authentication ": btoken,
+      },
+      body:JSON.stringify(body)
+  })
+  const response = await res.json()
+  console.log(response)
+  const { success } = response
+  // setIsLoading(false)
+  if (success) {
+      localStorage.setItem("program_token_node", response.token)
+      // setMentorList(response.data)
+  }
+  
+}
+const createTokenOld = async() => {
+  const body = {
+      "user_id":localStorage.getItem("user_id")
+  }
+  const res = await fetch(`${BASE_URL_APPLSURE}user-login`, {
+      method: 'POST',
+      headers: {
+          "Accept": "application/json",
+          'Content-Type': 'application/json',
+          // "Authorization": btoken,
+          // "Authentication ": btoken,
+      },
+      body:JSON.stringify(body)
+  })
+  const response = await res.json()
+  // console.log(response)
+  // return
+  const { status } = response
+  // setIsLoading(false)
+  if (status) {
+      localStorage.setItem("program_token_old", response.token)
+      // setMentorList(response.data)
+  }
+  
+}
+
+
   const getTasks1 = async() => {
     const token = await localStorage.getItem("token")
     const btoken = `Bearer ${token}`;   
-    const res = await fetch(`https://api.wiseqglobal.com/api/tasks`,{
+    const res = await fetch(`https://api.wiseq.co/api/tasks`,{
+    // const res = await fetch(`https://api.wiseqglobal.com/api/tasks`,{
         method:'GET',
         headers:{
           "Accept": "application/json",
@@ -268,7 +332,7 @@ function Home_Screen() {
     // 2023-01-10T02:00:00Z from Date
     // const res = await fetch(`https://api.wiseqglobal.com/api/session/evolution-chart?from=${from != ""? from : "2023-01-10T02:00:00Z"}&to=${to != "" ? to : "2023-07-31T02:00:00Z"}`,{
 
-    const res = await fetch(`https://api.wiseqglobal.com/api/session/evolution-chart?from=2023-01-10T02:00:00Z&to=${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString()}`,{
+    const res = await fetch(`https://api.wiseq.co/api/session/evolution-chart?from=2023-01-10T02:00:00Z&to=${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString()}`,{
         method:'GET',
         headers:{
           "Accept": "application/json",
@@ -280,14 +344,21 @@ function Home_Screen() {
         console.log("Chart Data ",response)
         const {success, data} = response
         let dataPoints = Object.values(data);
+        console.log(dataPoints)
         let GD = []
+        let temp = [["Month", "No of Sessions"]]
         dataPoints.forEach((i, index) => {
-          GD.push({
-            name: index == 0 && "Jan" || index == 1 && "Feb" || index == 2 && "Mar" || index == 3 && "Apr" || index == 4 && "May" || index == 5 && "Jun" || index == 6 && "Jul" || index == 7 && "Aug" || index == 8 && "Sep" || index == 9 && "Oct" || index == 10 && "Nov" || index == 11 && "Dec",
-            sessions: i,
-          })
-          // console.log(`There are ${i}`);
+          // GD.push({
+          //   name: index == 0 && "Jan" || index == 1 && "Feb" || index == 2 && "Mar" || index == 3 && "Apr" || index == 4 && "May" || index == 5 && "Jun" || index == 6 && "Jul" || index == 7 && "Aug" || index == 8 && "Sep" || index == 9 && "Oct" || index == 10 && "Nov" || index == 11 && "Dec",
+          //   sessions: i,
+          // })
+          temp.push([
+            index == 0 && "Jan" || index == 1 && "Feb" || index == 2 && "Mar" || index == 3 && "Apr" || index == 4 && "May" || index == 5 && "Jun" || index == 6 && "Jul" || index == 7 && "Aug" || index == 8 && "Sep" || index == 9 && "Oct" || index == 10 && "Nov" || index == 11 && "Dec",
+            i,
+          ])
         })
+        console.log(temp)
+        setEvaluationGraph(temp)
         setnewGraphData(GD)
         let graphdata = [
           {
@@ -431,6 +502,23 @@ function Home_Screen() {
 
   }
 
+
+   const options = {
+    width: '150%',
+    height: 400,
+    colors: ["#EF4F5F"],
+    hAxis: {
+      title: "Months",
+      minValue: 0,
+      format: '0'
+    },
+    vAxis: {
+      title: "No of Sessions",
+      format: '0'
+    },
+    bar: { groupWidth: "50%" },
+    legend: { position: "none" },
+  };
 
   return (
     <div className="main-content">
@@ -935,7 +1023,7 @@ function Home_Screen() {
                   <div className="card-header px-0 border-0">
                     <h6>Sessions Evolution</h6>
                   </div>
-                  <BarChart
+                  {/* <BarChart
                             width={500}
                             height={300}
                             data={newGraphData || []}
@@ -950,15 +1038,16 @@ function Home_Screen() {
                             <XAxis dataKey="name" />
                             <YAxis allowDecimals={false}/>
                             <Tooltip />
-                            {/* <Legend /> */}
-                            {/* <Line
-                              type="monotone"
-                              dataKey="pv"
-                              stroke="#8884d8"
-                              activeDot={{ r: 8 }}
-                            /> */}
                             <Bar dataKey="sessions" fill="#82ca9d" />
-                          </BarChart>
+                  </BarChart> */}
+                  <Chart
+                    chartType="ColumnChart"
+                    colo
+                    width="100%"
+                    height="400px"
+                    data={evaluationGraph}
+                    options={options}
+                    />
                 </div>
               </div>
             </div>

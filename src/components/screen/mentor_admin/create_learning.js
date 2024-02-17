@@ -2,7 +2,7 @@ import Side_Bar from './sidebar';
 import { useEffect, useState , useRef} from 'react';
 import { NavLink, useNavigate } from "react-router-dom";
 import Multiselect from 'multiselect-react-dropdown';
-import { BASE_URL } from '../../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE } from '../../../services/Config';
 
 function Create_Learning() {
     const navigate= useNavigate()
@@ -26,8 +26,12 @@ function Create_Learning() {
     const [summary, setSummary] = useState("")
     const [skills, setSkillsList] = useState([])
     const [imageUrl, setImageUrl] = useState("")
-    const [worksheetUrl, setWorksheetUrl] = useState("")
+    const [worksheetUrl, setWorksheetUrl] = useState([])
+    const [fileUrl, setFileUrl] = useState([])
+    const [FileUrlString, setFileUrlString] = useState("")
+    const [worksheetUrlString, setWorksheetUrlString] = useState("")
     const [discountApplied, setdiscountApplied] = useState(null)
+    const [scores, setScores] = useState({})
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -49,8 +53,122 @@ function Create_Learning() {
         };
     }, []);
 
+    useEffect(() => {
+        scoreDetails()
+    },[])
+
+    const scoreDetails = async() => {
+        const token = await localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
+        const res = await fetch(`${BASE_URL_APPLSURE}orgsettings-customize?id=${localStorage.getItem("user_id")}`,{
+            method:'GET',
+            headers:{
+              "Accept": "application/json",
+              'Content-Type': 'application/json',
+              "Authorization": btoken,
+            },
+        })
+        const response = await res.json()
+        const{status, data} = response
+        console.log("Default Score Res", response)
+        if(status){
+            if(response.data){
+                setScores(response.data?.customize?.growthScore)
+                //other setting
+            //    setScores(data?.customize?.growthScore)
+            }
+        }
+    }
+
+    function calculateTotalDays(value, type) {
+        const minutesInHour = 60;
+        const hoursInDay = 24;
+        const daysInWeek = 7;
+        const daysInMonth = 30; // Assuming a month is 30 days for simplicity
+      
+        switch (type) {
+          case 'minutes':
+            return value / minutesInHour / hoursInDay;
+          case 'days':
+            return value;
+          case 'weeks':
+            return value * daysInWeek;
+          case 'months':
+            return value * daysInMonth;
+          default:
+            throw new Error('Invalid type');
+        }
+      }
+
     const createNewLearning = async(e) => {
         e.preventDefault()
+
+        let nGS = ""
+        // if(growthScore == ""){
+            if(selectedCategory == "podcast"){
+                console.log("1")
+                if(growthScore == ""){
+                    nGS = scores.podcast
+                    // setGrowthScore(scores.podcast)
+                }else{
+                    nGS = parseInt(growthScore)
+                }
+            
+            }
+            if(selectedCategory == "article"){
+                console.log("2")
+                if(growthScore == ""){
+                    nGS = scores.article
+                    // setGrowthScore(scores.podcast)
+                }else{
+                    nGS = parseInt(growthScore)
+                }
+                
+            }
+            if(selectedCategory == "video"){
+                console.log("3")
+                if(growthScore == ""){
+                    nGS = scores.video
+                    // setGrowthScore(scores.podcast)
+                }else{
+                    nGS = parseInt(growthScore)
+                }
+                // growthScore = scores.video
+                // setGrowthScore(scores.video)
+            }
+            if(selectedCategory == "case-study"){
+                console.log("4")
+                if(growthScore == ""){
+                    nGS = scores.caseStudy
+                    // setGrowthScore(scores.podcast)
+                }else{
+                    nGS = parseInt(growthScore)
+                }
+                // growthScore = scores.caseStudy
+                // setGrowthScore(scores.caseStudy)
+            }
+            if(selectedCategory == "course"){
+                console.log("5")
+                if(growthScore == ""){
+                    console.log("empty score")
+                    if (calculateTotalDays(duration, durationType) <= 30) {
+                        nGS = scores.course1m
+                      } else if (calculateTotalDays(duration, durationType) <= 60) {
+                        nGS = scores.course2m
+                      } else if (calculateTotalDays(duration, durationType) <= 90) {
+                        nGS = scores.course3m
+                      } else if (calculateTotalDays(duration, durationType) <= 180) {
+                        nGS = scores.course3to6m
+                      } else {
+                        nGS = scores.courseGt6m
+                      }
+                    
+                }else{
+                    console.log("score value given")
+                    nGS = parseInt(growthScore)
+                }
+            }
+
         if(selectedSkill.length == 0){
             alert("Please select a skill")
             return
@@ -67,6 +185,14 @@ function Create_Learning() {
             }
         }
 
+        if(selectedSource == "internal"){
+            if(FileUrlString == ""){
+                alert("Please attach the learning file required to complete the learning")
+                return
+            }
+
+        }
+        
         if(duration.length == 0){
             alert("Please enter duration")
             return
@@ -80,7 +206,7 @@ function Create_Learning() {
             "learningImg": imageUrl,
             learningName,
             "skills": selectedSkill.toString(),
-            "growthScore":parseInt(growthScore),
+            "growthScore":nGS,
             "category": selectedCategory,
             "sourceType":selectedSource,
             sourceName,
@@ -91,7 +217,8 @@ function Create_Learning() {
             "isWorksheetNeeded": discountApplied,
             "worksheetComments": comment,
             summary,
-            worksheetFile:worksheetUrl
+            worksheetFile: worksheetUrlString,
+            otherFiles: FileUrlString,
           }
           console.log(body)
         //   return
@@ -180,6 +307,119 @@ function Create_Learning() {
         // setSelectedBSkill(selectedList)
     }
 
+    // const uploadImage1 = async (item, number) => {
+    //     // setImagePath(item)
+    //     console.log(item)
+    //     let formData = new FormData()
+    //     item.forEach((i,index) => {
+
+    //         formData.append("uploadfile[]", item[index])
+    //     })
+
+    //     // return
+    //     const token = await localStorage.getItem("token")
+    //     const btoken = `Bearer ${token}`;
+    //     // console.log(btoken)  
+    //     const res = await fetch(`${BASE_URL_APPLSURE}file-upload-multiple`, {
+    //     // const res = await fetch(`${BASE_URL}files/upload?fileType=learning_file`, {
+    //         method: 'POST',
+    //         headers: {
+    //             "Accept": "application/json",
+    //             //   'Content-Type': 'multipart/form-data',
+    //             "Authorization": btoken,
+    //         },
+    //         body: formData
+    //     })
+    //     const response = await res.json()
+    //     console.log(response)
+    //     const { status } = response
+    //     if (status) {
+    //             setWorksheetUrl(response.data)
+    //     }
+    // }
+
+    const uploadWorksheetInput = async (item, number) => {
+        // setImagePath(item)
+        console.log(item)
+        let formData = new FormData()
+        item.forEach((i,index) => {
+
+            formData.append("uploadfile[]", item[index])
+        })
+
+        // return
+        const token = await localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
+        // console.log(btoken)  
+        const res = await fetch(`${BASE_URL_APPLSURE}file-upload-multiple`, {
+        // const res = await fetch(`${BASE_URL}files/upload?fileType=learning_file`, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                //   'Content-Type': 'multipart/form-data',
+                "Authorization": btoken,
+            },
+            body: formData
+        })
+        const response = await res.json()
+        console.log(response)
+        const { status } = response
+        if (status) {
+            setWorksheetUrlString(response.data)
+            let temp = []
+            if(response.data.split("|") != undefined){
+                response.data.split("|")?.map((i)=> {
+                    // console.log(i)
+                    temp.push(i)
+                })
+            }
+                console.log(temp) 
+                // setWorksheetUrl(response.data)
+                setWorksheetUrl(temp)
+        }
+    }
+    const uploadFileInput = async (item, number) => {
+        // setImagePath(item)
+        console.log(item)
+        let formData = new FormData()
+        item.forEach((i,index) => {
+            formData.append("uploadfile[]", item[index])
+            formData.append("pathto", "othfileearningtemplate")
+        })
+
+        // return
+        const token = await localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
+        // console.log(btoken)  
+        const res = await fetch(`${BASE_URL_APPLSURE}file-upload-multiple`, {
+        // const res = await fetch(`${BASE_URL}files/upload?fileType=learning_file`, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                //   'Content-Type': 'multipart/form-data',
+                "Authorization": btoken,
+            },
+            body: formData
+        })
+        const response = await res.json()
+        console.log(response)
+        // return
+        const { status } = response
+        if (status) {
+            setFileUrlString(response.data)
+            let temp = []
+            if(response.data.split("|") != undefined){
+                response.data.split("|")?.map((i)=> {
+                    // console.log(i)
+                    temp.push(i)
+                })
+            }
+                console.log(temp) 
+                // setWorksheetUrl(response.data)
+                setFileUrl(temp)
+        }
+    }
+
     return (
 
         <div className="main-content">
@@ -212,12 +452,12 @@ function Create_Learning() {
                                                         if (e.target.value === '' || re.test(e.target.value)) {
                                                             setGrowthScore(e.target.value)
                                                         }
-                                                        }} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Growth Score" required/>
+                                                        }} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Growth Score"/>
                                                 </div>
 
                                                 <div className="col-md-6 mb-25">
                                                     <div class="countryOption">
-                                                        <select value={selectedSkill} onChange={e => setSelectedSkill(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example">
+                                                        <select value={selectedSkill} onChange={e => setSelectedSkill(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
                                                             <option value="">Skill(s) Addressed</option>
                                                             {skills && skills.map((i) => (
                                                                 <option value={i}>{i}</option>
@@ -238,7 +478,7 @@ function Create_Learning() {
 
                                                 <div className="col-md-6 mb-25">
                                                     <div class="countryOption">
-                                                        <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example">
+                                                        <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
                                                         <option value="">Category</option>
                                                             <option value="podcast">Podcast</option>
                                                             <option value="article">Article</option>
@@ -257,7 +497,7 @@ function Create_Learning() {
 
                                                 <div className="col-md-6 mb-25">
                                                     <div class="countryOption">
-                                                        <select value={selectedSource} onChange={e => setSelectedSource(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example">
+                                                        <select value={selectedSource} onChange={e => setSelectedSource(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
                                                         <option value="">Source Type</option>
                                                             <option value="internal">Internal</option>
                                                             <option value="external">External</option>
@@ -364,16 +604,41 @@ function Create_Learning() {
                                                                         </div>
                                                                         )}
                                                 </div>
-                                                {/* {discountApplied && */}
                                                 <div className="col-md-6 mb-30">
                                                     <label for="formFile" class="form-label">Upload a File</label>
                                                     <input onChange={(event) => {
-                                                                            setImageLocal(event.target.files[0])
-                                                                            uploadImage(event.target.files[0],"2")
-                                                                        }} class="form-control ip-gray radius-xs b-deep px-15" type="file" id="customFile" ref={inputFile}/>
-                                                                        {imageLocal && (
+                                                                            setImageLocal(event.target.files)
+                                                                            uploadFileInput(event.target.files,"2")
+                                                                        }} class="form-control ip-gray radius-xs b-deep px-15" type="file" id="customFile" ref={inputFile} multiple/>
+                                                                        {imageLocal && fileUrl.map((i)=> (
                                                                             <div style={{display:'flex', justifyContent:'space-between'}}>
-                                                                            <p>{imageLocal.name}</p>
+                                                                            {/* <p>{imageLocal.name}</p> */}
+                                                                            <p>{i.substring(i.indexOf('_')+1, i.length).replaceAll('%20', ' ')}</p>
+                                                                            <p style={{cursor:'pointer', color:'red'}} onClick={() =>{
+                                                                                if (inputFile.current) {
+                                                                                    inputFile.current.value = "";
+                                                                                    inputFile.current.type = "text";
+                                                                                    inputFile.current.type = "file";
+                                                                                    setImageLocal(null)
+                                                                                    setFileUrl("")
+                                                                                }
+
+                                                                            }}>Delete</p>
+                                                                        </div>
+                                                                        ))}
+                                                </div>
+
+                                                {discountApplied && (
+                                                    <div className="col-md-6 mb-30">
+                                                    <label for="formFile" class="form-label">Upload Worksheet</label>
+                                                    <input onChange={(event) => {
+                                                                            setImageLocal(event.target.files)
+                                                                            uploadWorksheetInput(event.target.files,"2")
+                                                                        }} class="form-control ip-gray radius-xs b-deep px-15" type="file" id="customFile" ref={inputFile} multiple/>
+                                                                        {imageLocal && worksheetUrl.map((i)=> (
+                                                                            <div style={{display:'flex', justifyContent:'space-between'}}>
+                                                                            {/* <p>{imageLocal.name}</p> */}
+                                                                            <p>{i.substring(i.indexOf('_')+1, i.length).replaceAll('%20', ' ')}</p>
                                                                             <p style={{cursor:'pointer', color:'red'}} onClick={() =>{
                                                                                 if (inputFile.current) {
                                                                                     inputFile.current.value = "";
@@ -385,9 +650,9 @@ function Create_Learning() {
 
                                                                             }}>Delete</p>
                                                                         </div>
-                                                                        )}
+                                                                        ))}
                                                 </div>
-                                                {/* } */}
+                                                )}
                                                 
                                                 <div className="layout-button">
                                                     <div className="btn_center">

@@ -4,7 +4,12 @@ import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from "react-router-dom";
 import authornav_img from '../../img/user_pic.png';
-import { BASE_URL } from '../../services/Config'
+import { BASE_URL, BASE_URL_APPLSURE } from '../../services/Config'
+import 'react-calendar/dist/Calendar.css';
+import Calendar from 'react-calendar';
+import Modal from 'react-bootstrap/Modal';
+import moment from 'moment'
+import Multiselect from 'multiselect-react-dropdown';
 
 const data = [
     { id: 1, community_name: "Anika Schleifer", author_name: "Senior Director - Human Resources" },
@@ -16,9 +21,18 @@ const data = [
 
 function Pending_By() {
     const {state} = useLocation()
+    console.log(state)
     const [token, setToken] = useState(localStorage.getItem("token"))
     const [sideBarOpen, setSideBarOpen] = useState(true)
     const [audiencesList, setAudiencesList] = useState([])
+    const [value, setValue] = useState(new Date());
+    const [calc, setCalc] = useState(false);
+    const [date, setDate] = useState("")
+    const [checked, setChecked] = useState(false)
+    const [menteeList, setMenteeList] = useState([])
+    const [selectedMentee, setSelectedMentee] = useState([])
+    const [selectedMenteeForAssign, setSelectedMenteeForAssign] = useState([])
+
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -40,13 +54,57 @@ function Pending_By() {
         };
     }, []);
 
+    const [showHello1, setShowHello1] = useState(false);
+    const closeModal1 = () => setShowHello1(false);
+    const showModal1 = () => setShowHello1(true);
+
     useEffect(() => {
         getAudiences()
     },[])
     
+    
+    const showCalc = () => {
+        setCalc(!calc)
+    }
+
+    const onChange = (e) => {
+        console.log(e)
+        setValue(moment(e).format("YYYY-MM-DD"))
+        setDate(moment(e).format("DD/MM/YYYY"))
+        showCalc()
+    }
+
+    const onSelectMentee = (selectedList, selectedItem) => {
+        console.log(selectedList)
+        let temp = []
+        let temp1 = []
+        selectedList.map((i) => {
+            temp.push(i)
+            temp1.push(i.userId)
+            // setnewSelectedTools(temp)
+        })
+        setSelectedMentee(temp)
+        setSelectedMenteeForAssign(temp1)
+    }
+
+    const onRemoveMentee = (selectedList, removedItem) => {
+        console.log(selectedList)
+        let temp = []
+        let temp1 = []
+        selectedList.map((i) => {
+            temp.push(i)
+            temp1.push(i.userId)
+            // setnewSelectedTools(temp)
+        })
+        // setSelectedCSkill(selectedList)
+        setSelectedMentee(temp)
+        setSelectedMenteeForAssign(temp1)
+    }
+
+
     const getAudiences = async() => {
         const btoken = `Bearer ${token}`;
-        const res = await fetch(`${BASE_URL}learnings/${state}/audience`, {
+        const res = await fetch(`${BASE_URL}learnings/${state.data}/audience`, {
             method: 'GET',
             headers: {
                 "Accept": "application/json",
@@ -57,6 +115,15 @@ function Pending_By() {
         const response = await res.json()
         console.log("audience list", response)
         setAudiencesList(response.data)
+        let temp = []
+        response.data.map((i) => {
+            // console.log(i)
+            if(i.completedOn == null){
+                console.log("herer", i)
+                temp.push(i)
+            }
+        })
+        setMenteeList(temp)
     }
 
     const sendReminder = async() => {
@@ -78,6 +145,39 @@ function Pending_By() {
         // setAudiencesList(response.data)
     }
 
+    const reAssignedToMentee = async() => {
+        const btoken = `Bearer ${token}`;
+        let temp = []
+        menteeList.map((i) => {
+            temp.push(i.userId)
+        })
+        console.log(temp)
+        const body = {
+            "mentees": checked ? temp : selectedMenteeForAssign,
+              // "finishBy":finishDate
+              "finishBy":value,
+        }
+        console.log(body)
+        const res = await fetch(`${BASE_URL}learnings/${state.data}/re-assign-learning`, {
+            method: 'PUT',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+            body:JSON.stringify(body)
+        })
+        const response = await res.json()
+        console.log("re assigned learning status", response)
+        if(response.success){
+            closeModal1()
+            alert("Learning reassigned successfully")
+            // getCreatedLearning()
+            // getAssignedLearning()
+        }
+        // setCheckedAndVerifiedLearning(response.data)
+    }
+
     return (
 
         <div className="main-content">
@@ -94,7 +194,14 @@ function Pending_By() {
                                     </div>
                                     <div class="layout-button">
                                         {/* <NavLink className="navbar-link" to="/create_learning"><button type="button" class="btn btn-outline-primary btn-squared color-primary">Edit</button></NavLink> */}
+                                        <a href={`${BASE_URL_APPLSURE}PendingAudience?learning_id=${state.data}`}>
+                                            <button type="button" class="btn btn-outline-primary btn-squared color-primary" onClick={() => {}}>Download List</button>
+                                        </a>
+                                        {state.hint == "overdue" ? 
+                                        <button type="button" class="btn btn-primary btn-default btn-squared" onClick={() => {showModal1()}}>Re Assign</button>
+                                        :
                                         <button type="button" class="btn btn-primary btn-default btn-squared" onClick={() => sendReminder()}>Send Reminder</button>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -147,6 +254,103 @@ function Pending_By() {
                 </div>
             </div>
             <Side_Bar onClick={toggle} sideBarOpen={windowSize.innerWidth > 768 && sideBarOpen ? true : windowSize.innerWidth > 768 && !sideBarOpen ? false : windowSize.innerWidth < 768 && sideBarOpen ? false : true} />
+
+            <Modal show={showHello1} onHide={closeModal1}>
+          <Modal.Header  closeButton>
+            <Modal.Title>Re Assign</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <form>
+              <div className="row">
+                <div className="col-md-12 mb-25">
+                  <div className="countryOption">
+                    <select
+                      className="form-select form-control ih-medium ip-gray radius-xs b-deep px-15"
+                      aria-label="Default select example"
+                      disabled
+                    >
+                      <option selected>Select Program</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="col-md-12 mb-25">
+                  <div className="countryOption">
+                  <Multiselect
+                      style={{ searchBox: { borderColor: "gray" } }}
+                      // isObject={false}
+                      disable={checked ? true : false}
+                      value={[{ id: 1, industry: "as" }]}
+                      options={menteeList} // Options to display in the dropdown
+                      placeholder="Select Mentees"
+                      selectedValues={selectedMentee} // Preselected value to persist in dropdown
+                      onSelect={onSelectMentee} // Function will trigger on select event
+                      onRemove={onRemoveMentee} // Function will trigger on remove event
+                      displayValue="name" // Property name to display in the dropdown options
+                    />
+                    {/* <select
+                      value={selectedMentee}
+                      onChange={(e) => setSelectedMentee(e.target.value)}
+                      className="form-select form-control ih-medium ip-gray radius-xs b-deep px-15"
+                      aria-label="Default select example"
+                    >
+                      <option value="">Select Mentees</option>
+                      {menteeList &&
+                        menteeList.map((i) => (
+                          <option value={i.id}>{i.name}</option>
+                        ))}
+                    </select> */}
+                  </div>
+                </div>
+
+                <div>
+                  <input
+                    value="test"
+                    placeholder="Select All Mentees"
+                    type="checkbox"
+                    onChange={(e) => {
+                        setChecked(e.target.checked)
+                        
+                    }}
+                  />
+                  <label for="check-1">
+                    <span className="checkbox-text fw-600">Select All Mentees</span>
+                  </label>
+                </div>
+                <div className="col-md-12 mb-25">
+                  <input
+                    onClick={() => showCalc()}
+                    value={date}
+                    className="form-control ih-medium ip-gray date_time radius-xs b-deep px-15"
+                    placeholder="Finish By"
+                    required
+                  />
+                  {calc && (
+                    <Calendar
+                      onChange={(e) => onChange(e)}
+                      value={value}
+                      minDate={new Date()}
+                    />
+                  )}
+                </div>
+
+                <div className="col-md-12">
+                  <div className="mt-0">
+                    <button
+                      type="button"
+                      onClick={() => reAssignedToMentee()}
+                      className="btn btn-primary btn-default btn-squared m-auto"
+                    >
+                      Re Assign
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </Modal.Body>
+        </Modal>
         </div>
 
     );

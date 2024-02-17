@@ -9,10 +9,11 @@ import Modal from 'react-bootstrap/Modal';
 import Accordion from 'react-bootstrap/Accordion';
 import { NavLink, useNavigate } from "react-router-dom";
 import moment from 'moment'
-import { BASE_URL } from '../../services/Config'
+import { BASE_URL, BASE_URL_APPLSURE_MENTORING } from '../../services/Config'
 import Multiselect from 'multiselect-react-dropdown';
 import 'react-calendar/dist/Calendar.css';
 import Calendar from 'react-calendar';
+import {matchSorter} from 'match-sorter'
 
 const data = [
     { id: 1, learning_name: "-", skill_address: "-", category_name: "-", source_type: "External", created_on: "12/12/23" },
@@ -31,6 +32,13 @@ const data3 = [
     { id: 1, learning_name: "-", skill_address: "-", category_name: "-", source_type: "-", assigned_to: "Jane Arora", assigned_on: "12/12/23", finish_by: "12/12/23" },
 ];
 
+const data9 = [
+  { id: 1, filter_heading: "Category" },
+  { id: 2, filter_heading: "Skills Addressed" },
+
+];
+
+
 let fAreaF = ""
 
 function Learning_Screen() {
@@ -38,22 +46,109 @@ function Learning_Screen() {
     const [token, setToken] = useState(localStorage.getItem("token"))
     const [sideBarOpen, setSideBarOpen] = useState(true)
     const [createdLearning, setCreatedLearning] = useState([])
+    const [createdLearning1, setCreatedLearning1] = useState([])
     const [completedLearning, setCompletedLearning] = useState([])
     const [verifiedLearning, setVerifiedLearning] = useState([])
     const [fAreas, setFAreas] = useState([])
     const [levels, setLevels] = useState([])
     const [finishDate, setFinishDate] = useState("")
+    const [programName, setProgramName] = useState("")
     const [checked, setChecked] = useState(false)
     const [menteeList, setMenteeList] = useState([])
+    const [programMenteeList, setProgramMenteeList] = useState([])
     const [selectedMentee, setSelectedMentee] = useState([])
     const [selectedMenteeForAssign, setSelectedMenteeForAssign] = useState([])
+    const [programList, setProgramList] = useState([])
     const [assignedID, setAssignedID] = useState("")
     const [assignedLearning, setAssignedLearning] = useState([])
+    const [filter0, setFilter0] = useState('');
     const [filter, setFilter] = useState('');
     const [filter1, setFilter1] = useState('');
     const [value, setValue] = useState(new Date());
     const [calc, setCalc] = useState(false);
     const [date, setDate] = useState("")
+    const [searchLearning, setSearchLearning] = useState("")
+    const [skills, setSkillsList] = useState([])
+
+
+    useEffect(() => {
+      const fetchListData = async(index) => {
+      
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+        myHeaders.append("Content-Type", "application/json");
+  
+        var raw = JSON.stringify({
+          "status":[4]
+      });
+  
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+  
+        fetch(`${BASE_URL_APPLSURE_MENTORING}program-list-published`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            console.log("==",result)
+            setProgramList(result.programList)
+           
+        })
+        .catch(error => console.log('error', error));
+  
+        
+      }
+      fetchListData()
+    },[])
+   
+
+    const handleChangeFilter0 = event => {
+      // console.log(programList)
+      // return
+      programList.map((i) => {
+        if(i.id == event.target.value){
+          setProgramName(i.name)
+        }
+      })
+      setFilter0(event.target.value);
+      getProgramMentee(event.target.value)
+    }
+
+    const getProgramMentee = async(id) => {
+      // console.log(id)
+      // return
+
+      var myHeaders = new Headers();
+      myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+      myHeaders.append("Content-Type", "application/json");
+
+      var raw = JSON.stringify({
+          "program_id":id,
+          "role":"mentee" // mentor
+      });
+
+      var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+      };
+
+      fetch(`${BASE_URL_APPLSURE_MENTORING}program-userslist`, requestOptions)
+      .then(response => response.json())
+      .then(result => {
+          console.log(result)
+          let pp = []
+          result.userlist?.map((i) => {
+            pp.push({id: i.user_id, name: i.user_meta?.name})
+          })
+          setMenteeList(pp)
+        })
+      .catch(error => console.log('error', error));
+      
+  }
 
     const handleChangeFilter = event => {
       setFilter(event.target.value);
@@ -92,11 +187,39 @@ function Learning_Screen() {
         getVerifiedLearning()
         getDetails()
         getMyMentee()
+        getSkills()
     },[])
 
     const [showHello, setShowHello] = useState(false);
     const closeModal = () => setShowHello(false);
     const showModal = () => setShowHello(true);
+
+    const [showFilter, setShowFilter] = useState(false)
+
+    const showModal1 = () => {
+        setShowFilter(prevStat => !prevStat)
+    }
+
+    const getSkills = async() => {
+      const btoken = `Bearer ${token}`;
+      const res = await fetch(`${BASE_URL}organisation-info/skills`, {
+          method: 'GET',
+          headers: {
+              "Accept": "application/json",
+              'Content-Type': 'application/json',
+              "Authorization": btoken,
+          },
+      })
+      const response = await res.json()
+      console.log("skill list", response)
+      if(response.success){
+          let tt = []
+          response.data.map((i) => {
+              tt.push({skill: i.skill, value: false})
+          })
+          setSkillsList(tt)
+      }
+}
 
     const getCreatedLearning = async() => {
         const btoken = `Bearer ${token}`;
@@ -111,6 +234,7 @@ function Learning_Screen() {
         const response = await res.json()
         console.log("created learning", response)
         setCreatedLearning(response.data)
+        setCreatedLearning1(response.data)
     }
 
     const getAssignedLearning = async() => {
@@ -240,9 +364,9 @@ function Learning_Screen() {
         console.log(temp)
         const body = {
         "mentees": checked ? temp : selectedMenteeForAssign,
-        // "finishBy":finishDate,
+        "program_id":filter0,
+        "program": programName,
         "finishBy":value,
-        // "finishBy":date
         }
 
         console.log(body)
@@ -276,13 +400,13 @@ function Learning_Screen() {
 
         if(e != ""){
             if(filter.length>0){
-                finalUrl  = `levels=${e}&functionalArea=${filter}`
+                finalUrl  = `levels=${e.trim()}&functionalArea=${filter.trim()}`
             }else{
-                finalUrl  = `levels=${e}`
+                finalUrl  = `levels=${e.trim()}`
             }
         }else{
             if(filter.length>0){
-                finalUrl  = `functionalArea=${filter}`
+                finalUrl  = `functionalArea=${filter.trim()}`
             }else{
                 finalUrl =""
             }
@@ -309,20 +433,21 @@ function Learning_Screen() {
 
     const FAreaFilter = async (e) => {
         let finalUrl;
-        console.log(filter)
-        console.log(filter1)
+        console.log(e)
+        // console.log(filter)
+        // console.log(filter1)
         
 
         if(e != ""){
             if(filter1.length>0){
-                finalUrl  = `functionalArea=${e}&levels=${filter1}`
+                finalUrl  = `functionalArea=${e.trim()}&levels=${filter1.trim()}`
             }else{
-                finalUrl  = `functionalArea=${e}`
+                finalUrl  = `functionalArea=${e.trim()}`
             }
         }else{
             if(filter1.length>0){
 
-                finalUrl  = `levels=${filter1}`
+                finalUrl  = `levels=${filter1.trim()}`
             }else{
                 finalUrl =""
             }
@@ -359,6 +484,74 @@ function Learning_Screen() {
         showCalc()
     }
 
+    const filterLearning = searchLearning
+    ? createdLearning.filter(x => 
+
+      x.learningName.toLowerCase().includes(searchLearning.toLowerCase()),
+        // alert(JSON.stringify(x,null,2))
+        // return
+        // x.skills.toLowerCase().includes(searchLearning.toLowerCase())
+    )
+    : createdLearning;
+
+
+    const handleOnChange = async(index) => {
+      let f;
+
+      // console.log(all)
+      console.log(skills[index].value)
+      skills[index].value == false ? skills[index].value = true : skills[index].value = false
+      if(skills[index].value == true){
+
+        f = matchSorter(createdLearning, skills[index].skill, {keys: ['skills']})
+        // f = matchSorter(createdLearning, ["Node, React"], {keys: ['skills']})
+        setCreatedLearning(f)
+      }else{
+        
+        setCreatedLearning(createdLearning1)
+      }
+      // console.log(f)
+    }
+    const handleOnChange1 = async(index) => {
+      let f;
+
+      // console.log(all)
+      console.log(catDate[index].value)
+      catDate[index].value == false ? catDate[index].value = true : catDate[index].value = false
+      if(catDate[index].value == true){
+
+        f = matchSorter(createdLearning, catDate[index].name, {keys: ['category']})
+        // f = matchSorter(createdLearning, ["Node, React"], {keys: ['skills']})
+        setCreatedLearning(f)
+      }else{
+        console.log("hell")
+        setCreatedLearning(createdLearning1)
+      }
+      // console.log(f)
+    }
+
+    const [catDate, setCatDate] = useState([
+      {
+        name:"Podcast",
+        value:false
+      },
+      {
+        name:"Article",
+        value:false
+      },
+      {
+        name:"Video",
+        value:false
+      },
+      {
+        name:"CaseStudy",
+        value:false
+      },
+      {
+        name:"Cource",
+        value:false
+      },
+    ])
     return (
       <div className="main-content">
         <div
@@ -379,16 +572,18 @@ function Learning_Screen() {
                     </div>
 
                     <div class="layout-button">
-                      <p className="filter_box me-10 mt-10">
+                      <p onClick={()=>showModal1()} className="filter_box me-10 mt-10">
                         <i class="las la-filter"></i> Filter
                       </p>
                       <div className="d-flex align-items-center user-member__form my-sm-0 my-2">
                         <img src={search_img} alt="search" className="svg" />
                         <input
+                          value={searchLearning}
+                          onChange={(e) =>setSearchLearning(e.target.value)}
                           className="me-sm-2 border-0 box-shadow-none ms-10"
                           type="search"
-                          placeholder="Search members..."
-                          aria-label="Search"
+                          placeholder="Search by keywords bar"
+                          aria-label="Search by keywords bar"
                         />
                       </div>
                       <NavLink className="" to="/create_learning">
@@ -409,7 +604,7 @@ function Learning_Screen() {
                       <div className="tab-wrapper">
                         <div className="dm-tab tab-horizontal">
                           <Tabs>
-                            <TabList className="nav nav-tabs vertical-tabs">
+                            <TabList className="nav nav-tabs vertical-tabs organisation-tab">
                               <Tab>Created</Tab>
                               <Tab>Assigned</Tab>
                               <Tab>Completed</Tab>
@@ -419,7 +614,7 @@ function Learning_Screen() {
                             <TabPanel className="tab-content">
                               <div className="row">
                                 {createdLearning &&
-                                  createdLearning.map((user) => (
+                                  filterLearning.map((user) => (
                                     <div className="col-lg-12">
                                       <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
                                         <div className="table-responsive">
@@ -489,8 +684,7 @@ function Learning_Screen() {
 
                                                 <td>
                                                   <div className="userDatatable-content">
-                                                    {/* {user.skills} */}
-                                                    {user.skills?.split(",")
+                                                    {/* {user.skills?.split(",")
                                                       .length > 2
                                                       ? `${
                                                           user.skills?.split(
@@ -501,7 +695,15 @@ function Learning_Screen() {
                                                             ","
                                                           )?.length - 1
                                                         }`
-                                                      : user.skills}
+                                                      : user.skills} */}
+                                                       {user.skills.substring(
+                                                      0,
+                                                      10
+                                                    )}
+                                                    {user.skills.length >
+                                                    10
+                                                      ? "..."
+                                                      : ""}
                                                   </div>
                                                 </td>
 
@@ -704,10 +906,10 @@ function Learning_Screen() {
                                                   <div className="userDatatable-content">
                                                     {user.learningName.substring(
                                                       0,
-                                                      12
+                                                      8
                                                     )}
                                                     {user.learningName.length >
-                                                    12
+                                                    8
                                                       ? "..."
                                                       : ""}
                                                   </div>
@@ -715,8 +917,7 @@ function Learning_Screen() {
 
                                                 <td>
                                                   <div className="userDatatable-content">
-                                                    {/* {user.skills} */}
-                                                    {user.skills?.split(",")
+                                                    {/* {user.skills?.split(",")
                                                       .length > 2
                                                       ? `${
                                                           user.skills?.split(
@@ -727,7 +928,15 @@ function Learning_Screen() {
                                                             ","
                                                           )?.length - 1
                                                         }`
-                                                      : user.skills}
+                                                      : user.skills} */}
+                                                       {user.skills.substring(
+                                                      0,
+                                                      10
+                                                    )}
+                                                    {user.skills.length >
+                                                    10
+                                                      ? "..."
+                                                      : ""}
                                                   </div>
                                                 </td>
 
@@ -745,8 +954,15 @@ function Learning_Screen() {
 
                                                 <td>
                                                   <div className="userDatatable-content fw-600">
-                                                    {user.audience[0]?.name +
-                                                      `${
+                                                  {user.audience[0]?.name.substring(
+                                                      0,
+                                                      8
+                                                    )}
+                                                    {user.audience[0]?.name.length >
+                                                    8
+                                                      ? "..."
+                                                      : "" }
+                                                      {`${
                                                         user.audience.length > 1
                                                           ? ` + ${
                                                               user.audience
@@ -767,21 +983,28 @@ function Learning_Screen() {
 
                                                 <td>
                                                   <div className="userDatatable-content fw-600">
-                                                    {moment(
-                                                      user.finishBy
-                                                    ).format("DD/MM/YY")}
+                                                    {
+                                                  moment(user.finishBy.split('T')[0]).format("DD/MM/YYYY")}
                                                   </div>
                                                 </td>
 
                                                 <td>
-                                                  <div className="userDatatable-content color-status fw-600">
-                                                    {user.status}
-                                                  </div>
+                                                  {user.status == "overdue" ? 
+                                                    <div style={{color:"#B93D49"}} className="userDatatable-content fw-600">
+                                                      {user.status.replace(/([a-z])([A-Z])/, '$1 $2')}
+                                                    </div>:
+                                                    <div className="userDatatable-content color-status fw-600">
+                                                      {user.status.replace(/([a-z])([A-Z])/, '$1 $2')}
+                                                    </div>
+                                                  }
+                                                  {/* <div className="userDatatable-content color-status fw-600">
+                                                    {user.status.replace(/([a-z])([A-Z])/, '$1 $2')}
+                                                  </div> */}
                                                 </td>
 
                                                 <td>
                                                   <ul className="orderDatatable_actions mb-0 d-flex flex-wrap">
-                                                    <li>
+                                                    {/* <li>
                                                       <button onClick={() => navigate("/edit_learning", {state:user})} className="btn btn-icon btn-warning btn-squared">
                                                         <img
                                                           src={edit_img}
@@ -789,7 +1012,7 @@ function Learning_Screen() {
                                                           className="svg"
                                                         />
                                                       </button>
-                                                    </li>
+                                                    </li> */}
 
                                                     {/* <NavLink className="navbar-link" to="/created_learning_profile"> */}
                                                     <li>
@@ -1160,6 +1383,89 @@ function Learning_Screen() {
             </div>
           </div>
         </div>
+
+        {showFilter ?
+                    <div className="filter_box1">
+                        <div className="products_page product_page--grid mb-30">
+                            <div className="1">
+                                <div className="1">
+                                    <div className="1">
+                                        <div className="widget box_shadow1">
+                                            <div className="category_sidebar">
+                                                <div className="product-sidebar-widget mb-10">
+                                                    {/* {data9.map((user) => ( */}
+
+                                                        <Accordion>
+                                                            <Accordion.Item eventKey="0" className="filter_accor">
+                                                                <Accordion.Header className="widget_title">Skills Addressed</Accordion.Header>
+                                                                <Accordion.Body className="card border-0 shadow-none">
+                                                                    <div className="product-brands">
+                                                                        <ul>
+                                                                          {skills && skills.map((i,index) =>(
+                                                                            <li>
+                                                                                <div className="checkbox-theme-default custom-checkbox">
+                                                                                    <input 
+                                                                                      name={i}
+                                                                                      value={i} 
+                                                                                      onChange={() => handleOnChange(index)}
+                                                                                      className="checkbox" type="checkbox" id={`custom-checkbox-${index}`} />
+                                                                                    <label for={`custom-checkbox-${index}`}>
+                                                                                        <span className="checkbox-text">
+                                                                                            {i.skill}
+                                                                                        </span>
+                                                                                    </label>
+                                                                                </div>
+                                                                            </li>
+                                                                          ))}
+                                                                           
+                                                                        </ul>
+                                                                    </div>
+                                                                </Accordion.Body>
+                                                            </Accordion.Item>
+                                                        </Accordion>
+                                                        <Accordion>
+                                                            <Accordion.Item eventKey="0" className="filter_accor">
+                                                                <Accordion.Header className="widget_title">Category</Accordion.Header>
+                                                                <Accordion.Body className="card border-0 shadow-none">
+                                                                    <div className="product-brands">
+                                                                        <ul>
+                                                                          {catDate.map((i,index) => (
+                                                                            <li>
+                                                                                <div className="checkbox-theme-default custom-checkbox">
+                                                                                    <input  
+                                                                                      name={i}
+                                                                                      value={i} 
+                                                                                      onChange={() => handleOnChange1(index)} className="checkbox" type="checkbox" id={`custom-checkbox-${index+100}`} />
+                                                                                    <label for={`custom-checkbox-${index+100}`}>
+                                                                                        <span className="checkbox-text">
+                                                                                        {i.name}
+                                                                                        </span>
+                                                                                    </label>
+                                                                                </div>
+                                                                            </li>
+                                                                          ))}
+                                                                            
+                                                                            
+                                                                        </ul>
+                                                                    </div>
+                                                                </Accordion.Body>
+                                                            </Accordion.Item>
+                                                        </Accordion>
+
+
+
+                                                    {/* ))} */}
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> : ""}
+
+
         <Side_Bar
           onClick={toggle}
           sideBarOpen={
@@ -1195,11 +1501,13 @@ function Learning_Screen() {
                     <select
                       className="form-select form-control ih-medium ip-gray radius-xs b-deep px-15"
                       aria-label="Default select example"
-                      disabled
+                      value={filter0}
+                      onChange={handleChangeFilter0}
                     >
-                      <option selected>Select Program</option>
-                      <option value="1">1</option>
-                      <option value="2">2</option>
+                      <option value="">Select Program</option>
+                      {programList.map((i) => (
+                        <option value={i.id}>{i.name}</option>
+                      ))}
                     </select>
                   </div>
                 </div>

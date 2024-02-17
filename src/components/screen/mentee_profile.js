@@ -14,7 +14,7 @@ import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { BASE_URL } from '../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE } from '../../services/Config';
 import authornav_img from '../../img/user_pic.png';
 import moment from 'moment';
 
@@ -142,6 +142,14 @@ function Mentee_Profile() {
     const closeModal2 = () => setShowHello2(false);
     const showModal2 = () => setShowHello2(true);
 
+    const [showHello3, setShowHello3] = useState(false);
+    const closeModal3 = () => setShowHello3(false);
+    const showModal3 = () => setShowHello3(true);
+
+    const [showHello4, setShowHello4] = useState(false);
+    const closeModal4 = () => setShowHello4(false);
+    const showModal4 = () => setShowHello4(true);
+
     const [showSuccess, setShowSuccess] = useState(false);
     const hideAddModel = () => setShowSuccess(false);
     const showAddModel = () => setShowSuccess(true);
@@ -252,6 +260,39 @@ const activeMentee = async() => {
           }
 }
 
+const enableAsMentor = async(per) => {
+  const token = await localStorage.getItem("token")
+  const btoken = `Bearer ${token}`;
+        const body = {
+          "user_id":state,
+          "what":per
+      }
+        const res = await fetch(`${BASE_URL_APPLSURE}switch-power-totoggle`,{
+            method:'POST',
+            headers:{
+              "Accept": "application/json",
+              'Content-Type': 'application/json',
+              "Authorization": btoken,
+            },
+            body:JSON.stringify(body)
+          })
+          const response = await res.json()
+        console.log(response)
+        const {status} = response
+        if(status){
+          // alert("Mentee active succesfully")
+          
+          if(per == "1"){
+            closeModal3()
+          }else{
+            closeModal4()
+          }
+          // showAddModel1()
+          getDetail()
+          // navigate(-1)
+        }
+}
+
     return (
       <div className="main-content">
         <div
@@ -297,6 +338,21 @@ const activeMentee = async() => {
                   </p>
                     </div>
                     <div class="layout-button">
+                    <button
+                        onClick={() =>{
+                          if(userData?.userMeta?.switchPower == 0 || userData?.userMeta?.switchPower == null){
+                            showModal3()
+                          }else{
+                            showModal4()
+                          }
+                        }
+                          // navigate("/edit_mentor", { state: userData })
+                        }
+                        type="button"
+                        className="btn btn-outline-primary btn-squared color-primary"
+                      >
+                        {userData && userData?.userMeta?.switchPower == 0 || userData?.userMeta?.switchPower == null ? "Active As Mentor" : "Disable As Mentor"}
+                      </button>
                       <button
                         onClick={() =>
                           navigate("/edit_mentee", { state: userData })
@@ -359,12 +415,12 @@ const activeMentee = async() => {
                       >
                         Write a Testimonial
                       </button>
-                      {/* <button
+                      <button
                         type="button"
                         className="btn btn-outline-primary btn-squared color-primary px-15"
                       >
                         View IDP
-                      </button> */}
+                      </button>
                       <button
                         type="button"
                         onClick={() => navigate('/chat', {state:userData})}
@@ -968,6 +1024,70 @@ const activeMentee = async() => {
             </div>
           </Modal.Body>
         </Modal>
+
+        <Modal show={showHello3} onHide={closeModal3}>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirm Action</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="text-center">
+              <h4 class="text-capitalize fw-500 mb-25">
+              Are you sure you want to enable {userData && userData.name} as Mentor to the platform?
+              </h4>
+
+              <div class="layout-button justify-content-center">
+                <button
+                  onClick={() => closeModal3()}
+                  type="button"
+                  className="btn btn-no btn-default btn-squared"
+                >
+                  No
+                </button>
+                <button
+                  onClick={() =>{
+                    enableAsMentor("1")
+                  } }
+                  type="button"
+                  className="btn btn-yes btn-default btn-squared"
+                >
+                  Yes
+                </button>
+              </div>
+            </div>
+          </Modal.Body>
+        </Modal>
+        <Modal show={showHello4} onHide={closeModal4}>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirm Action</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="text-center">
+              <h4 class="text-capitalize fw-500 mb-25">
+              Are you sure you want to disable {userData && userData.name} as Mentor to the platform?
+              </h4>
+
+              <div class="layout-button justify-content-center">
+                <button
+                  onClick={() => closeModal3()}
+                  type="button"
+                  className="btn btn-no btn-default btn-squared"
+                >
+                  No
+                </button>
+                <button
+                  onClick={() =>{
+                    enableAsMentor("2")
+                  } }
+                  type="button"
+                  className="btn btn-yes btn-default btn-squared"
+                >
+                  Yes
+                </button>
+              </div>
+            </div>
+          </Modal.Body>
+        </Modal>
+
 
         <Modal show={showHello1} onHide={() =>{
           closeModal1()

@@ -2,7 +2,7 @@ import React from 'react'
 import Side_Bar from "./sidebar";
 import { useEffect, useState } from "react";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
-import { BASE_URL_APPLSURE } from '../../services/Config';
+import { BASE_URL_APPLSURE, BASE_URL } from '../../services/Config';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import Modal from 'react-bootstrap/Modal';
@@ -28,6 +28,7 @@ function Competency_Report_For_Mentors() {
     const [totalNumber, setTotalNumber] = useState("")
     const [filterValue, setFilterValue] = useState("")
     const [value1, onChange1] = useState(new Date());
+    const [fullInfo, setFullInfo] = useState("");
     function getWindowSize() {
       const { innerWidth, innerHeight } = window;
       return { innerWidth, innerHeight };
@@ -44,18 +45,37 @@ function Competency_Report_For_Mentors() {
     }, []);
 
     useEffect(() => {
-      getReportofDevSkill()
+      getFullDetail()
     },[])
+
+    const getFullDetail = async () => {
+      const token = await localStorage.getItem("token");
+      const btoken = `Bearer ${token}`;
+  
+      const res = await fetch(`${BASE_URL}organisations/4324`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: btoken,
+        },
+      });
+      const response = await res.json();
+      console.log(response);
+      getReportofDevSkill(response.data.id)
+      setFullInfo(response.data.id);
+    };
 
     const [showHello, setShowHello] = useState(false);
     const closeModal = () => setShowHello(false);
     const showModal = () => setShowHello(true);
 
 
-    const getReportofDevSkill = async() => {
+    const getReportofDevSkill = async(id) => {
       const btoken = `Bearer ${token}`;
       const body = {
           "condition":"all",//lastmonth//lastweek//all/daterange,
+          "organization_id":id
           // "month":"10",
           // "from":"2023-10-10",
           // "to":"2023-10-20"
@@ -92,6 +112,7 @@ function Competency_Report_For_Mentors() {
           const btoken = `Bearer ${token}`;
           const body = {
               "condition":"all",//lastmonth//lastweek//all/daterange,
+              "organization_id":fullInfo
           }
           const res = await fetch(`${BASE_URL_APPLSURE}competency-report-for-mentee`, {
               method: 'POST',
@@ -114,6 +135,7 @@ function Competency_Report_For_Mentors() {
           const btoken = `Bearer ${token}`;
           const body = {
               "condition":"lastmonth",//lastmonth//lastweek//all/daterange,
+              "organization_id":fullInfo,
               "month":`${new Date().getMonth()+1}`,
           }
           const res = await fetch(`${BASE_URL_APPLSURE}competency-report-for-mentee`, {
@@ -138,6 +160,7 @@ function Competency_Report_For_Mentors() {
           const btoken = `Bearer ${token}`;
           const body = {
               "condition":"lastweek",//lastmonth//lastweek//all/daterange,
+              "organization_id":fullInfo
           }
           const res = await fetch(`${BASE_URL_APPLSURE}competency-report-for-mentee`, {
               method: 'POST',
@@ -161,7 +184,7 @@ function Competency_Report_For_Mentors() {
           showModal()
         }
         if(i == ""){
-          getReportofDevSkill()
+          getReportofDevSkill(fullInfo)
         }
         
       }
@@ -172,6 +195,7 @@ function Competency_Report_For_Mentors() {
           const body = {
               "condition":"daterange",//lastmonth//lastweek//all/daterange,
               // "month":`${new Date().getMonth()+1}`,
+              "organization_id":fullInfo,
               "from":moment(new Date(e[0]).toLocaleDateString()).format("YYYY-MM-DD"),
               "to":moment(new Date(e[1]).toLocaleDateString()).format("YYYY-MM-DD")
           }
@@ -222,7 +246,7 @@ function Competency_Report_For_Mentors() {
                         </div>
                         <span className="sub-title ms-sm-25 ps-sm-25"></span>
                       </div>
-                      <form
+                      {/* <form
                         action="#"
                         className="d-flex align-items-center add-contact__form my-sm-0 my-2 bg-transparent"
                       >
@@ -241,7 +265,7 @@ function Competency_Report_For_Mentors() {
                           <option value="Weekly">Weekly</option>
                           <option value="Custom (Calendar Selection)">Custom (Calendar Selection)</option>
                         </select>
-                      </form>
+                      </form> */}
                     </div>
                   </div>
                 </div>
@@ -276,7 +300,7 @@ function Competency_Report_For_Mentors() {
             </div>
             <div class="col-lg-6 col-sm-12 col-md-12 mb-25">
               <div className="row">
-                {top10Pro && top10Pro.map((i) => (
+                {top10Dev && top10Dev.map((i) => (
                   <div class="col-lg-3 mb-10">
                   <CircularProgressbar
                     value={i.percents}
@@ -296,7 +320,7 @@ function Competency_Report_For_Mentors() {
                       // backgroundColor: "red",
                     })}
                   />
-                   <p  style={{textAlign:'center', fontSize:"14px", color:'#F8A046', marginBottom:"5px"}}>{i.total_mentee} Mentees</p>
+                   <p  style={{textAlign:'center', fontSize:"14px", color:'#F8A046', marginBottom:"5px"}}>{i.total_mentor} Mentors</p>
                    <p style={{textAlign:'center', fontSize:"14px", color:'#000'}}>{i.skill_name}</p>
                 {/* <CircularProgressbar
                   value={percentage}

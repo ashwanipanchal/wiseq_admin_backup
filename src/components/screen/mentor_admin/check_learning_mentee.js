@@ -181,7 +181,7 @@ function Check_Learning_Mentee() {
 
                                 <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Finish by</p>
-                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && moment(learningDetails.finishBy).format("DD MMMM YYYY")}</p>
+                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && moment(learningDetails.finishBy?.split('T')[0]).format("DD MMMM YYYY")}</p>
                                 </div>
 
                                 <div className="col-md-12 mb-20">

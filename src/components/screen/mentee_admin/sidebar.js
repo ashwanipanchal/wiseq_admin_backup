@@ -31,7 +31,7 @@ import moment from 'moment';
 import Modal from 'react-bootstrap/Modal';
 import EventEmitter from "reactjs-eventemitter";
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import { BASE_URL } from '../../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE } from '../../../services/Config';
 
 function Side_bar({ onClick, sideBarOpen }) {
     const navigate = useNavigate()
@@ -48,6 +48,7 @@ function Side_bar({ onClick, sideBarOpen }) {
     const [chatList, setChatList] = useState([])
     const [windowSize, setWindowSize] = useState(getWindowSize());
     const [payload, setPayload] = useState({});
+    const [userInfo, setUserInfo] = useState("")
     function getWindowSize() {
         const { innerWidth, innerHeight } = window;
         return { innerWidth, innerHeight };
@@ -71,7 +72,7 @@ function Side_bar({ onClick, sideBarOpen }) {
             },
         })
         const response = await res.json()
-        console.log("Activities", response)
+        // console.log("Activities", response)
         if (response.success) {
             setActivities(response.data)
         }
@@ -90,9 +91,9 @@ function Side_bar({ onClick, sideBarOpen }) {
             },
         })
         const response = await res.json()
-        console.log("noti from mentee", response)
+        // console.log("noti from mentee", response)
         if (response.success) {
-            setNotificationData(response.data)
+            // setNotificationData(response.data)
         }
 
     }
@@ -114,12 +115,66 @@ function Side_bar({ onClick, sideBarOpen }) {
         // _RemoveAuthToke()
         localStorage.setItem("token", "")
         localStorage.setItem("user_type", "")
+        localStorage.setItem("user_id","")
         localStorage.setItem("pref", "")
         localStorage.setItem("user_info", "")
         localStorage.setItem("image", "")
+        localStorage.setItem("test", {})
+        localStorage.setItem("switch_message_flag", "")
+        localStorage.setItem("full_details", "")
         navigate('/admin_login')
     }
+    useEffect(() => {
+        getProfile()
+    },[])
+    useEffect(() =>{
+        getNewNotification()
+    },[])
+    const getProfile = async() => {
+        const token = await localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
 
+              const res = await fetch(`${BASE_URL}mentee/profile`,{
+                  method:'GET',
+                  headers:{
+                    "Accept": "application/json",
+                    'Content-Type': 'application/json',
+                    "Authorization": btoken,
+                  },
+                })
+                const response = await res.json()
+            //   console.log(response)
+              const {success} = response
+              if(success){
+                // getNewNotification(response.data?.id)
+                setUserInfo(response.data)
+                // localStorage.setItem("test", JSON.stringify(response.data))
+              }
+        
+    }
+
+    const getNewNotification = async (id) => {
+        const token = localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
+        const body ={
+            "user_id":localStorage.getItem("user_id")
+        }
+        const res = await fetch(`${BASE_URL_APPLSURE}get-notification`, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+            body:JSON.stringify(body)
+        })
+        const response = await res.json()
+        // console.log("Notifications", response)
+        if (response.status) {
+            setNotificationData(response.notifications)
+        }
+
+    }
 
     const acceptSession = async (val) => {
         // alert(JSON.stringify(val))
@@ -161,9 +216,57 @@ function Side_bar({ onClick, sideBarOpen }) {
             },
         })
         const response = await res.json()
-        console.log(response)
+        // console.log(response)
         setChatList(response.data)
     }
+
+
+    const switchUser = async() => {
+        const token = localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
+        const body = {
+            "email": userInfo.email,
+            "role": "mentor",
+            "deviceToken": localStorage.getItem("token")
+        }
+        // console.log(body)
+        // return
+        const res = await fetch(`${BASE_URL}auth/switchtouser`, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+            body: JSON.stringify(body)
+        })
+        const response = await res.json()
+        // console.log(response)
+        // return
+        const { success } = response
+        if(success){
+            localStorage.removeItem("wrong_login")
+                localStorage.setItem("token", response.data.token)
+                localStorage.setItem("user_id", response.data.id)
+                localStorage.setItem("user_type", response.data.role)
+                localStorage.setItem("pref", response.data.isFirstLogin)
+                localStorage.setItem("user_info", response.data.name);
+                localStorage.setItem("image", response.data.imageUrl);
+                localStorage.setItem("orgLogo", response.data.orgLogo);
+                localStorage.setItem("switch_message_flag", response.data.switch_message_flag);
+                EventEmitter.emit('eventName', response.data.role)
+                if(response.data.role == "mentor" || response.data.role == "mentee"){
+                    if(response.data.isFirstLogin){
+                        navigate("/preference_one")
+                    }else{
+                        navigate("/");
+                    }
+                }else{
+                    navigate("/");
+                }
+        }
+    }
+
     return (
 
 
@@ -246,7 +349,7 @@ function Side_bar({ onClick, sideBarOpen }) {
                 
                                                 <TabPanel className="tab-content">
                                                   <ul>
-                                                  {notificationData && notificationData.map((i) => (
+                                                  {notificationData && notificationData?.map((i) => (
                                                              <li 
                                                             //  onClick={() => {
                                                             //     if(i.type == "session_reschedule"){
@@ -273,7 +376,12 @@ function Side_bar({ onClick, sideBarOpen }) {
                                                                      {/* <p><span>New Session is created by {i.scheduler}</span></p> */}
                                                                      {/* <p><span>Schedule time is {moment(i.scheduleTime).format("DD MMM YY")}</span></p> */}
                                                                      <p>
-                                                                     <span className="time-posted">{new Date(i.updatedAt).toDateString()} {new Date(i.updatedAt).toTimeString().split(" ")[0]}</span>
+                                                                     {/* <span className="time-posted">{new Date(i.updatedAt).toDateString()} {new Date(i.updatedAt).toTimeString().split(" ")[0]}</span>                                                                      <span className="time-posted">{new Date(parseInt(i.createdAt['$date']['$numberLong'])).toDateString()} {new Date(parseInt(i.createdAt['$date']['$numberLong'])).toTimeString().split(" ")[0]}</span> */}
+                                                                     {'createdAt' in i && (
+
+                                                                     <span className="time-posted">{new Date(parseInt(i?.createdAt['$date']['$numberLong'])).toDateString()} {new Date(parseInt(i?.createdAt['$date']['$numberLong'])).toTimeString().split(" ")[0]}</span>
+                                                                     )}
+
                                                                      </p>
                                                                  </div>
                                                              </li>
@@ -453,6 +561,13 @@ function Side_bar({ onClick, sideBarOpen }) {
 
                                                         </NavLink>
                                                     </li>
+                                                    {userInfo && userInfo.userMeta?.switchPower == 1 && (
+                                                        <li onClick={() => switchUser()}>
+                                                        <NavLink className="navbar-link">
+                                                            <i class="uil uil-user-circle"></i> Switch to Mentor
+                                                        </NavLink>
+                                                    </li>
+                                                    )}
 
                                                     <li>
                                                         <NavLink className="navbar-link" to="/change_password">

@@ -15,11 +15,17 @@ import All_Activity from './all_activity';
 import Past_Session from './past_session_profile';
 import Live_Session from './live_session_profile';
 import Mentoring_Program from './mentoring_program';
+import Upcoming_Program from './mentoring_program_upcoming';
+import Progress_Program from './mentoring_program_progress';
+import Completed_Program from './mentoring_program_completed';
 import IDP from './idp';
 import Learning_Screen from './learning_screen';
 import Learning_Profile_Detail from './learning_profile_detail';
 import All_Completed_Learning from './all_completed_learning';
+import All_ToStart_Learning from './all_toStart_learning';
+import All_Progress_Learning from './all_progress_learning';
 import Assessment_Screen from './assessment_screen';
+import View_Ratings from './view_rating';
 // import Mentoring_Program from './mentoring_program';
 // import Upcoming_Program from './mentoring_program_upcoming';
 // import Program_Progress from './mentoring_program_progress';
@@ -59,6 +65,7 @@ import Edit_Profile_Mentor from './edit_profile';
 import Resources_Screen from './resources';
 import Resources_Detail from './resources_detail';
 import Preferences_Question from './preference_question';
+import Create_IDP from './create_idp';
 import Preferences_Question1 from './preference_question1';
 import Preferences_Question2 from './preference_question2';
 import Preferences_Question3 from './preference_question3';
@@ -69,6 +76,9 @@ import Session_list from './sessions_list';
 import Browse_Mentee from './browse_mentee';
 import Chat_Screen from './chat';
 import Change_Password from './change_password';
+import Idp_Full_View from './idp_full_view';
+import Program_Statistics from './program_statistics';
+
 
 function MainRouteMentee() {
     return (
@@ -87,19 +97,26 @@ function MainRouteMentee() {
                 <Route path="/preference_four" element={<Preferences_Question3 />} />
                 <Route path="/my_mentor" element={<My_Mentor />} />
                 <Route path="/all_task" element={<All_Task />}/>
+                <Route path="/idp_full_view" element={<Idp_Full_View />}/>
                 <Route path="/all_notification" element={<All_Notification />}/>
                 <Route path="/all_activity" element={<All_Activity />}/>
+                <Route path="/program_statistics" element={<Program_Statistics />}/>
                 <Route path="/mentor_profile" element={<Mentor_Profile />} />
                 <Route path="/calender" element={<Calendar_Open />} />
                 <Route path="/sessions_list" element={<Session_list />} />
+                <Route path="/mentoring_program_rating" element={<View_Ratings />} />
                 <Route path="/browse_mentee" element={<Browse_Mentee />} />
+                <Route path="/create_idp" element={<Create_IDP />} />
                 <Route path="/chat" element={<Chat_Screen />} />
                 <Route path="/live_session_profile" element={<Live_Session />} />
                 <Route path="/past_session_profile" element={<Past_Session />} />
+                <Route path="/mentoring_program_completed" element={<Completed_Program />} />
                 <Route path="/support_help" element={<Support_Help />} />
                 <Route path="/support_help" element={<Support_Help />} />
                 <Route path="/change_password" element={<Change_Password/>} /> 
                 <Route path="/mentoring_program" element={<Mentoring_Program/>} /> 
+                <Route path="/mentoring_program_upcoming" element={<Upcoming_Program/>} /> 
+                <Route path="/mentoring_program_progress" element={<Progress_Program/>} /> 
                 <Route path="/idp" element={<IDP/>} /> 
                 <Route path="/learning_screen" element={<Learning_Screen/>} /> 
                 <Route path="/assessment_screen" element={<Assessment_Screen />} />
@@ -108,6 +125,9 @@ function MainRouteMentee() {
                 <Route path="/reports_screen" element={<Report_Screen />} />
                 <Route path="/learning_profile_detail" element={<Learning_Profile_Detail />} />
                 <Route path="/all_completed_learning" element={<All_Completed_Learning />} />
+                <Route path="/all_toStart_learning" element={<All_ToStart_Learning />} />
+                <Route path="/all_process_learning" element={<All_Progress_Learning />} />
+                
                 {/* <Route path="/my_mentee" element={<My_Mentee />} />
                 <Route path="/mentee_profile" element={<Mentee_Profile />} />
                 <Route path="/mentee_program_progress" element={<Mentee_Program_progress />} />

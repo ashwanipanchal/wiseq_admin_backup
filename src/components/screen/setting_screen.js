@@ -9,7 +9,7 @@ import "react-tabs/style/react-tabs.css";
 import Side_Bar from "./sidebar";
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { CircularProgressbar } from "react-circular-progressbar";
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import Accordion from "react-bootstrap/Accordion";
 import { BASE_URL } from "../../services/Config";
@@ -101,6 +101,7 @@ function Setting_Screen() {
   const [mentorChartData, setMentorChartData] = useState({})
   const [sideBarOpen, setSideBarOpen] = useState(true);
   const [indexValue, setIndexValue] = useState(-1);
+  const [indexValue1, setIndexValue1] = useState(-1);
   const [superAdminList, setSuperAdminList] = useState([]);
   const [levels, setLevels] = useState("");
   const [fAreas, setFAreas] = useState("");
@@ -430,6 +431,7 @@ const updateScoreInfo = async() => {
     e.preventDefault();
     const token = await localStorage.getItem("token");
     const btoken = `Bearer ${token}`;
+
     const body = {
       levels,
       functionalAreas: fAreas,
@@ -441,8 +443,9 @@ const updateScoreInfo = async() => {
       roles: "Developer, Analyst",
       tools
     };
-    //   console.log(body)
-    //   return
+
+    console.log(body)
+    // return
     const res = await fetch(`${BASE_URL}organisation-info`, {
       method: "PUT",
       headers: {
@@ -748,9 +751,7 @@ const updateScoreInfo = async() => {
                                               <CircularProgressbar
                                                 value={fullInfo.profilePercentage}
                                                 text={`${fullInfo.profilePercentage}%`}
-                                                styles={{
-                                                  // Rotation of path and trail, in number of turns (0-1)
-                                                  rotation: 0.25,
+                                                styles={buildStyles({
 
                                                   // Whether to use rounded or flat corners on the ends - can use 'butt' or 'round'
                                                   strokeLinecap: "butt",
@@ -765,13 +766,10 @@ const updateScoreInfo = async() => {
                                                   // pathTransition: 'none',
 
                                                   // Colors
-                                                  pathColor: `rgba(253, 239, 230, ${
-                                                    66 / 100
-                                                  })`,
+                                                  pathColor: `#f8a046`,
                                                   textColor: "#f8a046",
-                                                  trailColor: "#f8a046",
-                                                  backgroundColor: "#f8a046",
-                                                }}
+                                                  trailColor: "lightgray",
+                                                })}
                                               />
                                             </div>
                                           </div>
@@ -1008,7 +1006,7 @@ const updateScoreInfo = async() => {
                                       </thead>
                                       <tbody>
                                         {superAdminList &&
-                                          superAdminList.map((user) => (
+                                          superAdminList.map((user, index) => (
                                             <tr>
                                               <td>
                                                 <div className="userDatatable-content">
@@ -1049,9 +1047,15 @@ const updateScoreInfo = async() => {
                                                           <img
                                                             src={horizontal_img}
                                                             className="svg"
-                                                            onClick={() =>
-                                                              showModal()
+                                                            onClick={() =>{
+                                                              // showModal()
+                                                              if(index == indexValue1){
+                                                                setIndexValue1(-1)
+                                                            }else{
+
+                                                                setIndexValue1(index)
                                                             }
+                                                            }}
                                                           />
                                                         </button>
                                                       </div>
@@ -1059,23 +1063,34 @@ const updateScoreInfo = async() => {
                                                   </ul>
                                                 </div>
 
-                                                {showFilter ? (
+                                                {index == indexValue1 && (
                                                   <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
-                                                    {/* <NavLink
-                                                      className="navbar-link"
-                                                      to="/edit_profile"
-                                                    > */}
+                                                  {/* <NavLink
+                                                    className="navbar-link"
+                                                    to="/edit_profile"
+                                                  > */}
+                                                    <div onClick={() =>alert("Please Contact WiseQ Support Team")} className="dropdown-item">
+                                                      Edit
+                                                    </div>
+                                                  {/* </NavLink> */}
+                                                  <div onClick={() =>alert("Please Contact WiseQ Support Team")} className="dropdown-item">
+                                                    Remove
+                                                  </div>
+                                                </div>
+                                                )}
+                                                {/* {showFilter ? (
+                                                  <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
+                                                    
                                                       <div onClick={() =>alert("Please Contact WiseQ Support Team")} className="dropdown-item">
                                                         Edit
                                                       </div>
-                                                    {/* </NavLink> */}
                                                     <div onClick={() =>alert("Please Contact WiseQ Support Team")} className="dropdown-item">
                                                       Remove
                                                     </div>
                                                   </div>
                                                 ) : (
                                                   ""
-                                                )}
+                                                )} */}
                                               </td>
                                             </tr>
                                           ))}

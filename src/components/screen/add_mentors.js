@@ -1,15 +1,25 @@
+import { useLocale } from 'antd/es/locale';
 import search_img from '../../img/svg/search1.svg';
+import check from '../../img/checked.svg';
+import uncheck from '../../img/uncheck.svg';
+import { BASE_URL, BASE_URL_APPLSURE_MENTORING } from '../../services/Config';
 import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 function Add_Mentors() {
-
+    const {state} = useLocation()
+    console.log("state in add mentors", state)
     const [sideBarOpen, setSideBarOpen] = useState(true)
+    const [mentorList, setMentorList] = useState([])
+    const [key1, setKey1] = useState(Math.random())
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
     const [windowSize, setWindowSize] = useState(getWindowSize());
+    const [searchKey, setSearchKey] = useState("");
+    const [selectedCount, setselectedCount] = useState("");
+    const [checked, setChecked] = useState([]);
     function getWindowSize() {
         const { innerWidth, innerHeight } = window;
         return { innerWidth, innerHeight };
@@ -27,6 +37,148 @@ function Add_Mentors() {
         };
     }, []);
 
+    useEffect(() => {
+        createToken()
+       
+    },[])
+
+    const createToken = async() => {
+        const body = {
+            "user_id":localStorage.getItem("user_id")
+        }
+        const res = await fetch(`${BASE_URL_APPLSURE_MENTORING}create-access`, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                // "Authorization": btoken,
+                // "Authentication ": btoken,
+            },
+            body:JSON.stringify(body)
+        })
+        const response = await res.json()
+        // console.log(response)
+        const { success } = response
+        // setIsLoading(false)
+        if (success) {
+            localStorage.setItem("program_token_node", response.token)
+            getList(response.token)
+            // setMentorList(response.data)
+        }
+        
+    }
+
+    const getList = async(token) => {
+
+        if(state?.from != ""){
+
+            var myHeaders = new Headers();
+            myHeaders.append("Authorization", token);
+            myHeaders.append("Content-Type", "application/json");
+    
+            var raw = JSON.stringify({
+                "program_id":state?.myState?.id,
+                "role":"mentor"
+            });
+    
+            var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+            redirect: 'follow'
+            };
+    
+            fetch(`${BASE_URL_APPLSURE_MENTORING}program-userlistdontinclude`, requestOptions)
+            .then(response => response.json())
+            .then(result => {
+                console.log(result)
+                let newMentee = result?.users?.map((i) => {
+                    return { ...i, isSelected: "" }
+                })
+                console.log(newMentee)
+                setMentorList(newMentee)
+            })
+            .catch(error => console.log('error', error));
+
+        }else{
+
+
+
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", token);
+        myHeaders.append("Content-Type", "application/json");
+
+        var raw = JSON.stringify({
+        "role": "mentor"
+        });
+
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+
+        fetch(`${BASE_URL_APPLSURE_MENTORING}get-user-list`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            console.log(result)
+            let newMentee = result?.users?.map((i) => {
+                return { ...i, isSelected: "" }
+            })
+            console.log(newMentee)
+            setMentorList(newMentee)
+        })
+        .catch(error => console.log('error', error));
+    }
+    }
+
+    const handleCheck = (event) => {
+        var updatedList = [...checked];
+        if (event.target.checked) {
+          updatedList = [...checked, event.target.value];
+        } else {
+          updatedList.splice(checked.indexOf(event.target.value), 1);
+        }
+        setChecked(updatedList);
+      };
+
+
+      console.log("checked", checked)
+
+    let selectedMentee = []
+    const addToList1 = (index, user) => {
+        let count = 1;
+        if (user.isSelected == "") {
+            for (let i = 0; i < mentorList.length; i++) {
+
+                if( mentorList[i].isSelected == "Y"){
+                    count++
+                }
+            }
+        
+            if(count > state?.myState?.no_of_mentor){
+                alert(`You can add ${state?.myState?.no_of_mentor} mentors only`)
+                return
+            }
+            mentorList[index].isSelected = "Y"
+        } else {
+            mentorList[index].isSelected = ""
+        }
+        setMentorList(mentorList)
+        setKey1(Math.random())
+        setselectedCount(count)
+    }
+
+      const filteredDataMentor = searchKey
+      ? mentorList?.filter(x =>
+          // alert(JSON.stringify(x,null,2))
+        //   console.log(x),
+        //   return
+          x?.name?.toLowerCase()?.startsWith(searchKey?.toLowerCase()) || x?.emp_id?.toLowerCase()?.startsWith(searchKey?.toLowerCase())
+      )
+      : mentorList;
+
     return (
 
         <div className="main-content">
@@ -34,31 +186,227 @@ function Add_Mentors() {
                 <div className="blog-page2">
                     <div className="container-fluid">
                         <div className="row">
-                            <div className="col-lg-12">
-                                <div className="breadcrumb-main user-member justify-content-sm-between">
-                                    <div className=" d-flex flex-wrap justify-content-center breadcrumb-main__wrapper">
-                                        <div className="d-flex align-items-center user-member__title justify-content-center me-sm-25">
-                                            <h4 className="text-capitalize fw-500 breadcrumb-title">Add Mentors</h4>
-                                        </div>
-                                    </div>
-                                    <div className="layout-button">
-                                        <NavLink className="navbar-link" to="/selected_mentors"><button type="button" className="btn btn-primary btn-default btn-squared">Selected (2)</button></NavLink>
-                                    </div>
-
-                                </div>
-                            </div>
+                            <h4 className='mb-20'>Add Mentors </h4>
+                        </div>
+                        <div className="row">
+                            <h5 className='mb-20'>Eligibility - {state?.myState?.eligibility}</h5>
                         </div>
 
                         <div className="row">
                             <div className="col-md-12 mb-25">
-                                <label>Search Mentor</label>
+                                <div style={{display:'flex', flexDirection:'row', justifyContent:'space-between'}}>
+
+                                <label style={{textDecoration:'bold'}}>Search Mentor</label>
+                                <div className="layout-button mb-10">
+                                        {/* <NavLink className="navbar-link" to="/selected_mentors" state={{myState: mentorList, number:checked.length}}><button type="button" className="btn btn-primary btn-default btn-squared">Selected ({checked.length})</button></NavLink> */}
+                                        <NavLink className="navbar-link" to="/selected_mentors" state={{myState: mentorList, number:checked.length, from :state?.from, data: state}}><button type="button" className="btn btn-primary btn-default btn-squared">Selected ({selectedCount == "" ? 0 : selectedCount})</button></NavLink>
+                                    </div>
+                                </div>
+
+                                {state?.myState?.eligibility != "Open Participation" ? 
                                 <div className="d-flex align-items-center user-member__form my-sm-0 my-2">
                                     <img src={search_img} alt="search" className="svg" />
-                                    <input className="me-sm-2 border-0 box-shadow-none ms-10" type="search" placeholder="Search by EID, Name" aria-label="Search" />
-                                </div>
+                                    <input value={searchKey} onChange={e => setSearchKey(e.target.value)} className="me-sm-2 border-0 box-shadow-none ms-10" type="search" placeholder="Search by EID, Name" aria-label="Search" />
+                                </div> :
+
+
+                                <div className="col-lg-12">
+                                    <div className="card card-Vertical card-default card-md mb-4">
+                                        <div className="">
+                                            <form>
+                                                <div className="row">
+                                                    {/* <div className="col-lg-2 col-md-4 mb-15">
+                                                        <div className="countryOption">
+                                                        <div onClick={() =>  showModal()} style={{border: '1px solid #beb9b9', padding: "6px", borderRadius: '5px', fontSize: '14px'}} className="">
+                                                            <span className="nav-item__title">Experience    <i className="las la-angle-down nav-item__arrow" style={{float:'right', marginTop:'3px'}}></i></span>
+                                                        </div>
+                                                        </div>
+                                                    </div> */}
+{/* 
+                                                    <div className="col-lg-2 col-md-4 mb-15">
+                                                        <div className="countryOption">
+                                                            <select onChange={e => WLFilter(e.target.value)} className="form-select custom_selects" aria-label="Default select example">
+                                                                <option value="">Location</option>
+                                                                {workLocationList.map((i) => (
+                                                                            <option value={i}>{i}</option>
+                                                                        ))}
+                                                            </select>
+                                                        </div>
+                                                    </div> */}
+
+                                                    <div className="col-lg-2 col-md-4 mb-15">
+                                                        <div className="countryOption">
+                                                            <select className="form-select custom_selects" aria-label="Default select example">
+                                                                <option selected>Select Level</option>
+                                                                <option value="1">9 Score</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-lg-2 col-md-4 mb-15">
+                                                        <div className="countryOption">
+                                                            <select className="form-select custom_selects" aria-label="Default select example">
+                                                                <option selected>Functional</option>
+                                                                <option value="1">9 Score</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-lg-2 col-md-4 mb-15">
+                                                        <div className="countryOption">
+                                                            <select className="form-select custom_selects" aria-label="Default select example">
+                                                                <option selected>Division</option>
+                                                                <option value="1">9 Score</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-lg-2 col-md-4 mb-15">
+                                                        <div className="countryOption">
+                                                            <select className="form-select custom_selects" aria-label="Default select example">
+                                                                <option selected>Country</option>
+                                                                <option value="1">9 Score</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-lg-2 col-md-4 mb-15">
+                                                        <div className="countryOption">
+                                                            <select className="form-select custom_selects" aria-label="Default select example">
+                                                                <option selected>Location</option>
+                                                                <option value="1">9 Score</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* <div className="col-lg-2 col-md-4 mb-15">
+                                                        <div className="countryOption">
+                                                            <select onChange={e => CSFilter(e.target.value)} className="form-select custom_selects" aria-label="Default select example">
+                                                                <option value="">Core Skills Need to Develop</option>
+                                                                {coreSkills.map((i) => (
+                                                                            <option value={i.skill.replace("&",'%26')}>{i.skill}</option>
+                                                                        ))}
+                                                                
+                                                            </select>
+                                                        </div>
+                                                    </div> */}
+
+                                                    {/* <div className="col-lg-2 col-md-4 mb-15">
+                                                        <div className="countryOption">
+                                                            <select onChange={e => CSGFilter(e.target.value)} className="form-select custom_selects" aria-label="Default select example">
+                                                                <option value="">Core Skills Good At</option>
+                                                                {coreSkills.map((i) => (
+                                                                            <option value={i.skill}>{i.skill}</option>
+                                                                        ))}
+                                                            </select>
+                                                        </div>
+                                                    </div> */}
+
+                                                    {/* <div className="col-lg-2 col-md-4 mb-15">
+                                                        <div className="countryOption">
+                                                            <select onChange={e => BSFilter(e.target.value)} className="form-select custom_selects" aria-label="Default select example">
+                                                                <option value="">Business Skills Need to Develop</option>
+                                                                {busSkills.map((i) => (
+                                                                            <option value={i.skill.replace("&",'%26')}>{i.skill}</option>
+                                                                        ))}
+                                                            </select>
+                                                        </div>
+                                                    </div> */}
+
+                                                    {/* <div className="col-lg-2 col-md-4 mb-15">
+                                                        <div className="countryOption">
+                                                            <select onChange={e => BSGFilter(e.target.value)} className="form-select custom_selects" aria-label="Default select example">
+                                                                <option value="">Business Skills Good At</option>
+                                                                {busSkills.map((i) => (
+                                                                            <option value={i.skill.replace("&",'%26')}>{i.skill}</option>
+                                                                        ))}
+                                                            </select>
+                                                        </div>
+                                                    </div> */}
+
+                                                    {/* <div className="col-lg-2 col-md-4 mb-15">
+                                                        <div className="countryOption">
+                                                            <select className="form-select custom_selects" aria-label="Default select example">
+                                                                <option selected>All Filters</option>
+                                                                <option value="1">3</option>
+                                                            </select>
+                                                        </div>
+                                                    </div> */}
+
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>}
                             </div>
 
-                            <div className="col-md-12 mb-25">
+                            {mentorList && filteredDataMentor.map((i,index) => (
+                                <div className="col-md-12 mb-25">
+                                <div className="card border-0 px-25 h-100 box_shadow1">
+                                    <div className="card-body p-0">
+                                        <div className="selling-table-wrap selling-table-wrap--source">
+                                            <div className="table-responsive">
+                                                <table className="table table--default table-borderless">
+                                                    <thead>
+                                                        <tr>
+                                                            <th className="table_colour">Select</th>
+                                                            {/* <th className="table_colour">S.no</th> */}
+                                                            <th className="table_colour">EID</th>
+                                                            {/* <th className="table_colour">Email</th> */}
+                                                            <th className="table_colour">First Name</th>
+                                                            <th className="table_colour">Last Name</th>
+                                                            {/* <th className="table_colour">Division</th> */}
+                                                            <th className="table_colour">Country</th>
+                                                            <th className="table_colour">Location</th>
+                                                            <th className="table_colour">Function</th>
+                                                            {/* <th className="table_colour">Role</th> */}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>
+                                                                <div>
+                                                                    <img key ={key1} style={{width:'30px', height:'30px'}} onClick={() =>{
+                                                                            
+
+                                                                            //     if(count > state?.myState?.no_of_mentor){
+                                                                            //         alert("you cannot add")
+                                                                            //         return
+                                                                            //     }else{
+                                                                            //         alert("ellse")
+                                                                                    addToList1(index, i)
+                                                                                    
+                                                                                //  handleCheck(e)
+                                                                                // }
+                                                                            // }
+                                                                    }} src={i.isSelected == "Y" ? check : uncheck}/>
+                                                                    {/* <input value={i.id} className="checkbox" type="checkbox" id="check-1" onChange={(e) => {
+                                                                        // console.log(mentorList)
+                                                                       
+                                                                        }} />
+                                                                    <label for="check-1"></label> */}
+                                                                </div>
+
+                                                            </td>
+                                                            {/* <td>-</td> */}
+                                                            <td>{i.emp_id != null && i.emp_id.length > 2 ?`${i.emp_id.substring(0, 4)}...` : "-------"}</td>
+                                                            {/* <td>{i.emp_id != null && i.emp_id.length > 3 ?`${i.emp_id.substring(0, 4)}...` : i.emp_id}</td> */}
+                                                            {/* <td>{i.email.length > 4 ?`${i.email.substring(0, 4)}...` : i.email}</td> */}
+                                                            <td>{i.name.split(" ")[0].substring(0,8)}
+                                                                {i.name.split(" ")[0].length > 8 ? "..." : ""}</td>
+                                                            <td>{i.name.split(" ")[1]}</td>
+                                                            {/* <td>{i.division}</td> */}
+                                                            <td>{i.country}</td>
+                                                            <td>{i.work_location}</td>
+                                                            <td>{i.functional_area}</td>
+                                                            {/* <td>{i.role}</td> */}
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            ))}
+
+                            {/* <div className="col-md-12 mb-25">
                                 <div className="card border-0 px-25 h-100 box_shadow1">
                                     <div className="card-body p-0">
                                         <div className="selling-table-wrap selling-table-wrap--source">
@@ -252,7 +600,7 @@ function Add_Mentors() {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> */}
 
 
                         </div>

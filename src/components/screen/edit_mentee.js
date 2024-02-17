@@ -54,15 +54,41 @@ function Edit_Mentee() {
             console.log("setting data",response)
             if(success){
                 if(data){
-                    setLevels(data.levels.split(','))
-                    setFAreas(data.functionalAreas.split(','))
-                    setcountryList(data.countries.split(','))
-                    setworkLocationList(data.locations.split(','))
-                    setdivisionList(data.divisions.split(','))
+                    var arr = data.functionalAreas.split(",").map(function(item) {
+                        return item.trim();
+                      });
+                      setFAreas(arr)
+                    
+                    var arr1 = data.levels.split(",").map(function(item) {
+                        return item.trim();
+                      });
+                      console.log("arr1",arr1)
+                    setLevels(arr1)
+
+                    var arr2 = data.countries.split(",").map(function(item) {
+                        return item.trim();
+                      });
+                    setcountryList(arr2)
+                    
+                    var arr3 = data.locations.split(",").map(function(item) {
+                        return item.trim();
+                      });
+                      console.log("arr3",arr3)
+                    setworkLocationList(arr3)
+
+                    var arr4 = data.divisions.split(",").map(function(item) {
+                        return item.trim();
+                      });
+                    setdivisionList(arr4)
+                    // setLevels(data.levels.split(','))
+                    // setcountryList(data.countries.split(','))
+                    // setworkLocationList(data.locations.split(','))
+                    // setdivisionList(data.divisions.split(','))
                     // setLocation(data.locations)
                     // setDivisions(data.divisions)
                     // setFSkills(data.coreSkills)
                     // setBSKills(data.businessSkills)
+                    // console.log(data.functionalAreas.replace(/[' ]+/g, ""))
                 }
             }
         }
@@ -82,7 +108,8 @@ function Edit_Mentee() {
         };
     }, []);
 
-    const updateMentee = async() => {
+    const updateMentee = async(e) => {
+        e.preventDefault()
         const token = await localStorage.getItem("token")
         const btoken = `Bearer ${token}`;
         const body = 
@@ -102,7 +129,7 @@ function Edit_Mentee() {
                     // "status": "Active"
                 
               }
-              console.log(body)
+            //   console.log(body)
             //   return
               const res = await fetch(`${BASE_URL}organisation-admins/${state.id}/edit-mentor-mentee`,{
                   method:'PUT',
@@ -117,6 +144,7 @@ function Edit_Mentee() {
             //   console.log(response)
               const {success} = response
               if(success == true){
+                alert("Profile has been updated successfully")
                 navigate(-1)
             }
     }
@@ -174,26 +202,26 @@ function Edit_Mentee() {
                             <div className="col-lg-12">
                                 <div className="card card-Vertical card-default card-md mb-4">
                                     <div className="">
-                                        <form>
+                                        <form onSubmit={updateMentee}>
                                             <div className="row">
                                                 <div className="col-md-6 mb-25">
                                                     <input type="text" className="form-control ih-medium ip-gray radius-xs px-15" disabled placeholder={state.empId} />
                                                 </div>
 
                                                 <div className="col-md-6 mb-25">
-                                                    <input value={email} onChange={e => setEmail(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Email" />
+                                                    <input value={email} onChange={e => setEmail(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Email" required/>
                                                 </div>
 
                                                 <div className="col-md-6 mb-25">
-                                                    <input value={fname} onChange={e => setFName(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="First Name" />
+                                                    <input value={fname} onChange={e => setFName(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="First Name" required/>
                                                 </div>
 
                                                 <div className="col-md-6 mb-25">
-                                                    <input value={lname} onChange={e => setLName(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Last Name" />
+                                                    <input value={lname} onChange={e => setLName(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Last Name" required/>
                                                 </div>
                                                 <div className="col-md-6 mb-25">
                                                     <div class="countryOption">
-                                                    <input value={role} onChange={e => setRole(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Job Title" />
+                                                    <input value={role} onChange={e => setRole(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Job Title" required/>
                                                         {/* <select value={role} onChange={e => setRole(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
                                                             <option value="">Select Role</option>
                                                             <option value="Developer">Developer</option>
@@ -228,7 +256,7 @@ function Edit_Mentee() {
                                                 </div> */}
 
                                                 <div className="col-md-6 mb-25">
-                                                    <input value={yearsWithCompany} onChange={e => setyearsWithCompany(e.target.value)} type="number" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Years with the Company" />
+                                                    <input value={yearsWithCompany} onChange={e => setyearsWithCompany(e.target.value)} type="number" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Years with the Company" required/>
                                                 </div>
                                                 <div className="col-md-6 mb-25">
                                                         <div class="countryOption">
@@ -258,7 +286,7 @@ function Edit_Mentee() {
 
                                                 <div className="col-md-6 mb-25">
                                                     <div class="countryOption">
-                                                        <select value={division} onChange={e => setdivision(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example">
+                                                        <select value={division} onChange={e => setdivision(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
                                                         <option value="">Select Division</option>
                                                             {divisionList.map((i) => (
                                                                     <option value={i.trim()}>{i}</option>
@@ -270,16 +298,16 @@ function Edit_Mentee() {
                                                 
 
                                                 <div className="col-md-6 mb-25">
-                                                    <input value={managerName} onChange={e => setmanagerName(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Reporting Manager Name" />
+                                                    <input value={managerName} onChange={e => setmanagerName(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Reporting Manager Name" required/>
                                                 </div>
 
                                                 <div className="col-md-6 mb-25">
-                                                    <input value={managerID} onChange={e => setmanagerID(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Reporting Manager EID" />
+                                                    <input value={managerID} onChange={e => setmanagerID(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Reporting Manager EID" required/>
                                                 </div>
 
                                                 <div className="col-md-6 mb-25">
                                                     <div class="countryOption">
-                                                        <select value={country} onChange={e => setcountry(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example">
+                                                        <select value={country} onChange={e => setcountry(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
                                                         <option value="">Select Country</option>
                                                             {countryList.map((i) => (
                                                                     <option value={i.trim()}>{i}</option>
@@ -291,7 +319,7 @@ function Edit_Mentee() {
 
                                                 <div className="col-md-12">
                                                     <div className="mt-0">
-                                                        <button onClick={() => updateMentee()} type="button" className="btn btn-primary btn-default btn-squared m-auto">Save</button>
+                                                        <button type="submit" className="btn btn-primary btn-default btn-squared m-auto">Save</button>
                                                     </div>
                                                 </div>
                                             </div>

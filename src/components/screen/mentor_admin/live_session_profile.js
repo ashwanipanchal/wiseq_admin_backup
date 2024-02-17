@@ -16,7 +16,7 @@ import Modal from 'react-bootstrap/Modal';
 import { FrownOutlined, MehOutlined, SmileOutlined } from '@ant-design/icons';
 import { Rating } from 'react-simple-star-rating';
 import { Rate } from 'antd';
-import { BASE_URL } from '../../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE_MENTORING } from '../../../services/Config';
 import moment from 'moment'
 import { io } from "socket.io-client";
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
@@ -129,7 +129,7 @@ function Live_Session() {
   };
 
   useEffect(() => {
-    const socket = io("https://api.wiseqglobal.com",{
+    const socket = io("https://api.wiseq.co",{
         transport:["websocket"],
         auth: {
             token: localStorage.getItem("token")
@@ -187,6 +187,10 @@ function Live_Session() {
   const hideConfirm = () => setConfirmModal(false);
   const showConfirmModal = () => setConfirmModal(true);
 
+  const [showGroupEndModal, setshowGroupEndModal] = useState(false);
+  const hideshowGroupEndModal = () => setshowGroupEndModal(false);
+  const showshowGroupEndModal = () => setshowGroupEndModal(true);
+
   const [rating1, setRating1] = useState(0)
   const [rating2, setRating2] = useState(0)
   const [rating3, setRating3] = useState(0)
@@ -196,9 +200,10 @@ function Live_Session() {
   const [windowSize, setWindowSize] = useState(getWindowSize());
   const [windowHeight, setWindowHeight] = useState(getWindowHeight());
   function getWindowSize() {
+    
     const { innerWidth, innerHeight } = window;
-    console.log(innerHeight)
-    console.log(window.screen.height)
+    // console.log(innerHeight)
+    // console.log(window.screen.height)
     return { innerWidth, innerHeight };
   }
   function getWindowHeight() {
@@ -217,6 +222,35 @@ function Live_Session() {
       window.removeEventListener("resize", handleWindowResize);
     };
   }, []);
+
+  useEffect(() => {
+    getAllUser()
+  },[])
+
+  const getAllUser = async() => {
+    const token = await localStorage.getItem("program_token_node")
+    const body = {
+      "session_id": "2c3e2b99-5051-4ab9-a8ea-9a564501b3f9",
+      "program_id":"a9b392cd-f13a-4139-9b01-31e36deec482",
+      "role":"mentee"
+  }
+    const res = await fetch(`${BASE_URL_APPLSURE_MENTORING}user/program-sessions-user-list`, {
+        method: 'POST',
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": token,
+        },
+        body:JSON.stringify(body)
+    })
+    const response = await res.json()
+    console.log(response)
+    const { success, allsession } = response
+    console.log("user",response)
+    // if (success) {
+    //     setPendingSessions(allsession)
+    // }
+  }
 
   const getSessionProfile = async() => {
     const token = await localStorage.getItem("token")
@@ -400,7 +434,13 @@ const saveActionss = async () => {
     console.log(response)
     if(response.success){
       hideConfirm()
-      showModal()
+      if(fullSessionDetail?.type == "group") {
+        showshowGroupEndModal()
+      } else if(fullSessionDetail?.type == "cohort" ){
+
+      }else{
+        showModal()
+      }
       // navigate(-1)
     }
   } 
@@ -882,6 +922,7 @@ const saveActionss = async () => {
             : true
         }
       /> : null}
+
       <Modal show={showHello} onHide={closeModal}>
         <Modal.Header className="mentor_feedback" closeButton>
           <Modal.Title>Feedback</Modal.Title>
@@ -901,6 +942,7 @@ const saveActionss = async () => {
               onChange={(e) => setNumberRating(e)}
               character={({ index }) => index + 1}
             /> */}
+            <p>1-3 Beginer, 3-5 Competent, 6-8 Proficient, 9-10 Expert</p>
             <div class="rate">
                 <input type="radio" id="star10" name="rate" value="10" onChange={e => setNumberRating(e.target.value)} />
                 <label for="star10" title="text">10</label>
@@ -1046,6 +1088,39 @@ const saveActionss = async () => {
                                 // endCallAndRecording()
                             }} type="button" className="btn btn-no btn-default btn-squared">Yes</button>
                             <button onClick={() => hideConfirm()} type="button" className="btn btn-yes btn-default btn-squared">No</button>
+                        </div>
+                    </div>
+
+                </Modal.Body>
+      </Modal>
+
+      <Modal show={showGroupEndModal} onHide={hideshowGroupEndModal}>
+      <Modal.Header className="mentor_feedback" closeButton>
+                    <Modal.Title>Feedback</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className="text-center">
+                      <h5 class="text-capitalize fw-600 mb-10 mt-10">
+                        Rate the engagement of the group
+                      </h5>
+
+                      <Rating
+                          onClick={handleRating2}
+                          size={30}
+                          onPointerEnter={onPointerEnter}
+                          onPointerLeave={onPointerLeave}
+                          onPointerMove={onPointerMove}
+                          /* Available Props */
+                        />
+                        <div class="layout-button justify-content-center">
+                            <button onClick={() =>{
+                                setVideoCall(false)
+                                
+                                endCallAndRecording()
+                                
+                                // endCallAndRecording()
+                            }} type="button" className="btn btn-petrol btn-squared color-primary px-15 mt-20">Submit</button>
+                            {/* <button onClick={() => hideConfirm()} type="button" className="btn btn-yes btn-default btn-squared">No</button> */}
                         </div>
                     </div>
 

@@ -1,13 +1,18 @@
 // import search_img from '../../img/svg/search1.svg';
+import { useLocation } from 'react-router-dom';
+import { BASE_URL_APPLSURE_MENTORING } from '../../services/Config';
 import Side_Bar from './sidebar';
 // import view_img from '../../img/view.svg';
 // import delete_img from '../../img/svg/delete.svg';
 import { useEffect, useState } from 'react';
+import moment from 'moment';
 // import { NavLink } from "react-router-dom";
 
 function View_Worksheet() {
-
+    const {state} = useLocation()
+    console.log("state in view worksheet", state)
     const [sideBarOpen, setSideBarOpen] = useState(true)
+    const [worksheetList, setWorksheetList] = useState([])
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -29,6 +34,47 @@ function View_Worksheet() {
         };
     }, []);
 
+    useEffect(() => {
+        getWorksheets()
+    },[])
+    const getWorksheets = async() => {
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+        myHeaders.append("Content-Type", "application/json");
+  
+        var raw = JSON.stringify({
+            "program_id": state,
+        });
+        // console.log(raw)
+        // return
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+  
+        fetch(`${BASE_URL_APPLSURE_MENTORING}program-worksheet-list`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            console.log(result)
+            if(result.success){
+                setWorksheetList(result.worksheetAssignedDetails)
+                // alert("Worksheet added successfully")
+                // closeModal()
+            }
+            // navigate(-1)
+        })
+        .catch(error => console.log('error', error));
+      }
+
+      const downloadFiles = (files) => {
+        // console.log(files)
+        files.program_worksheet?.files.split("|").map((i)=>{
+            console.log(i)
+            window.open(i, "_blank")
+        })
+      }
     return (
 
         <div className="main-content">
@@ -59,71 +105,80 @@ function View_Worksheet() {
 
                         <div className="row">
                             <div className="col-md-12 mb-25">
-                                <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
-                                    <div className="table-responsive">
-                                        <table className="table mb-0 table-borderless">
-                                            <thead>
-                                                <tr className="userDatatable-header py-20">
-                                                    <th>
-                                                        <span className="userDatatable-title">S.no</span>
-                                                    </th>
-                                                    <th>
-                                                        <span className="userDatatable-title">Mentee Name</span>
-                                                    </th>
-                                                    <th>
-                                                        <span className="userDatatable-title">Worksheet Name</span>
-                                                    </th>
-                                                    <th>
-                                                        <span className="userDatatable-title">Uploaded On</span>
-                                                    </th>
-                                                    <th>
-                                                        <span className="userDatatable-title float-end">action</span>
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-
-                                                <tr>
-                                                    <td>
-                                                        <div className="userDatatable-content">
-                                                            1
-                                                        </div>
-                                                    </td>
-
-                                                    <td>
-                                                        <div className="userDatatable-content">
-                                                            Jane Arora
-                                                        </div>
-                                                    </td>
-
-                                                    <td>
-                                                        <div className="userDatatable-content">
-                                                            -
-                                                        </div>
-                                                    </td>
-
-                                                    <td>
-                                                        <div className="userDatatable-content">
-                                                            12/12/23
-                                                        </div>
-                                                    </td>
-
-                                                    <td>
-                                                        <ul className="orderDatatable_actions mb-0 d-flex flex-wrap">
-
-                                                            <li>
-                                                                <button className="btn px-15 btn-primary ms-10">
-                                                                    Download
-                                                                </button>
-                                                            </li>
-                                                        </ul>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-
+                                {worksheetList && worksheetList.map((i, index)=> {
+                                    if(i.user_meta?.role == "mentee"){
+                                        return(
+                                            <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
+                                            <div className="table-responsive">
+                                                <table className="table mb-0 table-borderless">
+                                                    <thead>
+                                                        <tr className="userDatatable-header py-20">
+                                                            <th>
+                                                                <span className="userDatatable-title">S.no</span>
+                                                            </th>
+                                                            <th>
+                                                                <span className="userDatatable-title">Mentee Name</span>
+                                                            </th>
+                                                            <th>
+                                                                <span className="userDatatable-title">Worksheet Name</span>
+                                                            </th>
+                                                            <th>
+                                                                <span className="userDatatable-title">Uploaded On</span>
+                                                            </th>
+                                                            <th>
+                                                                <span className="userDatatable-title float-end">action</span>
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+        
+                                                        <tr>
+                                                            <td>
+                                                                <div className="userDatatable-content">
+                                                                    {index+1}
+                                                                </div>
+                                                            </td>
+        
+                                                            <td>
+                                                                <div className="userDatatable-content">
+                                                                    {i.user_meta?.name}
+                                                                </div>
+                                                            </td>
+        
+                                                            <td>
+                                                                <div className="userDatatable-content">
+                                                                    {i?.program_worksheet?.name}
+                                                                </div>
+                                                            </td>
+        
+                                                            <td>
+                                                                <div className="userDatatable-content">
+                                                                    {moment(i.created_at).format("DD/MM/YY")}
+                                                                </div>
+                                                            </td>
+        
+                                                            <td>
+                                                                <ul className="orderDatatable_actions mb-0 d-flex flex-wrap">
+        
+                                                                    <li>
+                                                                        <button onClick={() => downloadFiles(i)} className="btn px-15 btn-primary ms-10">
+                                                                            Download
+                                                                        </button>
+                                                                    </li>
+                                                                </ul>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        )
+                                    }
+                                    
+                                    
+                                    })}
+                                
+{/* 
                                 <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
                                     <div className="table-responsive">
                                         <table className="table mb-0 table-borderless">
@@ -252,7 +307,7 @@ function View_Worksheet() {
                                             </tbody>
                                         </table>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
 
                         </div>

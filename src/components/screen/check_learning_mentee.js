@@ -8,7 +8,7 @@ import word_img from "../../img/word.svg";
 import csv_img from "../../img/csv.svg";
 import picture_img from "../../img/picture.svg";
 import moment from 'moment'
-import { BASE_URL } from "../../services/Config";
+import { BASE_URL, BASE_URL_APPLSURE } from "../../services/Config";
 // import mentees_home from '../../img/mentees_home.svg';
 // import mentee_home from '../../img/mentee_home.svg';
 
@@ -21,6 +21,7 @@ function Check_Learning_Mentee() {
     const [feedback, setFeedback] = useState("")
     const [learningDetails, setLearningDetails] = useState({})
     const [worksheetList, setWorksheetList] = useState([])
+    const [avgRatingScore, setAvgRatingScore] = useState("")
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -48,6 +49,7 @@ function Check_Learning_Mentee() {
 
     useEffect(() => {
         getProfile()
+        getAvgRating()
     },[])
     const getProfile = async() => {
         const btoken = `Bearer ${token}`;
@@ -110,6 +112,28 @@ function Check_Learning_Mentee() {
           return word_img
         }
       }
+
+      const getAvgRating = async() => {
+        const token = await localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
+        const body = {
+                "learning_id":state.id
+            }
+        const res = await fetch(`${BASE_URL_APPLSURE}ratinglearning?learning_id=${state.learningId}`,{
+            method:'GET',
+            headers:{
+              "Accept": "application/json",
+              'Content-Type': 'application/json',
+              "Authorization": btoken,
+            },
+            // body:JSON.stringify(body)
+        })
+        const response = await res.json()
+        console.log(response)
+        if(response.status){
+            setAvgRatingScore(response.rating)
+        }
+    }
 
     return (
 
@@ -181,12 +205,15 @@ function Check_Learning_Mentee() {
 
                                 <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Finish by</p>
-                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && moment(learningDetails.finishBy).format("DD MMMM YYYY")}</p>
+                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && moment(learningDetails.finishBy?.split('T')[0]).format("DD MMMM YYYY")}</p>
                                 </div>
 
                                 <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Duration</p>
-                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && learningDetails.duration}</p>
+                                    <p className="color-dark fs-14 fw-300 align-center mb-0">{learningDetails && learningDetails.duration}{' '}
+                      {learningDetails &&
+                        learningDetails.durationType?.charAt(0).toUpperCase() +
+                          learningDetails.durationType?.slice(1)}</p>
                                 </div>
 
                                 <div className="col-md-12 mb-20">
@@ -196,7 +223,7 @@ function Check_Learning_Mentee() {
 
                                 <div className="col-md-12 mb-20">
                                     <p className="color-gray fs-14 fw-300 align-center mb-0">Learning’s Rating</p>
-                                    <span className="badge badge-round btn-primary mt-10">{learningDetails && learningDetails.learningRating}<i className="lar la-star user_star"></i></span>
+                                    <span className="badge badge-round btn-primary mt-10">{avgRatingScore && avgRatingScore}<i className="lar la-star user_star"></i></span>
                                 </div>
 
                                 <div className="col-md-12 mb-20">

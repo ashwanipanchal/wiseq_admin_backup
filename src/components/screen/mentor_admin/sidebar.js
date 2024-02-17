@@ -15,7 +15,7 @@ import report_img from '../../../img/sidebar_icon/report.svg';
 import survey_img from '../../../img/sidebar_icon/survey.svg';
 import setting_img from '../../../img/sidebar_icon/settings.svg';
 // import message_img from '../../../img/messagess.svg';
-import { BASE_URL } from '../../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE } from '../../../services/Config';
 import message_img from '../../../img/chat_mentor_mentee.svg';
 import team_img from '../../../img/team-1.png';
 import alarm_img from '../../../img/notificationss.svg';
@@ -35,7 +35,7 @@ import { io } from "socket.io-client";
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 
 function Side_bar({ onClick, sideBarOpen, notificationCount }) {
-    console.log("notificationCount in side bar from home", notificationCount)
+    // console.log("notificationCount in side bar from home", notificationCount)
     const navigate = useNavigate()
     const [showHello, setShowHello] = useState(false);
     const [menteeSearch, setmenteeSearch] = useState("")
@@ -51,6 +51,7 @@ function Side_bar({ onClick, sideBarOpen, notificationCount }) {
     const [payload, setPayload] = useState({});
     const [showMessage, setShowMessage] = useState(false)
     const [delay, setDelay] = useState(false)
+    const [userInfo, setUserInfo] = useState({})
     const [windowSize, setWindowSize] = useState(getWindowSize());
     function getWindowSize() {
         const { innerWidth, innerHeight } = window;
@@ -61,7 +62,8 @@ function Side_bar({ onClick, sideBarOpen, notificationCount }) {
         getNotificationCount()
         getSessionRequest()
         getActivities()
-        getNotification()
+        // getNotification()
+        // getNewNotification()
         getAllChat()
         const socket = io("https://api.wiseq.co",{
         transport:["websocket"],
@@ -70,21 +72,47 @@ function Side_bar({ onClick, sideBarOpen, notificationCount }) {
         }
       });
       socket.on('connect', () => {
-        console.log('socket connected');
+        // console.log('socket connected');
       });
       socket.on('connect_error', err => {
         console.log(err);
       });
       socket.on('notification', res => {
-        console.log("notification recieved from socket==", res);
+        // console.log("notification recieved from socket==", res);
         if(res){
             setnotificationValue(notificationValue + 1)
             getSessionRequest()
-            getNotification()
+            // getNotification()
+            // getNewNotification(userInfo)
         }
       });
         
     }, [])
+
+    useEffect(() => {
+        getProfile()
+    },[])
+    const getProfile = async() => {
+        const token = await localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
+
+              const res = await fetch(`${BASE_URL}mentor/profile`,{
+                  method:'GET',
+                  headers:{
+                    "Accept": "application/json",
+                    'Content-Type': 'application/json',
+                    "Authorization": btoken,
+                  },
+                })
+                const response = await res.json()
+            //   console.log(response)
+              const {success} = response
+              if(success){
+                getNewNotification(response.data?.id)
+                setUserInfo(response.data)
+              }
+        
+    }
 
     const getSessionRequest = async () => {
         const token = localStorage.getItem("token")
@@ -98,9 +126,9 @@ function Side_bar({ onClick, sideBarOpen, notificationCount }) {
             },
         })
         const response = await res.json()
-        console.log("requezt", response)
+        // console.log("requezt", response)
         if (response.success) {
-            setNotificationData(response.data)
+            // setNotificationData(response.data)
         }
 
     }
@@ -117,27 +145,49 @@ function Side_bar({ onClick, sideBarOpen, notificationCount }) {
             },
         })
         const response = await res.json()
-        console.log("Activities", response)
+        // console.log("Activities", response)
         if (response.success) {
             setActivities(response.data)
         }
 
     }
-    const getNotification = async () => {
+    // const getNotification = async () => {
+    //     const token = localStorage.getItem("token")
+    //     const btoken = `Bearer ${token}`;
+    //     const res = await fetch(`${BASE_URL}notifications`, {
+    //         method: 'GET',
+    //         headers: {
+    //             "Accept": "application/json",
+    //             'Content-Type': 'application/json',
+    //             "Authorization": btoken,
+    //         },
+    //     })
+    //     const response = await res.json()
+    //     console.log("Notifications", response)
+    //     if (response.success) {
+    //         setNotificationData(response.data)
+    //     }
+
+    // }
+    const getNewNotification = async (id) => {
         const token = localStorage.getItem("token")
         const btoken = `Bearer ${token}`;
-        const res = await fetch(`${BASE_URL}notifications`, {
-            method: 'GET',
+        const body ={
+            "user_id":id
+        }
+        const res = await fetch(`${BASE_URL_APPLSURE}get-notification`, {
+            method: 'POST',
             headers: {
                 "Accept": "application/json",
                 'Content-Type': 'application/json',
                 "Authorization": btoken,
             },
+            body:JSON.stringify(body)
         })
         const response = await res.json()
-        console.log("Notifications", response)
-        if (response.success) {
-            setNotificationData(response.data)
+        // console.log("Notifications", response)
+        if (response.status) {
+            setNotificationData(response.notifications)
         }
 
     }
@@ -153,7 +203,7 @@ function Side_bar({ onClick, sideBarOpen, notificationCount }) {
             },
         })
         const response = await res.json()
-        console.log("Notifications count in sidebar", response)
+        // console.log("Notifications count in sidebar", response)
         if (response.success) {
             setnotificationValue(response.data?.notificationCount)
         }
@@ -173,7 +223,7 @@ function Side_bar({ onClick, sideBarOpen, notificationCount }) {
             },
         })
         const response = await res.json()
-        console.log(response)
+        // console.log(response)
         setChatList(response.data)
     }
 
@@ -192,8 +242,13 @@ function Side_bar({ onClick, sideBarOpen, notificationCount }) {
 
     const logout_fun = () => {
         // _RemoveAuthToke()
+        // window.localStorage.clear();
+        // window.sessionStorage.clear()
         localStorage.setItem("token", "")
         localStorage.setItem("user_type", "")
+        localStorage.setItem("user_id","")
+        localStorage.setItem("switch_message_flag", "")
+        localStorage.setItem("full_details", "")
         navigate('../admin_login')
     }
 
@@ -223,6 +278,54 @@ function Side_bar({ onClick, sideBarOpen, notificationCount }) {
         }
 
     }
+
+
+    const switchUser = async() => {
+        const token = localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
+        const body = {
+            "email": userInfo.email,
+            "role": "mentee",
+            "deviceToken": localStorage.getItem("token")
+        }
+        // console.log(body)
+        // return
+        const res = await fetch(`${BASE_URL}auth/switchtouser`, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+            body: JSON.stringify(body)
+        })
+        const response = await res.json()
+        // console.log(response)
+        // return
+        const { success } = response
+        if(success){
+            localStorage.removeItem("wrong_login")
+                localStorage.setItem("token", response.data.token)
+                localStorage.setItem("user_id", response.data.id)
+                localStorage.setItem("user_type", response.data.role)
+                localStorage.setItem("pref", response.data.isFirstLogin)
+                localStorage.setItem("user_info", response.data.name);
+                localStorage.setItem("image", response.data.imageUrl);
+                localStorage.setItem("orgLogo", response.data.orgLogo);
+                localStorage.setItem("switch_message_flag", response.data.switch_message_flag);
+                EventEmitter.emit('eventName', response.data.role)
+                if(response.data.role == "mentor" || response.data.role == "mentee"){
+                    if(response.data.isFirstLogin){
+                        navigate("/preference_one")
+                    }else{
+                        navigate("/");
+                    }
+                }else{
+                    navigate("/");
+                }
+        }
+    }
+
     return (
 
 
@@ -314,14 +417,15 @@ function Side_bar({ onClick, sideBarOpen, notificationCount }) {
                                                                      {i.type == "session_request" &&
                                                                      <p style={{cursor:'pointer'}} onClick={() => {
                                                                         setPayload(JSON.parse(i.payload))
-                                                                        console.log(JSON.parse(i.payload))
+                                                                        // console.log(JSON.parse(i.payload))
                                                                         setNotoficationId(i.payload)
                                                                         showModal()
                                                                      }}>
                                                                          <span style={{textDecoration:'underline'}} className="time-posted">Click here to accept/decline.</span>
                                                                      </p>}
                                                                      <p>
-                                                                         <span className="time-posted">{new Date(i.updatedAt).toDateString()} {new Date(i.updatedAt).toTimeString().split(" ")[0]}</span>
+                                                                         {/* <span className="time-posted">{new Date(i.updated_at).toDateString()} {new Date(i.updated_at).toTimeString().split(" ")[0]}</span> */}
+                                                                         <span className="time-posted">{new Date(parseInt(i.createdAt['$date']['$numberLong'])).toDateString()} {new Date(parseInt(i.createdAt['$date']['$numberLong'])).toTimeString().split(" ")[0]}</span>
                                                                      </p>
                                                                  </div>
                                                              </li>
@@ -515,6 +619,14 @@ function Side_bar({ onClick, sideBarOpen, notificationCount }) {
 
                                                         </NavLink>
                                                     </li>
+                                                    {userInfo && userInfo.userMeta?.switchPower == 1 && (
+                                                        <li onClick={() => switchUser()}>
+                                                        <NavLink className="navbar-link">
+                                                            <i class="uil uil-user-circle"></i> Switch to Mentee
+                                                        </NavLink>
+                                                    </li>
+                                                    )}
+                                                    
 
                                                     <li>
                                                         <NavLink className="navbar-link" to="/change_password">

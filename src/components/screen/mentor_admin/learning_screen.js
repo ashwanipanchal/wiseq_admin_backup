@@ -13,6 +13,8 @@ import Multiselect from 'multiselect-react-dropdown';
 import { BASE_URL } from '../../../services/Config';
 import 'react-calendar/dist/Calendar.css';
 import Calendar from 'react-calendar';
+import {matchSorter} from 'match-sorter'
+import { filterData, SearchType } from 'filter-data';
 
 const data = [
     { id: 1, learning_name: "-", skill_address: "-", category_name: "-", source_type: "External", created_on: "12/12/23" },
@@ -38,6 +40,7 @@ function Learning_Screen() {
     const [assignedID, setAssignedID] = useState("")
     const [reAssignedID, setReassignedID] = useState("")
     const [createdLearning, setCreatedLearning] = useState([])
+    const [createdLearning1, setCreatedLearning1] = useState([])
     const [selectedMentee, setSelectedMentee] = useState([])
     const [selectedMenteeForAssign, setSelectedMenteeForAssign] = useState([])
     const [finishDate, setFinishDate] = useState("")
@@ -49,6 +52,8 @@ function Learning_Screen() {
     const [value, setValue] = useState(new Date());
     const [calc, setCalc] = useState(false);
     const [date, setDate] = useState("")
+    const [searchLearning, setSearchLearning] = useState("")
+    const [skills, setSkillsList] = useState([])
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -64,7 +69,29 @@ function Learning_Screen() {
         getAssignedLearning()
         getCompletedLearning()
         getMyMentee()
+        getSkills()
     }, [])
+
+    const getSkills = async() => {
+      const btoken = `Bearer ${token}`;
+      const res = await fetch(`${BASE_URL}organisation-info/skills`, {
+          method: 'GET',
+          headers: {
+              "Accept": "application/json",
+              'Content-Type': 'application/json',
+              "Authorization": btoken,
+          },
+      })
+      const response = await res.json()
+      console.log("skill list", response)
+      if(response.success){
+          let tt = []
+          response.data.map((i) => {
+              tt.push({skill: i.skill, value: false})
+          })
+          setSkillsList(tt)
+      }
+}
 
     useEffect(() => {
         function handleWindowResize() {
@@ -78,6 +105,12 @@ function Learning_Screen() {
             window.removeEventListener('resize', handleWindowResize);
         };
     }, []);
+
+    const [showFilter, setShowFilter] = useState(false)
+
+    const showModal2 = () => {
+        setShowFilter(prevStat => !prevStat)
+    }
 
     const [showHello, setShowHello] = useState(false);
     const closeModal = () => setShowHello(false);
@@ -100,6 +133,7 @@ function Learning_Screen() {
         const response = await res.json()
         console.log("created learning", response)
         setCreatedLearning(response.data)
+        setCreatedLearning1(response.data)
     }
 
     const getAssignedLearning = async() => {
@@ -164,19 +198,30 @@ function Learning_Screen() {
 
 
     const assignedToMentee = async() => {
+      if(!checked){
+
+        if(selectedMenteeForAssign.length == 0){
+            alert("Please select atleast one mentee")
+            return
+        }
+    }
+    if(date.length == ""){
+        alert("Please enter finish by date")
+        return
+    }
         const btoken = `Bearer ${token}`;
         // menteeList
         let temp = []
-                        menteeList.map((i) => {
-                            temp.push(i.id)
-                        })
-                        console.log(temp)
+        menteeList.map((i) => {
+            temp.push(i.id)
+        })
+        console.log(temp)
         const body = {
             "mentees": checked ? temp : selectedMenteeForAssign,
               // "finishBy":finishDate
               "finishBy":value,
         }
-        // console.log(body)
+        console.log(body)
         // return
         const res = await fetch(`${BASE_URL}learnings/${assignedID}/assign-to-mentees`, {
             method: 'PUT',
@@ -199,8 +244,13 @@ function Learning_Screen() {
 
     const reAssignedToMentee = async() => {
         const btoken = `Bearer ${token}`;
+        let temp = []
+        menteeList.map((i) => {
+            temp.push(i.id)
+        })
+        console.log(temp)
         const body = {
-            "mentees": selectedMenteeForAssign,
+            "mentees": checked ? temp : selectedMenteeForAssign,
               // "finishBy":finishDate
               "finishBy":value,
         }
@@ -225,12 +275,12 @@ function Learning_Screen() {
 
 
     const assignedOption = (user) => {
-        if(user.status == "overdue"){
-            showModal1()
-            setReassignedID(user.id)
-        }else{
+        // if(user.status == "overdue"){
+        //     showModal1()
+        //     setReassignedID(user.id)
+        // }else{
             navigate("/assigned_learning_profile", {state: user})
-        }
+        // }
     }
 
         const onSelectMentee = (selectedList, selectedItem) => {
@@ -271,6 +321,93 @@ function Learning_Screen() {
       showCalc()
   }
 
+  const [catDate, setCatDate] = useState([
+    {
+      name:"Podcast",
+      value:false
+    },
+    {
+      name:"Article",
+      value:false
+    },
+    {
+      name:"Video",
+      value:false
+    },
+    {
+      name:"CaseStudy",
+      value:false
+    },
+    {
+      name:"Cource",
+      value:false
+    },
+  ])
+
+  
+  const handleOnChange = async(index) => {
+    let f;
+
+    // console.log(all)
+    console.log(skills[index].value)
+    skills[index].value == false ? skills[index].value = true : skills[index].value = false
+    if(skills[index].value == true){
+
+      f = matchSorter(createdLearning, skills[index].skill, {keys: ['skills']})
+      // f = matchSorter(createdLearning, ["Node, React"], {keys: ['skills']})
+      setCreatedLearning(f)
+    }else{
+      
+      setCreatedLearning(createdLearning1)
+    }
+    // console.log(f)
+  }
+  const handleOnChange1 = async(index) => {
+    let f;
+
+    // console.log(all)
+    console.log(catDate[index].value)
+    catDate[index].value == false ? catDate[index].value = true : catDate[index].value = false
+    if(catDate[index].value == true){
+
+      f = matchSorter(createdLearning, catDate[index].name, {keys: ['category']})
+      // f = matchSorter(createdLearning, ["Node, React"], {keys: ['skills']})
+      setCreatedLearning(f)
+    }else{
+      console.log("hell")
+      setCreatedLearning(createdLearning1)
+    }
+    // console.log(f)
+  }
+
+  const filterLearning = searchLearning
+  ? createdLearning.filter(x => 
+
+    x.learningName.toLowerCase().includes(searchLearning.toLowerCase()),
+      // alert(JSON.stringify(x,null,2))
+      // return
+      // x.skills.toLowerCase().includes(searchLearning.toLowerCase())
+  )
+  : createdLearning;
+
+
+  const searchConditions = [
+    {
+      key: "category",
+      value: 'Podcast',
+      type: SearchType.LK,
+    }, 
+    {
+      key: "skills",
+      value: "React",
+      type: SearchType.LK
+    },
+    
+  ];
+
+  const result = filterData(createdLearning, searchConditions);
+
+  console.log(result)
     return (
       <div className="main-content">
         <div
@@ -291,6 +428,20 @@ function Learning_Screen() {
                     </div>
 
                     <div class="layout-button">
+                    <p onClick={()=>showModal2()} className="filter_box me-10 mt-10">
+                        <i class="las la-filter"></i> Filter
+                      </p>
+                      <div className="d-flex align-items-center user-member__form my-sm-0 my-2">
+                        <img src={search_img} alt="search" className="svg" />
+                        <input
+                          value={searchLearning}
+                          onChange={(e) =>setSearchLearning(e.target.value)}
+                          className="me-sm-2 border-0 box-shadow-none ms-10"
+                          type="search"
+                          placeholder="Search by keywords bar"
+                          aria-label="Search by keywords bar"
+                        />
+                      </div>
                       <NavLink className="" to="/create_learning">
                         <button
                           type="button"
@@ -320,7 +471,7 @@ function Learning_Screen() {
                               <div className="row">
                                 {/* {createdLearning && createdLearning.map((user) => ( */}
                                 {createdLearning &&
-                                  createdLearning.map((user) => (
+                                  filterLearning.map((user) => (
                                     <div className="col-lg-12">
                                       <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
                                         <div className="table-responsive">
@@ -391,7 +542,7 @@ function Learning_Screen() {
 
                                                 <td>
                                                   <div className="userDatatable-content">
-                                                    {user.skills?.split(",")
+                                                    {/* {user.skills?.split(",")
                                                       .length > 2
                                                       ? `${
                                                           user.skills?.split(
@@ -402,7 +553,15 @@ function Learning_Screen() {
                                                             ","
                                                           )?.length - 1
                                                         }`
-                                                      : user.skills}
+                                                      : user.skills} */}
+                                                      {user.skills.substring(
+                                                      0,
+                                                      10
+                                                    )}
+                                                    {user.skills.length >
+                                                    10
+                                                      ? "..."
+                                                      : ""}
                                                   </div>
                                                 </td>
 
@@ -550,7 +709,7 @@ function Learning_Screen() {
 
                                                 <td>
                                                   <div className="userDatatable-content">
-                                                    {user.skills?.split(",")
+                                                    {/* {user.skills?.split(",")
                                                       .length > 2
                                                       ? `${
                                                           user.skills?.split(
@@ -561,7 +720,15 @@ function Learning_Screen() {
                                                             ","
                                                           )?.length - 1
                                                         }`
-                                                      : user.skills}
+                                                      : user.skills} */}
+                                                      {user.skills.substring(
+                                                      0,
+                                                      10
+                                                    )}
+                                                    {user.skills.length >
+                                                    10
+                                                      ? "..."
+                                                      : ""}
                                                   </div>
                                                 </td>
 
@@ -579,8 +746,24 @@ function Learning_Screen() {
 
                                                 <td>
                                                   <div className="userDatatable-content fw-600">
-                                                    {user.audience[0]?.name +
+                                                    {/* {user.audience[0]?.name +
                                                       `${
+                                                        user.audience.length > 1
+                                                          ? ` + ${
+                                                              user.audience
+                                                                .length - 1
+                                                            }`
+                                                          : ""
+                                                      }`} */}
+                                                      {user.audience[0]?.name.substring(
+                                                      0,
+                                                      8
+                                                    )}
+                                                    {user.audience[0]?.name.length >
+                                                    8
+                                                      ? "..."
+                                                      : "" }
+                                                      {`${
                                                         user.audience.length > 1
                                                           ? ` + ${
                                                               user.audience
@@ -594,32 +777,39 @@ function Learning_Screen() {
                                                 <td>
                                                   <div className="userDatatable-content fw-600">
                                                     {moment(
-                                                      user.assignedOn
+                                                      user.createdAt
                                                     ).format("DD/MM/YY")}
                                                   </div>
                                                 </td>
 
                                                 <td>
                                                   <div className="userDatatable-content fw-600">
-                                                    {/* {user.finishBy} */}
-                                                    {moment(
-                                                      user.finishBy
-                                                    ).format("DD/MM/YY")}
+                                                  {
+                                                  moment(user.finishBy?.split('T')[0]).format("DD/MM/YYYY")}
+                                                    {/* {moment(user.finishBy).subtract(1, "days").format("DD/MM/YY")} */}
                                                   </div>
                                                 </td>
 
                                                 <td>
-                                                  <div
+                                                {user.status == "overdue" ? 
+                                                    <div style={{color:"#B93D49"}} className="userDatatable-content fw-600">
+                                                      {user.status.replace(/([a-z])([A-Z])/, '$1 $2')}
+                                                    </div>:
+                                                    <div className="userDatatable-content color-status fw-600">
+                                                      {user.status.replace(/([a-z])([A-Z])/, '$1 $2')}
+                                                    </div>
+                                                  }
+                                                  {/* <div
                                                     style={{ color: "#B93D49" }}
                                                     className="userDatatable-content fw-600"
                                                   >
-                                                    {user.status}
-                                                  </div>
+                                                    {user.status.replace(/([a-z])([A-Z])/, '$1 $2')}
+                                                  </div> */}
                                                 </td>
 
                                                 <td>
                                                   <ul className="orderDatatable_actions mb-0 d-flex flex-wrap">
-                                                    <li>
+                                                    {/* <li>
                                                       <button
                                                         onClick={() =>
                                                           navigate(
@@ -635,7 +825,7 @@ function Learning_Screen() {
                                                           className="svg"
                                                         />
                                                       </button>
-                                                    </li>
+                                                    </li> */}
 
                                                     {/* <NavLink className="navbar-link" to="/created_learning_profile"> */}
                                                     <li>
@@ -645,10 +835,11 @@ function Learning_Screen() {
                                                         }
                                                         className="btn btn-icon btn-petrol btn-squared ms-10"
                                                       >
-                                                        {user.status ==
+                                                        {/* {user.status ==
                                                         "overdue"
                                                           ? "Re assign"
-                                                          : "View"}
+                                                          : "View"} */}
+                                                          View
                                                       </button>
                                                     </li>
                                                     {/* </NavLink> */}
@@ -779,9 +970,7 @@ function Learning_Screen() {
 
                                                 <td>
                                                   <div className="userDatatable-content fw-600">
-                                                    {moment(
-                                                      user.finishBy
-                                                    ).format("DD/MM/YY")}
+                                                    {moment(user.finishBy).subtract(1, "days").format("DD/MM/YY")}
                                                   </div>
                                                 </td>
 
@@ -895,7 +1084,7 @@ function Learning_Screen() {
 
                                                 <td>
                                                   <div className="userDatatable-content">
-                                                    {user.skills?.split(",")
+                                                    {/* {user.skills?.split(",")
                                                       .length > 2
                                                       ? `${
                                                           user.skills?.split(
@@ -906,7 +1095,15 @@ function Learning_Screen() {
                                                             ","
                                                           )?.length - 1
                                                         }`
-                                                      : user.skills}
+                                                      : user.skills} */}
+                                                      {user.skills.substring(
+                                                      0,
+                                                      10
+                                                    )}
+                                                    {user.skills.length >
+                                                    10
+                                                      ? "..."
+                                                      : ""}
                                                   </div>
                                                 </td>
 
@@ -982,6 +1179,88 @@ function Learning_Screen() {
             </div>
           </div>
         </div>
+
+        {showFilter ?
+                    <div className="filter_box1">
+                        <div className="products_page product_page--grid mb-30">
+                            <div className="1">
+                                <div className="1">
+                                    <div className="1">
+                                        <div className="widget box_shadow1">
+                                            <div className="category_sidebar">
+                                                <div className="product-sidebar-widget mb-10">
+                                                    {/* {data9.map((user) => ( */}
+
+                                                        <Accordion>
+                                                            <Accordion.Item eventKey="0" className="filter_accor">
+                                                                <Accordion.Header className="widget_title">Skills Addressed</Accordion.Header>
+                                                                <Accordion.Body className="card border-0 shadow-none">
+                                                                    <div className="product-brands">
+                                                                        <ul>
+                                                                          {skills && skills.map((i,index) =>(
+                                                                            <li>
+                                                                                <div className="checkbox-theme-default custom-checkbox">
+                                                                                    <input 
+                                                                                      name={i}
+                                                                                      value={i} 
+                                                                                      onChange={() => handleOnChange(index)}
+                                                                                      className="checkbox" type="checkbox" id={`custom-checkbox-${index}`} />
+                                                                                    <label for={`custom-checkbox-${index}`}>
+                                                                                        <span className="checkbox-text">
+                                                                                            {i.skill}
+                                                                                        </span>
+                                                                                    </label>
+                                                                                </div>
+                                                                            </li>
+                                                                          ))}
+                                                                           
+                                                                        </ul>
+                                                                    </div>
+                                                                </Accordion.Body>
+                                                            </Accordion.Item>
+                                                        </Accordion>
+                                                        <Accordion>
+                                                            <Accordion.Item eventKey="0" className="filter_accor">
+                                                                <Accordion.Header className="widget_title">Category</Accordion.Header>
+                                                                <Accordion.Body className="card border-0 shadow-none">
+                                                                    <div className="product-brands">
+                                                                        <ul>
+                                                                          {catDate.map((i,index) => (
+                                                                            <li>
+                                                                                <div className="checkbox-theme-default custom-checkbox">
+                                                                                    <input  
+                                                                                      name={i}
+                                                                                      value={i} 
+                                                                                      onChange={() => handleOnChange1(index)} className="checkbox" type="checkbox" id={`custom-checkbox-${index+100}`} />
+                                                                                    <label for={`custom-checkbox-${index+100}`}>
+                                                                                        <span className="checkbox-text">
+                                                                                        {i.name}
+                                                                                        </span>
+                                                                                    </label>
+                                                                                </div>
+                                                                            </li>
+                                                                          ))}
+                                                                            
+                                                                            
+                                                                        </ul>
+                                                                    </div>
+                                                                </Accordion.Body>
+                                                            </Accordion.Item>
+                                                        </Accordion>
+
+
+
+                                                    {/* ))} */}
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> : ""}
+
         <Side_Bar
           onClick={toggle}
           sideBarOpen={
@@ -1123,7 +1402,19 @@ function Learning_Screen() {
 
                 <div className="col-md-12 mb-25">
                   <div className="countryOption">
-                    <select
+                  <Multiselect
+                      style={{ searchBox: { borderColor: "gray" } }}
+                      // isObject={false}
+                      disable={checked ? true : false}
+                      value={[{ id: 1, industry: "as" }]}
+                      options={menteeList} // Options to display in the dropdown
+                      placeholder="Select Mentees"
+                      selectedValues={selectedMentee} // Preselected value to persist in dropdown
+                      onSelect={onSelectMentee} // Function will trigger on select event
+                      onRemove={onRemoveMentee} // Function will trigger on remove event
+                      displayValue="name" // Property name to display in the dropdown options
+                    />
+                    {/* <select
                       value={selectedMentee}
                       onChange={(e) => setSelectedMentee(e.target.value)}
                       className="form-select form-control ih-medium ip-gray radius-xs b-deep px-15"
@@ -1134,19 +1425,24 @@ function Learning_Screen() {
                         menteeList.map((i) => (
                           <option value={i.id}>{i.name}</option>
                         ))}
-                    </select>
+                    </select> */}
                   </div>
                 </div>
 
-                {/* <div className="col-md-12 mb-25">
+                <div>
                   <input
-                    value={finishDate}
-                    onChange={(e) => setFinishDate(e.target.value)}
-                    type="date"
-                    className="form-control ih-medium ip-gray radius-xs b-deep px-15"
-                    placeholder="Finish By"
+                    value="test"
+                    placeholder="Select All Mentees"
+                    type="checkbox"
+                    onChange={(e) => {
+                        setChecked(e.target.checked)
+                        
+                    }}
                   />
-                </div> */}
+                  <label for="check-1">
+                    <span className="checkbox-text fw-600">Select All Mentees</span>
+                  </label>
+                </div>
                 <div className="col-md-12 mb-25">
                   <input
                     onClick={() => showCalc()}

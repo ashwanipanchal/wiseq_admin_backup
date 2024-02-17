@@ -259,6 +259,10 @@ h6 {
   display: block;
 }
 
+.mentoring-tabs .react-tabs__tab--selected{
+    color: var(--color-green-admin) !important;
+}
+
 .react-tabs__tab--selected {
     color: var(--color-green-admin) !important;
     background-color: transparent !important;

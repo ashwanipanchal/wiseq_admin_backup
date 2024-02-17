@@ -1,7 +1,8 @@
 import Side_Bar from './sidebar';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { NavLink, useNavigate } from "react-router-dom";
 import Multiselect from 'multiselect-react-dropdown';
+import { BASE_URL } from '../../services/Config';
 
 const categoryOption = [
     {
@@ -40,14 +41,19 @@ const categoryOption = [
 ]
 function Add_Resources() {
     const navigate = useNavigate()
+    const inputFile = useRef(null);
+    const inputFile1 = useRef(null);
+    const [token, setToken] = useState(localStorage.getItem("token"))
     const [sideBarOpen, setSideBarOpen] = useState(true)
     const [name, setName] = useState("")
     const [desctiption, setDescription] = useState("")
     const [category, setCategory] = useState([])
-    const [skills, setSkills] = useState("")
+    const [selectedSkill, setSelectedSkill] = useState("")
     const [link, setLink] = useState("")
+    const [sourceName, setSourceName] = useState("")
     const [photoUrl, setPhotoUrl] = useState("")
     const [fileUrl, setFileUrl] = useState("")
+    const [skills, setSkillsList] = useState([])
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -63,32 +69,56 @@ function Add_Resources() {
         }
 
         window.addEventListener('resize', handleWindowResize);
-
+        getSkills()
         return () => {
             window.removeEventListener('resize', handleWindowResize);
         };
     }, []);
 
+    const getSkills = async() => {
+        const btoken = `Bearer ${token}`;
+        const res = await fetch(`${BASE_URL}organisation-info/skills`, {
+            method: 'GET',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+        })
+        const response = await res.json()
+        console.log("skill list", response)
+        if(response.success){
+            let tt = []
+            response.data.map((i) => {
+                tt.push(i.skill)
+            })
+            setSkillsList(tt)
+        }
+}
+
+
     const uploadResources = async(e) => {
         e.preventDefault()
         const body = {
             name,
-            "categories": category,
+            "categories": [category],
             // "organisationId": [
             //   "string"
             // ],
             description: desctiption,
-            skills,
+            skills:selectedSkill,
             "externalLink": link,
             "coverPhoto": photoUrl,
-            "fileUrl": fileUrl
+            "fileUrl": fileUrl,
+            "sourceUrl":link,
+            "sourceLink":sourceName
           }
-        //   console.log(body)
+          console.log(body)
         //   return
           const token = await localStorage.getItem("token")
                 const btoken = `Bearer ${token}`;  
                 // console.log(btoken)  
-                const res = await fetch(`https://api.wiseqglobal.com/api/resources`,{
+                const res = await fetch(`${BASE_URL}resources`,{
                     method:'POST',
                     headers:{
                       "Accept": "application/json",
@@ -113,7 +143,7 @@ function Add_Resources() {
                 const token = await localStorage.getItem("token")
                 const btoken = `Bearer ${token}`;  
                 // console.log(btoken)  
-                const res = await fetch(`https://api.wiseqglobal.com/api/files/upload?fileType=ressource_file`,{
+                const res = await fetch(`${BASE_URL}files/upload?fileType=ressource_file`,{
                     method:'POST',
                     headers:{
                       "Accept": "application/json",
@@ -184,12 +214,15 @@ function Add_Resources() {
 
                                                 <div className="col-md-6 mb-25">
                                                     <div class="countryOption">
-                                                        {/* <select value={category} onChange={e => setCategory(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
-                                                            <option value="">Select Category</option>
-                                                            <option value="category1">Category 1</option>
-                                                            <option value="category2">Category 2</option>
-                                                        </select> */}
-                                                        <Multiselect
+                                                    <select value={category} onChange={e => setCategory(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
+                                                            <option value="">Category</option>
+                                                            <option value="podcast">Podcast</option>
+                                                            <option value="article">Article</option>
+                                                            <option value="video">Video</option>
+                                                            <option value="case-study">Case Study</option>
+                                                            <option value="course">Course</option>
+                                                        </select>
+                                                        {/* <Multiselect
                                                             style={{ searchBox: { borderColor: 'gray' } }}
                                                             // isObject={false}
                                                             options={categoryOption} // Options to display in the dropdown
@@ -198,36 +231,72 @@ function Add_Resources() {
                                                             onSelect={onSelectCat} // Function will trigger on select event
                                                             onRemove={onRemoveCat} // Function will trigger on remove event
                                                             displayValue="name" // Property name to display in the dropdown options
-                                                        />
+                                                        /> */}
                                                     </div>
                                                 </div>
 
                                                 <div className="col-md-6 mb-25">
                                                     <div class="countryOption">
-                                                        <select value={skills} onChange={e => setSkills(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
-                                                            <option value="">Select Key Skills</option>
-                                                            <option value="react">React</option>
-                                                            <option value="node">Node</option>
+                                                        <select value={selectedSkill} onChange={e => setSelectedSkill(e.target.value)} class="form-select form-control ih-medium ip-gray radius-xs b-deep px-15" aria-label="Default select example" required>
+                                                            <option value="">Skill Addressed</option>
+                                                            {skills && skills.map((i) => (
+                                                                <option value={i}>{i}</option>
+                                                            ))}
                                                         </select>
                                                     </div>
                                                 </div>
 
-                                                <div className="col-md-12 mb-15">
-                                                    <input value={link} onChange={e => setLink(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="External Link" />
+                                                <div className="col-md-6 mb-15">
+                                                    <input value={sourceName} onChange={e => setSourceName(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Source Name" />
+                                                </div>
+                                                <div className="col-md-6 mb-15">
+                                                    <input value={link} onChange={e => setLink(e.target.value)} type="text" className="form-control ih-medium ip-gray radius-xs b-deep px-15" placeholder="Source Link" />
                                                 </div>
 
                                                 <div className="col-md-6 mb-25">
                                                     <label for="formFile" class="form-label">Upload Photo</label>
                                                     <input onChange={(event) => { 
                                                             uploadImage(event.target.files[0],"1")
-                                                        }} class="form-control ip-gray radius-xs b-deep px-15" type="file" id="customFile" required/>
+                                                        }} class="form-control ip-gray radius-xs b-deep px-15" type="file" id="customFile" ref={inputFile1}  required/>
+                                                        {photoUrl.length > 0 &&  (
+                                                                            <div style={{display:'flex', justifyContent:'space-between'}}>
+                                                                            
+                                                                            <p>{photoUrl.split("/")[4]}</p>
+                                                                            <p style={{cursor:'pointer', color:'red'}} onClick={() =>{
+                                                                                if (inputFile1.current) {
+                                                                                    inputFile1.current.value = "";
+                                                                                    inputFile1.current.type = "text";
+                                                                                    inputFile1.current.type = "file";
+                                                                                    // setImageLocal(null)
+                                                                                    setPhotoUrl("")
+                                                                                }
+
+                                                                            }}>Delete</p>
+                                                                        </div>
+                                                                        )}
                                                 </div>
 
                                                 <div className="col-md-6 mb-25">
                                                     <label for="formFile" class="form-label">Upload File</label>
                                                     <input onChange={(event) => { 
                                                             uploadImage(event.target.files[0],"2")
-                                                        }} class="form-control ip-gray radius-xs b-deep px-15" type="file" id="customFile" required/>
+                                                        }} class="form-control ip-gray radius-xs b-deep px-15" type="file" id="customFile" ref={inputFile} required/>
+                                                        {fileUrl.length > 0 &&  (
+                                                                            <div style={{display:'flex', justifyContent:'space-between'}}>
+                                                                            
+                                                                            <p>{fileUrl.split("/")[4]}</p>
+                                                                            <p style={{cursor:'pointer', color:'red'}} onClick={() =>{
+                                                                                if (inputFile.current) {
+                                                                                    inputFile.current.value = "";
+                                                                                    inputFile.current.type = "text";
+                                                                                    inputFile.current.type = "file";
+                                                                                    // setImageLocal(null)
+                                                                                    setFileUrl("")
+                                                                                }
+
+                                                                            }}>Delete</p>
+                                                                        </div>
+                                                                        )}
                                                 </div>
 
                                                 <div className="col-md-12">

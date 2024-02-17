@@ -467,6 +467,45 @@ function Created_Learning_Profile() {
                         : "No"}
                     </p>
                   </div>
+                  
+                  {learningDetails.worksheetFile != "" &&
+                    <div className="col-md-12 mb-20">
+                    <p className="color-gray fs-14 fw-300 align-center mb-0">
+                     Worksheet Files
+                    </p>
+                    {learningDetails.worksheetFile?.split("|").map((i)=>(
+                      <p style={{cursor:'pointer', textDecoration:'underline'}} className="color-dark fs-14 fw-300 align-center mb-0"
+                      onClick={() =>
+                        window.open(i, "_blank")
+                      }
+                    >
+                      {i.split("/")[4]}
+                    </p>
+                    ))}
+                    
+                  </div>
+                  
+                  }
+
+                  {learningDetails.otherFiles != "" &&
+                    <div className="col-md-12 mb-20">
+                    <p className="color-gray fs-14 fw-300 align-center mb-0">
+                     File Attached
+                    </p>
+                    {learningDetails.otherFiles?.split("|").map((i)=>(
+                      <p style={{cursor:'pointer', textDecoration:'underline'}} className="color-dark fs-14 fw-300 align-center mb-0"
+                      onClick={() =>
+                        window.open(i, "_blank")
+                      }
+                    >
+                      {i.split("/")[4]}
+                    </p>
+                    ))}
+                    
+                  </div>
+                  
+                  }
+                  
 
                   <div className="col-md-12 mb-20">
                     <p className="color-gray fs-14 fw-300 align-center mb-0">
@@ -477,12 +516,12 @@ function Created_Learning_Profile() {
                     </p>
                   </div>
 
-                  <div className="col-md-12 mb-20">
+                  {/* <div className="col-md-12 mb-20">
                     <p className="color-gray fs-14 fw-300 align-center mb-0">
                       Learning’s Rating
                     </p>
-                    {/* <span className="badge badge-round btn-primary mt-10">4.5 <i className="lar la-star user_star"></i></span> */}
-                  </div>
+                    <span className="badge badge-round btn-primary mt-10">4.5 <i className="lar la-star user_star"></i></span>
+                  </div> */}
                 </div>
               </div>
             </div>

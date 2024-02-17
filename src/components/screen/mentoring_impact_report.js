@@ -2,6 +2,11 @@ import React from 'react'
 import Side_Bar from "./sidebar";
 import { useEffect, useState } from "react";
 import { Chart, Line, Point, Tooltip,getTheme } from "bizcharts";
+import arrow_up from '../../img/report_arrow_up.svg';
+import arrow_down from '../../img/report_arrow_down.svg';
+import chart_arrow_down from '../../img/chart_arrow_down.svg';
+import chart_arrow_up from '../../img/chart_arrow_up.svg';
+import { BASE_URL, BASE_URL_APPLSURE } from '../../services/Config';
 
 const data = [
 	{
@@ -32,8 +37,13 @@ const data = [
 
 
 function Mentoring_Impact_Report() {
+  const [token, setToken] = useState(localStorage.getItem("token"))
     const [sideBarOpen, setSideBarOpen] = useState(true);
     const [windowSize, setWindowSize] = useState(getWindowSize());
+    const [top5Dev, setTop5Dev] = useState([])
+    const [overAll, setOverAll] = useState({})
+    const [fullInfo, setFullInfo] = useState("");
+    const [filterValue, setFilterValue] = useState("");
     function getWindowSize() {
       const { innerWidth, innerHeight } = window;
       return { innerWidth, innerHeight };
@@ -49,8 +59,213 @@ function Mentoring_Impact_Report() {
       };
     }, []);
 
+    useEffect(() => {
+      getFullDetail()
+    },[])
+
+    const getFullDetail = async () => {
+      const token = await localStorage.getItem("token");
+      const btoken = `Bearer ${token}`;
+  
+      const res = await fetch(`${BASE_URL}organisations/4324`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: btoken,
+        },
+      });
+      const response = await res.json();
+      console.log(response);
+      getImpactReport(response.data.id)
+      setFullInfo(response.data.id);
+    };
+
+    const getImpactReport = async(id) => {
+      const btoken = `Bearer ${token}`;
+      const body = {
+        "condition":"year",
+        // "month":"11",
+        "year":new Date().getFullYear(),
+        // "from":"",
+        // "to":"",
+        "organization_id":id
+    
+    }
+      const res = await fetch(`${BASE_URL_APPLSURE}mentoring-impact-report`, {
+          method: 'POST',
+          headers: {
+              "Accept": "application/json",
+              'Content-Type': 'application/json',
+              "Authorization": btoken,
+          },
+          body:JSON.stringify(body)
+      })
+      const response = await res.json()
+      console.log(response)
+      if(response.status){
+        setTop5Dev(response.top5dev)
+        setOverAll(response.overall)
+      }
+    }
+    
     const toggle = () => {
         setSideBarOpen(!sideBarOpen);
+      };
+
+
+      const filterStats = async (i) => {
+        const token = await localStorage.getItem("token");
+        const btoken = `Bearer ${token}`;
+        let url = "";
+        if (i == "Year to Date") {
+          const btoken = `Bearer ${token}`;
+          const body = {
+            "condition":"year",
+            // "month":"11",
+            "year":new Date().getFullYear(),
+            // "from":"",
+            // "to":"",
+            "organization_id":fullInfo
+        
+        }
+          const res = await fetch(`${BASE_URL_APPLSURE}mentoring-impact-report`, 
+            {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: btoken,
+              },
+              body: JSON.stringify(body),
+            }
+          );
+          const response = await res.json();
+          console.log("getReportofDevSkill", response);
+          if(response.status){
+            setTop5Dev(response.top5dev)
+            setOverAll(response.overall)
+          }
+        }
+        if (i == "Month to Date") {
+          const btoken = `Bearer ${token}`;
+          // const body = {
+          //   condition: "lastmonth", //lastmonth//lastweek//all/daterange,
+          //   "organization_id":fullInfo,
+          //   month: `${new Date().getMonth() + 1}`,
+          // };
+          const body = {
+            "condition":"month",
+            "month":new Date().getMonth()+1,
+            "year":new Date().getFullYear(),
+            // "from":"",
+            // "to":"",
+            "organization_id":fullInfo
+        
+        }
+          const res = await fetch(`${BASE_URL_APPLSURE}mentoring-impact-report`, 
+            {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: btoken,
+              },
+              body: JSON.stringify(body),
+            }
+          );
+          const response = await res.json();
+          console.log("getReportofDevSkill", response);
+          if(response.status){
+            setTop5Dev(response.top5dev)
+            setOverAll(response.overall)
+          }
+        }
+    
+        // if (i == "Weekly") {
+        //   const btoken = `Bearer ${token}`;
+        //   const body = {
+        //     condition: "lastweek", //lastmonth//lastweek//all/daterange,
+        //     "organization_id":fullInfo
+        //   };
+        //   const res = await fetch(`${BASE_URL_APPLSURE}mentoring-impact-report`, 
+        //     {
+        //       method: "POST",
+        //       headers: {
+        //         Accept: "application/json",
+        //         "Content-Type": "application/json",
+        //         Authorization: btoken,
+        //       },
+        //       body: JSON.stringify(body),
+        //     }
+        //   );
+        //   const response = await res.json();
+        //   console.log("getReportofDevSkill", response);
+        //   if (response.status) {
+        //     setQuesOne([
+        //       [
+        //         "Element",
+        //         "Percentage",
+        //         { role: "style" },
+        //         {
+        //           sourceColumn: 0,
+        //           role: "annotation",
+        //           type: "string",
+        //           calc: "stringify",
+        //         },
+        //       ],
+        //       ["1 Star", response.questone[1], "#62B2FD", null],
+        //       ["2 Star", response.questone[2], "#9BDFC4", null],
+        //       ["3 Star", response.questone[3], "#F99BAB", null],
+        //       ["4 Star", response.questone[4], "color: #FFB44F", null],
+        //       ["5 Star", response.questone[5], "color: #9F97F7", null],
+        //     ]);
+        //     setQuesTwo([
+        //       [
+        //         "Element",
+        //         "Percentage",
+        //         { role: "style" },
+        //         {
+        //           sourceColumn: 0,
+        //           role: "annotation",
+        //           type: "string",
+        //           calc: "stringify",
+        //         },
+        //       ],
+        //       ["1 Star", response.questtwo[1], "#62B2FD", null],
+        //       ["2 Star", response.questtwo[2], "#9BDFC4", null],
+        //       ["3 Star", response.questtwo[3], "#F99BAB", null],
+        //       ["4 Star", response.questtwo[4], "color: #FFB44F", null],
+        //       ["5 Star", response.questtwo[5], "color: #9F97F7", null],
+        //     ]);
+        //     setQuesThree([
+        //       [
+        //         "Element",
+        //         "Percentage",
+        //         { role: "style" },
+        //         {
+        //           sourceColumn: 0,
+        //           role: "annotation",
+        //           type: "string",
+        //           calc: "stringify",
+        //         },
+        //       ],
+        //       ["1 Star", response.questthree[1], "#62B2FD", null],
+        //       ["2 Star", response.questthree[2], "#9BDFC4", null],
+        //       ["3 Star", response.questthree[3], "#F99BAB", null],
+        //       ["4 Star", response.questthree[4], "color: #FFB44F", null],
+        //       ["5 Star", response.questthree[5], "color: #9F97F7", null],
+        //     ]);
+        //     setOverAll(response.overall)
+        //   }
+        // }
+    
+        // if (i == "Custom (Calendar Selection)") {
+        //   showModal();
+        // }
+        if (i == "") {
+          getImpactReport(fullInfo);
+        }
       };
 
   return (
@@ -85,18 +300,18 @@ function Mentoring_Impact_Report() {
                         <select
                           className="form-select custom_selects"
                           aria-label="Default select example"
-                          // value={filterValue}
-                          // onChange={(e) => {
-                          //   setFilterValue(e.target.value)
-                          //   filterStats(e.target.value)
-                          // }}
+                          value={filterValue}
+                          onChange={(e) => {
+                            setFilterValue(e.target.value)
+                            filterStats(e.target.value)
+                          }}
                         >
                           <option value="">Select Filter</option>
                           <option value="Year to Date">Year to Date</option>
                           <option value="Month to Date">Month to Date</option>
-                          <option value="Custom (Calendar Selection)">
+                          {/* <option value="Custom (Calendar Selection)">
                             Custom (Calendar Selection)
-                          </option>
+                          </option> */}
                         </select>
                       </form>
                     </div>
@@ -109,197 +324,90 @@ function Mentoring_Impact_Report() {
 
         <div className="col-lg-12">
           <div className="row">
-            <div className="col-lg-12 col-sm-6 col-md-6 mb-25">
-              <div className="card border-0 card-timeline h-100 box_shadow1">
-                <div className="card-header border-0">
-                  <h6 className="session_report">
-                  Overall Growth Percentage
-                  </h6>
-                  <h4>90%</h4>
-                </div>
-                {/* <BarChart
-                        width={500}
-                        height={300}
-                        data={learningTopData}
-                        margin={{
-                        top: 5,
-                        right: 10,
-                        left: 20,
-                        bottom: 5,
-                        }}
-                    >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="skills" />
-                        <YAxis allowDecimals={false}/>
-                        <Tooltip />
+          <div className="col-lg-12 mb-25">
+                  <div className="card border-0 px-20 pb-20 project-task-list--event box_shadow1 mentee_card">
+                    <div className="card-header px-0 border-0">
+                      <h6>Overall Growth (All Skills Combined)</h6>
+                    </div>
                     
-                        <Bar dataKey="learningCompleted" fill="#F8A046" barSize={20} />
-                    </BarChart> */}
-              </div>
+                        <>
+                        
+
+                        <div className="media-body d-flex mt-2 justify-content-between mb-3">
+                        
+                        <div className="mt-1">
+                        <p className="color-dark fs-2 fw-700 mb-0">
+                        {overAll.mentee} <span style={{color:"#FFBC00"}} className='fs-2 fw-700 mb-0'>({overAll.main}%)</span>
+                        </p>
+                        <p className="color-dark mb-0">
+                        Mentees skilled up in various skills among those who have taken at least one session.
+                        </p>
+                          </div>
+                          {overAll.statusfinal == "gain" && (
+                            <img
+                            src={chart_arrow_up}
+                          />
+                          )}
+                          {overAll.statusfinal == "loss" && (
+                            <img
+                            src={chart_arrow_down}
+                          />
+                          )}
+                          
+                          {/* <img
+                            src={overAll.statusfinal == "gain"? chart_arrow_up: overAll.status == "loss" ? chart_arrow_down : ""}
+                          /> */}
+                          
+                        </div>
+                        <div style={{backgroundColor:'#F3F3F3', padding:"10px", borderRadius:'10px'}} className='d-flex'>
+                          <img src={ overAll.statusfinal == "gain"? arrow_up: overAll.status == "loss" ? arrow_down : ""}/>
+                          <p style={{color:overAll.statusfinal == "gain" ?  "#00A94B":"#DD2025", marginRight:'10px', marginLeft:'10px', fontWeight:'bold'}} className='mb-0'>{overAll.previous}%</p>
+                          <p className='color-dark mb-0'>Since last month</p>
+                        </div>
+                      </>
+                      
+                   
+                  </div>
             </div>
-            <div className="col-lg-6 col-sm-6 col-md-6 mb-25">
-              <div className="card border-0 card-timeline h-100 box_shadow1">
-                <div className="card-header border-0">
-                  <h6 className="session_report">
-                  Leadership
-                  </h6>
-                </div>
-                {/* <BarChart
-                        width={500}
-                        height={300}
-                        data={learningTopData}
-                        margin={{
-                        top: 5,
-                        right: 10,
-                        left: 20,
-                        bottom: 5,
-                        }}
-                    >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="skills" />
-                        <YAxis allowDecimals={false}/>
-                        <Tooltip />
+            
+            {top5Dev && top5Dev.map((i) => (
+              <div className="col-lg-6 mb-25">
+                  <div className="card border-0 px-20 pb-20 project-task-list--event box_shadow1 mentee_card">
+                    <div className="card-header px-0 border-0">
+                      <h6>{i.skillname}</h6>
+                    </div>
                     
-                        <Bar dataKey="learningCompleted" fill="#F8A046" barSize={20} />
-                    </BarChart> */}
-                    <Chart
-                      appendPadding={[10, 0, 0, 10]}
-                      autoFit
-                      height={500}
-                      data={data}
-                      onLineClick={console.log}
-                      scale={{ value: { min: 0, alias: 'Value', type: 'linear-strict' }, year: { range: [0, 1] } }}
-                    >
-
-                      <Line position="year*value" />
-                      <Point position="year*value" />
-                      <Tooltip showCrosshairs follow={false} />
-                    </Chart>
-              </div>
-            </div>
-
-            <div className="col-lg-6 col-sm-6 col-md-6 mb-25">
-              <div className="card border-0 card-timeline h-100 box_shadow1">
-                <div className="card-header border-0">
-                  <h6 className="session_report">
-                  Communication
-                  </h6>
-                </div>
-                {/* <BarChart
-                        width={500}
-                        height={300}
-                        data={learningBottomData}
-                        margin={{
-                        top: 5,
-                        right: 10,
-                        left: 20,
-                        bottom: 5,
-                        }}
-                    >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="skills" />
-                        <YAxis allowDecimals={false}/>
-                        <Tooltip />
+                        <>
                         
-                        <Bar dataKey="learningCompleted" fill="#72B8BF" barSize={20} />
-                    </BarChart> */}
-                    <Chart
-                      appendPadding={[10, 0, 0, 10]}
-                      autoFit
-                      height={500}
-                      data={data}
-                      onLineClick={console.log}
-                      scale={{ value: { min: 0, alias: 'Value', type: 'linear-strict' }, year: { range: [0, 1] } }}
-                    >
 
-                      <Line position="year*value" />
-                      <Point position="year*value" />
-                      <Tooltip showCrosshairs follow={false} />
-                    </Chart>
-              </div>
-            </div>
-
-            <div className="col-lg-6 col-sm-6 col-md-6 mb-25">
-              <div className="card border-0 card-timeline h-100 box_shadow1">
-                <div className="card-header border-0">
-                  <h6 className="session_report">
-                  Leadership
-                  </h6>
-                </div>
-                {/* <BarChart
-                        width={500}
-                        height={300}
-                        data={learningBottomData}
-                        margin={{
-                        top: 5,
-                        right: 10,
-                        left: 20,
-                        bottom: 5,
-                        }}
-                    >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="skills" />
-                        <YAxis allowDecimals={false}/>
-                        <Tooltip />
+                        <div className="media-body d-flex mt-2 justify-content-between mb-3">
                         
-                        <Bar dataKey="learningCompleted" fill="#72B8BF" barSize={20} />
-                    </BarChart> */}
-                    <Chart
-                      appendPadding={[10, 0, 0, 10]}
-                      autoFit
-                      height={500}
-                      data={data}
-                      onLineClick={console.log}
-                      scale={{ value: { min: 0, alias: 'Value', type: 'linear-strict' }, year: { range: [0, 1] } }}
-                    >
-
-                      <Line position="year*value" />
-                      <Point position="year*value" />
-                      <Tooltip showCrosshairs follow={false} />
-                    </Chart>
-              </div>
+                        <div className="mt-1">
+                        <p className="color-dark fs-2 fw-700 mb-0">
+                        {i.mentee} <span style={{color:"#FFBC00"}} className='fs-2 fw-700 mb-0'>({i.main}%)</span>
+                        </p>
+                        <p className="color-dark mb-0">
+                        Mentees skilled up on <span className='fw-700'>{i.skillname}</span> Skill 
+                        </p>
+                          </div>
+                          <img
+                            src={i.statusfinal == "gain"? chart_arrow_up: i.statusfinal == "loss" ? chart_arrow_down : ""}
+                          />
+                          
+                        </div>
+                        <div style={{backgroundColor:'#F3F3F3', padding:"10px", borderRadius:'10px'}} className='d-flex'>
+                          <img src={ i.statusfinal == "gain"? arrow_up: i.statusfinal == "loss" ? arrow_down : ""}/>
+                          <p style={{color:i.statusfinal == "gain" ?  "#00A94B":"#DD2025", marginRight:'10px', marginLeft:'10px', fontWeight:'bold'}} className='mb-0'>{i.previous}%</p>
+                          <p className='color-dark mb-0'>Since last month</p>
+                        </div>
+                      </>
+                      
+                   
+                  </div>
             </div>
+            ))}
+            
 
-            <div className="col-lg-6 col-sm-6 col-md-6 mb-25">
-              <div className="card border-0 card-timeline h-100 box_shadow1">
-                <div className="card-header border-0">
-                  <h6 className="session_report">
-                  Leadership
-                  </h6>
-                </div>
-                {/* <BarChart
-                        width={500}
-                        height={300}
-                        data={learningBottomData}
-                        margin={{
-                        top: 5,
-                        right: 10,
-                        left: 20,
-                        bottom: 5,
-                        }}
-                    >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="skills" />
-                        <YAxis allowDecimals={false}/>
-                        <Tooltip />
-                        
-                        <Bar dataKey="learningCompleted" fill="#72B8BF" barSize={20} />
-                    </BarChart> */}
-                    <Chart
-                      appendPadding={[10, 0, 0, 10]}
-                      autoFit
-                      height={500}
-                      data={data}
-                      onLineClick={console.log}
-                      scale={{ value: { min: 0, alias: 'Value', type: 'linear-strict' }, year: { range: [0, 1] } }}
-                    >
-
-                      <Line position="year*value" />
-                      <Point position="year*value" />
-                      <Tooltip showCrosshairs follow={false} />
-                    </Chart>
-              </div>
-            </div>
           </div>
         </div>
       </div>

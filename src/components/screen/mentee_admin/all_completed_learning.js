@@ -2,13 +2,15 @@ import React from 'react'
 import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
 import moment from "moment"
-import { NavLink,useLocation, useNavigate } from "react-router-dom";
-import { BASE_URL } from '../../../services/Config';
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { BASE_URL, BASE_URL_APPLSURE } from '../../../services/Config';
 import { Rating } from 'react-simple-star-rating'
 import Modal from 'react-bootstrap/Modal';
 
 function All_Completed_Learning() {
     const navigate = useNavigate()
+    const {state} = useLocation()
+    console.log(state)
     const [token, setToken] = useState(localStorage.getItem("token"))
     const [sideBarOpen, setSideBarOpen] = useState(true)
     const [completedLearning, setcompletedLearning] = useState([])
@@ -56,20 +58,44 @@ function All_Completed_Learning() {
         getAllCompletedLearning()
     },[])
 
+    // const getAllCompletedLearning = async() => {
+    //     const btoken = `Bearer ${token}`;
+    //     const res = await fetch(`${BASE_URL}mentee-learnings/completed`, {
+    //         method: 'GET',
+    //         headers: {
+    //             "Accept": "application/json",
+    //             'Content-Type': 'application/json',
+    //             "Authorization": btoken,
+    //         },
+    //     })
+    //     const response = await res.json()
+    //     console.log("all completed list", response)
+    //     if(response.success){
+    //       setcompletedLearning(response.data)
+    //     }
+    // }
     const getAllCompletedLearning = async() => {
         const btoken = `Bearer ${token}`;
-        const res = await fetch(`${BASE_URL}mentee-learnings/completed`, {
-            method: 'GET',
+        const body = {
+          "mentee_id":localStorage.getItem("user_id"),
+          "condition":state.type//in-progress,completed,not-started
+      }
+      
+      // console.log(body)
+      // return
+        const res = await fetch(`${BASE_URL_APPLSURE}mentee-learnings-viewall`, {
+            method: 'POST',
             headers: {
                 "Accept": "application/json",
                 'Content-Type': 'application/json',
                 "Authorization": btoken,
             },
+            body:JSON.stringify(body)
         })
         const response = await res.json()
         console.log("all completed list", response)
-        if(response.success){
-          setcompletedLearning(response.data)
+        if(response.status){
+          setcompletedLearning(response.Learnings)
         }
     }
   
@@ -158,40 +184,40 @@ function All_Completed_Learning() {
                         lineHeight: "26px",
                     }}
                     >
-                      {capitalizeFirstLetter(user.learning?.category)}
+                      {capitalizeFirstLetter(user?.category)}
                     </div>
-                      <img src={user.learning?.learningImg} />
+                      <img src={user?.learning_img} />
                       {/* </a> */}
                     </div>
                     <div class="user-group px-25 pt-25 pb-20 radius-xl">
                       <div class="user-group-people">
                         <p class="">Key Skills</p>
                         <ul class="d-flex flex-wrap mb-10 user-group-people__parent">
-                          {user.learning?.skills?.split(",")?.map((i)=> (
+                          {user?.skills?.split(",")?.map((i)=> (
                                             <span class="badge badge-square btn-outline-emlpoy me-10">{i}</span>
                                         ))}
                           
                           {/* <span class="badge badge-square btn-outline-emlpoy me-10">MySQL</span> */}
                           </ul>
-                          <p class="color-dark fs-14 fw-600 mb-0">{user.learning?.learningName}</p>
-                          <p class="mb-0 fs-12">Source: <span class="color-dark fs-12 fw-400">{user.learning?.sourceName}</span></p>
-                          <p class="mb-0 fs-12">Assigned by: <span class="color-dark fs-12 fw-400">{user.learning?.creator?.name}</span></p>
-                          <p class="mb-0 fs-12">Finish by: <span class="color-dark fs-12 fw-400">{moment(user.learning?.finishBy).format("DD MMMM YYYY")}</span></p>
-                          <span class="badge badge-round btn-sky mt-10">{user.menteeRating}<i class="lar la-star user_star"></i></span>
+                          <p class="color-dark fs-14 fw-600 mb-0">{user.learning_name}</p>
+                          <p class="mb-0 fs-12">Source: <span class="color-dark fs-12 fw-400">{user.source_name}</span></p>
+                          <p class="mb-0 fs-12">Assigned by: <span class="color-dark fs-12 fw-400">{capitalizeFirstLetter(user?.role == "super_admin" ? "Administrator": user?.role)}</span></p>
+                          <p class="mb-0 fs-12">Finish by: <span class="color-dark fs-12 fw-400">{moment(user?.finish_by).subtract(1, "days").format("DD MMMM YYYY")}</span></p>
+                          <p class="mb-0 fs-12">Rating: <span className="badge badge-round btn-sky">{user.mentee_rating} <i className="lar la-star user_star"></i></span></p>
 
                           <div style={{display:'flex',justifyContent:'space-between'}}>
                             <div>
                                       <p class="text-capitalize fw-700 mb-0">Growth Score:</p>
-                                      <span class="badge badge-square btn-outline-emlpoy me-10 mb-10">{user.learning?.growthScore}</span>
+                                      <span class="badge badge-square btn-outline-emlpoy me-10 mb-10">{user?.growth_score}</span>
                             </div>
                                         {/* <button type="button" className="btn btn-light-petrol btn-default btn-squared ment_btn">Resume</button> */}
                                     </div>
                                     <div className="layout-button">
                                         <button onClick={() =>navigate("/learning_profile_detail", {state:{data:user, hint: "done"}})} type="button" className="btn btn-light-petrol btn-default btn-squared flex-grow-1 ment_btn">View</button>
-                                        {user.menteeRating == 0 &&
+                                        {user.mentee_rating == 0 &&
                                             <button  type="button" onClick={() => {
                                               showModal1()
-                                              setRateID(user.learningId)
+                                              setRateID(user.learning_id)
                                             }} className="btn btn-primary btn-default btn-squared flex-grow-1 ment_btn">Rate</button>
                                         }
                                     </div>

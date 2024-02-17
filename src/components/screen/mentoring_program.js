@@ -1,20 +1,37 @@
 import horizontal_img from '../../img/svg/more-verticals.svg';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import 'react-tabs/style/react-tabs.css';
+// import 'react-tabs/style/react-tabs.css';
 import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { BASE_URL_APPLSURE, BASE_URL_APPLSURE_MENTORING } from '../../services/Config';
+import Modal from 'react-bootstrap/Modal';
+import moment from 'moment';
 
 const data = [
     { id: 1, program_id: "-", program_name: "-", skills: "-", duration: "-", type: "-", program_parti: "-", starting_on: "-", status: "-", finishing: "-", completion_percen: "50%" },
 ];
 
 function Mentoring_Program() {
-
+  const navigate = useNavigate()
+    const [programTemplateList, setProgramTemplateList] = useState([])
+    const [publishedList, setPublishedList] = useState([])
+    const [progressList, setProgressList] = useState([])
+    const [deleteID, setDeleteID] = useState("")
+    const [pastList, setPastList] = useState([])
+    const [indexValue, setIndexValue] = useState(-1);
+    const [indexValue1, setIndexValue1] = useState(-1);
+    const [indexValue2, setIndexValue2] = useState(-1);
+    const [indexValue3, setIndexValue3] = useState(-1);
     const [sideBarOpen, setSideBarOpen] = useState(true)
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
+
+    const [showHello, setShowHello] = useState(false);
+    const closeModal = () => setShowHello(false);
+    const showModal = () => setShowHello(true);
+
     const [windowSize, setWindowSize] = useState(getWindowSize());
     function getWindowSize() {
         const { innerWidth, innerHeight } = window;
@@ -35,9 +52,141 @@ function Mentoring_Program() {
 
     const [showFilter, setShowFilter] = useState(false)
 
-    const showModal = () => {
-        setShowFilter(prevStat => !prevStat)
-        // alert(showFilter)
+    // const showModal = () => {
+    //     setShowFilter(prevStat => !prevStat)
+    // }
+
+    useEffect(() => {
+      getProgramList()
+    },[])
+
+    const getProgramList = async() =>{
+      const token = await localStorage.getItem("program_token_old")
+    const btoken = `Bearer ${token}`;   
+      // const btoken = `Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiYTJiNTY4ZmU0MDE4NmEyZDFmZDA4MjU1NmYxMmNiZTA5NDI2ODJiZTAxNTM1OGJhNTRlOWRmNDY1NmQzNzJjMjk0ZTBmYWI0YzE2ZGMxYzkiLCJpYXQiOjE3MDEwNTk4MjAuOTYxMjQxLCJuYmYiOjE3MDEwNTk4MjAuOTYxMjQ1LCJleHAiOjE3MzI2ODIyMjAuOTU3NDksInN1YiI6IjVjY2I5NWQwLWQwYWQtNDFjZS1iODEyLWY5YjVkZTRiMTJlMCIsInNjb3BlcyI6W119.BkZl-BXCxoYIcjXoEYOymy1I4kEVNroQy9wmDirrIuPt2tMVcRJLMXSYjGzua3TchY8cKtQGCZSW0skYinM8m5ixRatJGPIrhpjwlphY5Kfp_MquMRANJATt6C8yH3nsUtTSWR-DLdQYgIqt7HGYrxOGe2UC33_iZdY0Z9dHMOy3apio1fdlJ9xEG8hs_m3-susi_EYeeoa2CUYZpA08HqqZbm3qQXnTj3wtLv80nHWGlp-HefUyKkf5dJwJ8M9a--_H4xpvG2uNWWdX8TcX344oWSo-ttGKu5wrWz3QkHM_0KaJsVarQQP4QXhko3n1J5lvO-9uFz_wme1fpTkiipVySP_ioKzGgfkPbQxQPdp-9eftKpcpEfxvZiwzaZyZmPTK0GQjEt9JSLgoL3Us57KbO9S3nBXvYpkUmlPtU-ryChaxffnTByMyTroAw8ayMA3nu8ORHCi79Hhk4xxg3sq8GTr7PeZ4ijLxaqrQ3e-tvlVXhAVFB2s2zIdUxvt45D0NjsJrTOnf4D4ZNYuU5ggsZc1V3AwwSlPFxV8o8b2B_W7f5JZh5MEkfCq9BpCvkDpzX1TBeA9VgeeErqxIlYzH0uD640SUvvHJlNqQP3X8izpxt8e2r2Kbc8Tu2_rJU6cORhs7VF7UFhT3od5cuhpwZiAs9YCqmP1RdDlTX78`;
+      const res = await fetch(`${BASE_URL_APPLSURE}program/template-list`, {
+          method: 'GET',
+          headers: {
+              "Accept": "application/json",
+              'Content-Type': 'application/json',
+              "Authorization": btoken,
+          },
+      })
+      const response = await res.json()
+      console.log("program list", response)
+      if(response.status){
+          setProgramTemplateList(response.template)
+      }
+      // https://www.wiseq.co/ndwiseqbackend/api/program/template-list
+    }
+
+    const fetchListData = async(index) => {
+      let pp = []
+      if(index == 1){
+        pp.push(0,1)
+      }
+      if(index == 2){
+        pp.push(4)
+      }
+      if(index == 3){
+        pp.push(3)
+      }
+
+      var myHeaders = new Headers();
+      myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+      myHeaders.append("Content-Type", "application/json");
+
+      var raw = JSON.stringify({
+        "status":pp
+    });
+
+      var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+      };
+
+      fetch(`${BASE_URL_APPLSURE_MENTORING}program-list-published`, requestOptions)
+      .then(response => response.json())
+      .then(result => {
+          console.log(pp,"==",result)
+          if(index == 1){
+            setPublishedList(result.programList)
+          }
+          if(index == 2){
+            setProgressList(result.programList)
+          }
+          if(index == 3){
+            setPastList(result.programList)
+          }
+         
+      })
+      .catch(error => console.log('error', error));
+
+      
+    }
+
+
+    const deleteProgram = async() => {
+      
+      var myHeaders = new Headers();
+      myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+      myHeaders.append("Content-Type", "application/json");
+
+      var raw = JSON.stringify({
+        "program_id":deleteID
+    });
+
+    console.log(raw)
+    return
+      var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+      };
+
+      fetch(`${BASE_URL_APPLSURE_MENTORING}program-delete`, requestOptions)
+      .then(response => response.json())
+      .then(result => {
+          console.log(result)
+          alert("Program Deleted Successfully")
+          // navigate(-1)
+      })
+      .catch(error => console.log('error', error));
+    }
+
+
+    const activeAProgram = (user) => {
+      // console.log(user)
+      var myHeaders = new Headers();
+      myHeaders.append("Authorization", localStorage.getItem("program_token_node"));
+      myHeaders.append("Content-Type", "application/json");
+
+      var raw = JSON.stringify({
+        "program_id":user.id,
+        "status":4
+    });
+
+    // console.log(localStorage.getItem("program_token_node"))
+    // console.log(raw)
+    // return
+      var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+      };
+
+      fetch(`${BASE_URL_APPLSURE_MENTORING}program-status-change`, requestOptions)
+      .then(response => response.json())
+      .then(result => {
+          console.log(result)
+          alert("Program Activated Successfully")
+          // navigate(-1)
+      })
+      .catch(error => console.log('error', error));
     }
 
 
@@ -75,8 +224,8 @@ function Mentoring_Program() {
                     <div className="">
                       <div className="tab-wrapper">
                         <div className="dm-tab tab-horizontal">
-                          <Tabs>
-                            <TabList className="nav nav-tabs vertical-tabs">
+                          <Tabs defaultIndex={0} onSelect={(index) => fetchListData(index)}>
+                            <TabList className="nav nav-tabs vertical-tabs organisation-tab">
                               <Tab>Programs Created</Tab>
                               <Tab>Programs Published</Tab>
                               <Tab>Programs In-Progress</Tab>
@@ -85,6 +234,7 @@ function Mentoring_Program() {
 
                             <TabPanel className="tab-content">
                               <div className="row">
+                              {programTemplateList&&programTemplateList.map((user, index) => (
                                                             <div className="col-lg-12">
                                                                 <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
                                                                     <div className="table-responsive">
@@ -126,48 +276,88 @@ function Mentoring_Program() {
                                                                             </thead>
                                                                             <tbody>
 
-                                                                                {data.map((user) => (
+                                                                                {/* {programTemplateList&&programTemplateList.map((user) => ( */}
 
                                                                                     <tr>
                                                                                         <td>
                                                                                             <div className="userDatatable-content">
-                                                                                                {user.program_id}
+                                                                                                -
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
-                                                                                            <div className="userDatatable-content">
-                                                                                                {user.program_name}
+                                                                                            <div style={{cursor:"pointer", color:'#f8a046'}} onClick={() => navigate("/program_create_profile_view",{state:user})} className="userDatatable-content">
+                                                                                                
+                                                                                                {user.name.substring(
+                                                                                                  0,
+                                                                                                  4
+                                                                                                )}
+                                                                                                {user.name.length >
+                                                                                                4
+                                                                                                  ? "..."
+                                                                                                  : ""}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
-                                                                                            <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.skills}
+                                                                                            <div className="userDatatable-content fw-600">
+                                                                                            {user.skills?.split(",")[0]?.substring(
+                                                                                                  0,
+                                                                                                  6
+                                                                                                )}
+                                                                                                {user.skills?.split(",")[0]?.length >
+                                                                                                6
+                                                                                                  ? "..."
+                                                                                                  : "" }
+
+                                                                                              {`${
+                                                                                                  user.skills?.split(",").length > 1
+                                                                                                    ? ` + ${
+                                                                                                        user.skills?.split(",").length - 1
+                                                                                                      }`
+                                                                                                    : ""
+                                                                                                }`}
+
+                                                                                            {/* {user.skills?.split(",")
+                                                                                                  .length > 1
+                                                                                                  ? `
+                                                                                                  ${
+                                                                                                      user.skills?.split(
+                                                                                                        ","
+                                                                                                      )[0]
+                                                                                                    } 
+                                                                                                    + ${
+                                                                                                      user.skills?.split(
+                                                                                                        ","
+                                                                                                      )?.length - 1
+                                                                                                    }`
+                                                                                                  : user.skills} */}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
-                                                                                            <div className="userDatatable-content color-status fw-600">
+                                                                                            <div className="userDatatable-content fw-600">
                                                                                                 {user.duration}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
-                                                                                            <div className="userDatatable-content color-status fw-600">
+                                                                                            <div className="userDatatable-content fw-600">
                                                                                                 {user.type}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
-                                                                                            <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.program_parti}
+                                                                                            <div className="userDatatable-content fw-600">
+                                                                                                {user.participation == 1 ? "Mandatory" : "Optional"}
                                                                                             </div>
                                                                                         </td>
 
                                                                                         <td>
-                                                                                            <div className="userDatatable-content color-status fw-600">
-                                                                                                {user.starting_on}
+                                                                                            <div className="userDatatable-content fw-600">
+                                                                                            {moment(
+                                                                                                user.start_date
+                                                                                              ).format("DD/MM/YY")}
                                                                                             </div>
                                                                                         </td>
 
@@ -177,7 +367,18 @@ function Mentoring_Program() {
                                                                                                     <li>
                                                                                                         <div className="dropdown dropleft">
                                                                                                             <button className="btn-link border-0 bg-transparent p-0">
-                                                                                                                <img src={horizontal_img} className="svg" onClick={() => showModal()} />
+                                                                                                                <img src={horizontal_img} className="svg" 
+                                                                                                                  // showModal()
+                                                                                                                  onClick={() =>{
+                                                                                                                    if(index == indexValue){
+                                                                                                                        setIndexValue(-1)
+                                                                                                                    }else{
+                                                    
+                                                                                                                        setIndexValue(index)
+                                                                                                                    }
+                                                                                                                    // showModal()
+                                                                                                                }
+                                                                                                                  } />
                                                                                                             </button>
 
 
@@ -187,23 +388,37 @@ function Mentoring_Program() {
                                                                                                 </ul>
                                                                                             </div>
 
-                                                                                            {showFilter ?
+                                                                                            {/* {showFilter ?
                                                                                                 <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
-                                                                                                    <NavLink className="" to="/program_create_profile_view"><div className="dropdown-item">view</div></NavLink>
+                                                                                                    <NavLink className="" to="/program_create_profile_view">
+                                                                                                      <div onClick={() => navigate("/program_create_profile_view",{state:user})} className="dropdown-item">view</div>
+                                                                                                      </NavLink>
                                                                                                     <a className="dropdown-item" href="#">edit</a>
                                                                                                     <NavLink className="" to="/program_settings"><div className="dropdown-item" href="#">Program Settings</div></NavLink>
-                                                                                                </div> : ""}
+                                                                                                </div> : ""} */}
+
+                                                                                                {index == indexValue && (
+                                                                                                  <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
+                                                                                                    {/* <NavLink className="" to="/program_create_profile_view"> */}
+                                                                                                      <div onClick={() => navigate("/program_create_profile_view",{state:user})} className="dropdown-item">view</div>
+                                                                                                      {/* </NavLink> */}
+                                                                                                    {/* <a className="dropdown-item" href="#">edit</a> */}
+                                                                                                    <div onClick={() => navigate("/edit_program",{state:user})} className="dropdown-item">edit</div>
+                                                                                                    <NavLink className="" to="/program_settings" state={{ myState: "created", data:user }}><div className="dropdown-item" href="#">Program Settings</div></NavLink>
+                                                                                                </div>
+                                                                                                )}
                                                                                         </td>
                                                                                     </tr>
 
 
-                                                                                ))}
+                                                                                {/* ))} */}
 
                                                                             </tbody>
                                                                         </table>
                                                                     </div>
                                                                 </div>
                                                             </div>
+                              ))}
                                                         </div>
                               {/* <div className="col-lg-12">
                                 <div className="row">
@@ -229,6 +444,7 @@ function Mentoring_Program() {
 
                             <TabPanel>
                               <div className="row">
+                              {publishedList&&publishedList.map((user, index) => (
                                 <div className="col-lg-12">
                                   <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
                                     <div className="table-responsive">
@@ -289,7 +505,7 @@ function Mentoring_Program() {
                                           </tr>
                                         </thead>
                                         <tbody>
-                                          {data.map((user) => (
+                                          {/* {data.map((user) => ( */}
                                             <tr>
                                               <td>
                                                 <div className="userDatatable-content">
@@ -298,44 +514,80 @@ function Mentoring_Program() {
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content">
-                                                  {user.program_name}
+                                                <div style={{cursor:"pointer",color:'#f8a046'}} onClick={() => navigate("/program_publish_profile_view",{state:user})} className="userDatatable-content">
+                                                {user.name.substring(0,
+                                                                      4
+                                                                    )}
+                                                                    {user.name.length >
+                                                                    4
+                                                                      ? "..."
+                                                                      : ""}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
-                                                  {user.skills}
+                                                <div className="userDatatable-content fw-600">
+                                                {/* {user.skills?.split(",")
+                                                            .length > 1
+                                                            ? `${
+                                                                user.skills?.split(
+                                                                  ","
+                                                                )[0]
+                                                              } + ${
+                                                                user.skills?.split(
+                                                                  ","
+                                                                )?.length - 1
+                                                              }`
+                                                            : user.skills} */}
+
+                                                  {user.skills?.split(",")[0]?.substring(
+                                                      0,
+                                                      6
+                                                    )}
+                                                    {user.skills?.split(",")[0]?.length >
+                                                    6
+                                                      ? "..."
+                                                      : "" }
+
+                                                  {`${
+                                                      user.skills?.split(",").length > 1
+                                                        ? ` + ${
+                                                            user.skills?.split(",").length - 1
+                                                          }`
+                                                        : ""
+                                                    }`}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
+                                                <div className="userDatatable-content fw-600">
                                                   {user.duration}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
+                                                <div className="userDatatable-content fw-600">
                                                   {user.type}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
-                                                  {user.program_parti}
+                                                <div className="userDatatable-content fw-600">
+                                                {user.participation == 1 ? "Mandatory" : "Optional"}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
-                                                  {user.starting_on}
+                                                <div className="userDatatable-content fw-600">
+                                                {moment(
+                                                      user.start_date
+                                                    ).format("DD/MM/YY")}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
-                                                  {user.status}
+                                                <div className="userDatatable-content fw-600">
+                                                  {user.status == 0 ? "Published" : "Activated"}
                                                 </div>
                                               </td>
 
@@ -348,8 +600,15 @@ function Mentoring_Program() {
                                                           <img
                                                             src={horizontal_img}
                                                             className="svg"
-                                                            onClick={() =>
-                                                              showModal()
+                                                            onClick={() =>{
+                                                              if(index == indexValue1){
+                                                                  setIndexValue1(-1)
+                                                              }else{
+
+                                                                  setIndexValue1(index)
+                                                              }
+                                                              // showModal()
+                                                          }
                                                             }
                                                           />
                                                         </button>
@@ -358,7 +617,7 @@ function Mentoring_Program() {
                                                   </ul>
                                                 </div>
 
-                                                {showFilter ? (
+                                                {/* {showFilter ? (
                                                   <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
                                                     <NavLink
                                                       className=""
@@ -374,24 +633,35 @@ function Mentoring_Program() {
                                                     >
                                                       edit
                                                     </a>
-                                                    <a
-                                                      className="dropdown-item"
-                                                      href="#"
-                                                    >
-                                                      Program Settings
-                                                    </a>
+                                                    <NavLink className="" to="/program_settings" state={{ myState: "published" }}><div className="dropdown-item" href="#">Program Settings</div></NavLink>
                                                   </div>
                                                 ) : (
                                                   ""
-                                                )}
+                                                )} */}
+                                                 {index == indexValue1 && (
+                                                    <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
+                                                      {/* <NavLink className="" to="/program_create_profile_view"> */}
+                                                        <div onClick={() => navigate("/program_publish_profile_view",{state:user})} className="dropdown-item">view</div>
+                                                        {/* </NavLink> */}
+                                                      {/* <a className="dropdown-item" href="#">edit</a> */}
+                                                      <div onClick={() => navigate("/edit_program",{state:user})} className="dropdown-item">edit</div>
+                                                      <NavLink className="" to="/program_settings" state={{ myState: "published", data:user }}><div className="dropdown-item" href="#">Program Settings</div></NavLink>
+                                                      {/* {user.status == 0 && (
+                                                        <div onClick={() => activeAProgram(user)} className="dropdown-item">Active</div>
+                                                        )} */}
+                                                      {/* <div onClick={() => {
+                                                        setDeleteID(user.id)
+                                                        showModal()
+                                                        }} className="dropdown-item">Delete</div> */}
+                                                  </div>
+                                                  )}
                                               </td>
                                             </tr>
-                                          ))}
                                         </tbody>
                                       </table>
                                     </div>
                                   </div>
-                                </div>
+                                </div>))}
                               </div>
                               {/* <div className="col-lg-12">
                               <div className="row">
@@ -414,8 +684,10 @@ function Mentoring_Program() {
                             </div> */}
                             </TabPanel>
 
+                            {/* Progress List Tab */}
                             <TabPanel className="tab-content">
                               <div className="row">
+                              {progressList&&progressList.map((user, index) => (
                                 <div className="col-lg-12">
                                   <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
                                     <div className="table-responsive">
@@ -482,7 +754,7 @@ function Mentoring_Program() {
                                           </tr>
                                         </thead>
                                         <tbody>
-                                          {data.map((user) => (
+                                          {/* {data.map((user) => ( */}
                                             <tr>
                                               <td>
                                                 <div className="userDatatable-content">
@@ -491,50 +763,87 @@ function Mentoring_Program() {
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content">
-                                                  {user.program_name}
+                                                <div style={{cursor:"pointer",color:'#f8a046'}} onClick={() => navigate("/program_progress_profile_view",{state:user})} className="userDatatable-content">
+                                                {user.name.substring(0,
+                                                                      4
+                                                                    )}
+                                                                    {user.name.length >
+                                                                    4
+                                                                      ? "..."
+                                                                      : ""}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
-                                                  {user.skills}
+                                                <div className="userDatatable-content fw-600">
+                                                {/* {user.skills?.split(",")
+                                                  .length > 1
+                                                  ? `${
+                                                      user.skills?.split(
+                                                        ","
+                                                      )[0]
+                                                    } + ${
+                                                      user.skills?.split(
+                                                        ","
+                                                      )?.length - 1
+                                                    }`
+                                                  : user.skills} */}
+                                                  {user.skills?.split(",")[0]?.substring(
+                                                      0,
+                                                      6
+                                                    )}
+                                                    {user.skills?.split(",")[0]?.length >
+                                                    6
+                                                      ? "..."
+                                                      : "" }
+
+                                                  {`${
+                                                      user.skills?.split(",").length > 1
+                                                        ? ` + ${
+                                                            user.skills?.split(",").length - 1
+                                                          }`
+                                                        : ""
+                                                    }`}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
+                                                <div className="userDatatable-content fw-600">
                                                   {user.duration}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
+                                                <div className="userDatatable-content fw-600">
                                                   {user.type}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
-                                                  {user.program_parti}
+                                                <div className="userDatatable-content fw-600">
+                                                {user.participation == 1 ? "Mandatory" : "Optional"}
+                                                </div>
+                                              </td>
+
+                                              <td>
+                                                <div className="userDatatable-content fw-600">
+                                                {moment(
+                                                      user.start_date
+                                                    ).format("DD/MM/YY")}
+                                                </div>
+                                              </td>
+
+                                              <td>
+                                                <div className="userDatatable-content fw-600">
+                                                {moment(
+                                                      user.end_date
+                                                    ).format("DD/MM/YY")}
                                                 </div>
                                               </td>
 
                                               <td>
                                                 <div className="userDatatable-content color-status fw-600">
-                                                  {user.starting_on}
-                                                </div>
-                                              </td>
-
-                                              <td>
-                                                <div className="userDatatable-content color-status fw-600">
-                                                  {user.finishing}
-                                                </div>
-                                              </td>
-
-                                              <td>
-                                                <div className="userDatatable-content color-status fw-600">
-                                                  {user.completion_percen}
+                                                  {user.hasOwnProperty('totalProgress') ? `${user.totalProgress}%` : "0%"}
                                                 </div>
                                               </td>
 
@@ -547,17 +856,43 @@ function Mentoring_Program() {
                                                           <img
                                                             src={horizontal_img}
                                                             className="svg"
-                                                            onClick={() =>
-                                                              showModal()
-                                                            }
+                                                            // onClick={() =>{}
+                                                            //   // showModal()
+                                                            // }
+                                                            onClick={() =>{
+                                                              if(index == indexValue2){
+                                                                  setIndexValue2(-1)
+                                                              }else{
+
+                                                                  setIndexValue2(index)
+                                                              }
+                                                              // showModal()
+                                                          }}
                                                           />
                                                         </button>
                                                       </div>
                                                     </li>
                                                   </ul>
                                                 </div>
+                                                {index == indexValue2 && (
+                                                    <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
+                                                      {/* <NavLink className="" to="/program_create_profile_view"> */}
+                                                        <div onClick={() => navigate("/program_progress_profile_view",{state:user})} className="dropdown-item">view</div>
+                                                        {/* </NavLink> */}
+                                                      {/* <a className="dropdown-item" href="#">edit</a> */}
+                                                      <div onClick={() => navigate("/edit_program",{state:user})} className="dropdown-item">edit</div>
+                                                      <NavLink className="" to="/program_settings" state={{ myState: "progress", data:user }}><div className="dropdown-item" href="#">Program Settings</div></NavLink>
+                                                      {/* {user.status == 0 && (
+                                                        <div onClick={() => activeAProgram(user)} className="dropdown-item">Active</div>
+                                                        )} */}
+                                                      {/* <div onClick={() => {
+                                                        setDeleteID(user.id)
+                                                        showModal()
+                                                        }} className="dropdown-item">Delete</div> */}
+                                                  </div>
+                                                  )}
 
-                                                {showFilter ? (
+                                                {/* {showFilter ? (
                                                   <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
                                                     <NavLink
                                                       className=""
@@ -573,24 +908,19 @@ function Mentoring_Program() {
                                                     >
                                                       edit
                                                     </a>
-                                                    <a
-                                                      className="dropdown-item"
-                                                      href="#"
-                                                    >
-                                                      Program Settings
-                                                    </a>
+                                                    <NavLink className="" to="/program_settings" state={{ myState: "progress" }}><div className="dropdown-item" href="#">Program Settings</div></NavLink>
                                                   </div>
                                                 ) : (
                                                   ""
-                                                )}
+                                                )} */}
                                               </td>
                                             </tr>
-                                          ))}
+                                          {/* ))} */}
                                         </tbody>
                                       </table>
                                     </div>
                                   </div>
-                                </div>
+                                </div>))}
                               </div>
                               {/* <div className="col-lg-12">
                               <div className="row">
@@ -614,6 +944,7 @@ function Mentoring_Program() {
                             </TabPanel>
 
                             <TabPanel className="tab-content">
+                            {pastList&&pastList.map((user, index) => (
                               <div className="row">
                                 <div className="col-lg-12">
                                   <div className="userDatatable global-shadow w-100 mb-30 box_shadow1">
@@ -681,59 +1012,102 @@ function Mentoring_Program() {
                                           </tr>
                                         </thead>
                                         <tbody>
-                                          {data.map((user) => (
+                                          {/* {data.map((user) => ( */}
                                             <tr>
-                                              <td>
+                                            <td>
                                                 <div className="userDatatable-content">
                                                   {user.program_id}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content">
-                                                  {user.program_name}
+                                                <div style={{cursor:"pointer",color:'#f8a046'}} onClick={() => navigate("/program_past_profile_view",{state:user})} className="userDatatable-content">
+                                                {user.name.substring(0,
+                                                                      4
+                                                                    )}
+                                                                    {user.name.length >
+                                                                    4
+                                                                      ? "..."
+                                                                      : ""}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
-                                                  {user.skills}
+                                                <div className="userDatatable-content fw-600">
+                                                {/* {user.skills?.split(",")
+                                                  .length > 1
+                                                  ? `${
+                                                      user.skills?.split(
+                                                        ","
+                                                      )[0]
+                                                    } + ${
+                                                      user.skills?.split(
+                                                        ","
+                                                      )?.length - 1
+                                                    }`
+                                                  : user.skills} */}
+                                                  {user.skills?.split(",")[0]?.substring(
+                                                      0,
+                                                      6
+                                                    )}
+                                                    {user.skills?.split(",")[0]?.length >
+                                                    6
+                                                      ? "..."
+                                                      : "" }
+
+                                                  {`${
+                                                      user.skills?.split(",").length > 1
+                                                        ? ` + ${
+                                                            user.skills?.split(",").length - 1
+                                                          }`
+                                                        : ""
+                                                    }`}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
+                                                <div className="userDatatable-content fw-600">
                                                   {user.duration}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
+                                                <div className="userDatatable-content fw-600">
                                                   {user.type}
                                                 </div>
                                               </td>
 
                                               <td>
-                                                <div className="userDatatable-content color-status fw-600">
-                                                  {user.program_parti}
+                                                <div className="userDatatable-content fw-600">
+                                                {user.participation == 1 ? "Mandatory" : "Optional"}
+                                                </div>
+                                              </td>
+
+                                              <td>
+                                                <div className="userDatatable-content fw-600">
+                                                {moment(
+                                                      user.start_date
+                                                    ).format("DD/MM/YY")}
+                                                </div>
+                                              </td>
+
+                                              <td>
+                                                <div className="userDatatable-content fw-600">
+                                                {moment(
+                                                      user.end_date
+                                                    ).format("DD/MM/YY")}
                                                 </div>
                                               </td>
 
                                               <td>
                                                 <div className="userDatatable-content color-status fw-600">
-                                                  {user.starting_on}
+                                                  {user.completion_percen}
                                                 </div>
                                               </td>
 
                                               <td>
                                                 <div className="userDatatable-content color-status fw-600">
-                                                  {user.finishing}
-                                                </div>
-                                              </td>
-
-                                              <td>
-                                                <div className="userDatatable-content color-status fw-600">
-                                                  {user.status}
+                                                  {/* {user.status} */}
                                                 </div>
                                               </td>
 
@@ -746,8 +1120,23 @@ function Mentoring_Program() {
                                                           <img
                                                             src={horizontal_img}
                                                             className="svg"
-                                                            onClick={() =>
-                                                              showModal()
+                                                            onClick={() =>{
+
+                                                              {index == indexValue3 && (
+                                                                <div className="dropdown-menu dropdown-menu--dynamic box_shadow1">
+                                                                    <div onClick={() => navigate("/program_progress_profile_view",{state:user})} className="dropdown-item">view</div>
+                                                                  <NavLink className="" to="/program_settings" state={{ myState: "progress", data:user }}><div className="dropdown-item" href="#">Dublicate</div></NavLink>
+                                                                  {/* {user.status == 0 && (
+                                                                    <div onClick={() => activeAProgram(user)} className="dropdown-item">Active</div>
+                                                                    )} */}
+                                                                  {/* <div onClick={() => {
+                                                                    setDeleteID(user.id)
+                                                                    showModal()
+                                                                    }} className="dropdown-item">Delete</div> */}
+                                                              </div>
+                                                              )}
+                                                            }
+                                                              // showModal()
                                                             }
                                                           />
                                                         </button>
@@ -778,13 +1167,13 @@ function Mentoring_Program() {
                                                 )}
                                               </td>
                                             </tr>
-                                          ))}
+                                          {/* ))} */}
                                         </tbody>
                                       </table>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
+                              </div>))}
                               {/* <div className="col-lg-12">
                               <div className="row">
                                 <div
@@ -827,6 +1216,38 @@ function Mentoring_Program() {
               : true
           }
         />
+
+    <Modal show={showHello} onHide={closeModal}>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirm Action</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="text-center">
+              <h4 class="text-capitalize fw-500 mb-25">
+              Are you sure you want to delete this program?
+              </h4>
+
+              <div class="layout-button justify-content-center">
+                <button
+                  onClick={() => closeModal()}
+                  type="button"
+                  className="btn btn-no btn-default btn-squared"
+                >
+                  No
+                </button>
+                <button
+                  onClick={() =>{
+                    deleteProgram()
+                  } }
+                  type="button"
+                  className="btn btn-yes btn-default btn-squared"
+                >
+                  Yes
+                </button>
+              </div>
+            </div>
+          </Modal.Body>
+        </Modal>
       </div>
     );
 }

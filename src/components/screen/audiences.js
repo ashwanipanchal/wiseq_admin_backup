@@ -4,7 +4,7 @@ import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from "react-router-dom";
 import authornav_img from '../../img/user_pic.png';
-import { BASE_URL } from '../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE } from '../../services/Config';
 import Modal from 'react-bootstrap/Modal';
 import success_msg from '../../img/success_msg.svg';
 
@@ -75,17 +75,23 @@ function Audiences() {
 
     const removeAudience = async() => {
         const btoken = `Bearer ${token}`;
-        const res = await fetch(`${BASE_URL}learnings/${state}/user?userId=${deleteIndex}`, {
-            method: 'DELETE',
+        // const res = await fetch(`${BASE_URL}learnings/${state}/user?userId=${deleteIndex}`, {
+          const body = {
+            "learning_id":state,
+            "user_id":deleteIndex
+          }
+        const res = await fetch(`${BASE_URL_APPLSURE}delete-assigned-learner`, {
+            method: 'POST',
             headers: {
                 "Accept": "application/json",
                 'Content-Type': 'application/json',
                 "Authorization": btoken,
             },
+            body:JSON.stringify(body)
         })
         const response = await res.json()
         console.log("audience removed", response)
-        if(response.success){
+        if(response.status){
             closeModal()
             showAddModel()
             getAudiences()

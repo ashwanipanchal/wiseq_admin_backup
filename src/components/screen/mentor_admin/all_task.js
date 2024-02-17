@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import Accordion from 'react-bootstrap/Accordion';
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { BASE_URL, BASE_URL_APPLSURE } from '../../../services/Config';
 
 const data = [
     { id: 1, learning_name: "-", skill_address: "-", category_name: "-", source_type: "External", created_on: "12/12/23" },
@@ -32,6 +33,7 @@ function All_Task() {
     console.log(state)
     const [sideBarOpen, setSideBarOpen] = useState(true)
     const [payload, setPayload] = useState({});
+    const [tasks, setTasks] = useState([]);
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
@@ -87,7 +89,7 @@ function All_Task() {
         const body = {
             status: val == 0 ? "rejected" : "accepted"
         }
-        const res = await fetch(`https://api.wiseqglobal.com/api/session/requests/${payload.sessionId}`, {
+        const res = await fetch(`${BASE_URL}session/requests/${payload.sessionId}`, {
             method: 'PUT',
             headers: {
                 "Accept": "application/json",
@@ -107,6 +109,39 @@ function All_Task() {
   
     }
 
+useEffect(() => {
+    getTasks()
+},[])
+    const getTasks = async () => {
+        const token = await localStorage.getItem("token");
+        const btoken = `Bearer ${token}`;
+        // const res = await fetch(`${BASE_URL}tasks`, {
+          const body ={
+            "user_id":localStorage.getItem("user_id")
+        }
+        console.log(body)
+        const res = await fetch(`${BASE_URL_APPLSURE}get-task`, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: btoken,
+          },
+          body:JSON.stringify(body)
+        });
+        const response = await res.json();
+        console.log("Tasks ", response);
+        const { success, data } = response;
+        if (response.status) {
+          let temp = []
+          response.task.map((i) => {
+            if(i.status == "not-completed"){
+              temp.push(i)
+            }
+          })
+          setTasks(temp);
+        }
+      };
     return (
 
         <div className="main-content">
@@ -128,7 +163,7 @@ function All_Task() {
                                 <div className="card card-default card-md">
                                 <table className="table table-borderless mb-1">
                               <tbody>
-                                {state.map((user) => (
+                                {tasks && tasks.map((user) => (
                                   <tr className="project-task-list">
                                     <td>
                                       <div style={{cursor:'pointer'}} onClick={() => goToTask(user)} className="box_shadow1 p-15 notifi">

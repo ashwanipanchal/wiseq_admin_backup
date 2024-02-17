@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from "react-router-dom";
 import moment from 'moment'
 import Modal from "react-bootstrap/Modal";
-import { BASE_URL } from '../../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE_MENTORING } from '../../../services/Config';
 const data = [
     { id: 1, date_time: "Wed, Dec 14, 202205:30 PM IST", mentee_name: "Jane Arora", session: "28", skill_mentored: "HR Strategy", objective: "Objective 1", type: "MentoringProgram" },
     { id: 2, date_time: "Wed, Dec 14, 202205:30 PM IST", mentee_name: "Jane Arora", session: "28", skill_mentored: "HR Strategy", objective: "Objective 1", type: "MentoringProgram" },
@@ -17,6 +17,8 @@ function Session_list() {
     const navigate = useNavigate()
     const [sessions, setSessions] = useState([])
     const [deletedID, setDeleteID] = useState({})
+    const [payload, setPayload] = useState({});
+    const [pendingSessions, setPendingSessions] = useState([])
     const [sideBarOpen, setSideBarOpen] = useState(true)
     const [reason, setReason] = useState("")
     const toggle = () => {
@@ -31,6 +33,10 @@ function Session_list() {
     const closeModal1 = () => setShowHello1(false);
     const showModal1 = () => setShowHello1(true);
 
+    const [showHello2, setShowHello2] = useState(false);
+    const closeModal2 = () => setShowHello2(false);
+    const showModal2 = () => setShowHello2(true);
+
     const [windowSize, setWindowSize] = useState(getWindowSize());
     function getWindowSize() {
         const { innerWidth, innerHeight } = window;
@@ -39,7 +45,7 @@ function Session_list() {
 
     useEffect(() => {
         getSessions()
-
+        getExtraSessions()
     }, [])
 
     const getSessions = async () => {
@@ -62,6 +68,31 @@ function Session_list() {
 
     }
 
+    const getExtraSessions = async () => {
+        const token = await localStorage.getItem("program_token_node")
+        const btoken = `Bearer ${token}`;
+        const body = {
+            "condition":["pending"]//"('accepted','pending','rejected')"
+        }
+        const res = await fetch(`${BASE_URL_APPLSURE_MENTORING}user/program-sessions`, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": token,
+            },
+            body:JSON.stringify(body)
+        })
+        const response = await res.json()
+        console.log(response)
+        const { success, allsession } = response
+        console.log(allsession)
+        if (success) {
+            setPendingSessions(allsession)
+        }
+
+    }
+
     useEffect(() => {
         function handleWindowResize() {
             setWindowSize(getWindowSize());
@@ -76,13 +107,13 @@ function Session_list() {
     }, []);
 
     const wordsTruncate = (words, length) => {
-        words = words.trim(); //you need to decied wheather you do this or not
+        words = words?.trim(); //you need to decied wheather you do this or not
         length -= 6; // because ' (...)'.length === 6
-        if (length >= words.length) return words;
+        if (length >= words?.length) return words;
       
-        let oldResult = /\s/.test(words.charAt(length));
+        let oldResult = /\s/.test(words?.charAt(length));
         for (let i = length - 1; i > -1; i--) {
-          const currentRusult = /\s/.test(words.charAt(i))
+          const currentRusult = /\s/.test(words?.charAt(i))
       
           //check if oldresult is white space and current is not.
           //which means current character is end of word
@@ -135,6 +166,35 @@ function Session_list() {
     }
     // console.log(Array.from(moment().tz(Intl.DateTimeFormat().resolvedOptions().timeZone).zoneAbbr())[0])
 
+    const acceptSession = async (val) => {
+        // alert(JSON.stringify(val))
+        //     return
+        const token = localStorage.getItem("token")
+        const btoken = `Bearer ${token}`;
+        const body = {
+            status: val == 0 ? "rejected" : "accepted"
+        }
+        const res = await fetch(`${BASE_URL}session/requests/${payload.session_id}`, {
+            method: 'PUT',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+            body: JSON.stringify(body)
+        })
+        const response = await res.json()
+        const { success } = response
+        if (success) {
+            // getSessionRequest()
+            closeModal2()
+            getSessions()
+            getExtraSessions()
+            // getNotificationCount()
+        }
+  
+    }
+
     return (
 
         <div className="main-content">
@@ -145,15 +205,129 @@ function Session_list() {
                             <div className="breadcrumb-main user-member justify-content-sm-between">
                                 <div className=" d-flex flex-wrap justify-content-center breadcrumb-main__wrapper">
                                     <div className="d-flex align-items-center user-member__title justify-content-center me-sm-25">
+                                        <h4 className="text-capitalize fw-500 breadcrumb-title">Pending Sessions</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="userDatatable w-100 mb-30">
+                                <div className="table-responsive">
+                                    <table className="table mb-0 table-borderless">
+                                        <thead>
+                                            <tr className="userDatatable-header">
+                                                <th>
+                                                    <span className="userDatatable-title">S No.</span>
+                                                </th>
+                                                <th>
+                                                    <span className="userDatatable-title">Date & Time</span>
+                                                </th>
+                                                <th>
+                                                    <span className="userDatatable-title">Mentor</span>
+                                                </th>
+                                                <th>
+                                                    <span className="userDatatable-title">Session No.</span>
+                                                </th>
+                                                <th>
+                                                    <span className="userDatatable-title">Skills Mentored</span>
+                                                </th>
+                                                <th>
+                                                    <span className="userDatatable-title">Objective</span>
+                                                </th>
+                                                <th>
+                                                    <span className="userDatatable-title">Program Name</span>
+                                                </th>
+                                                <th>
+                                                    <span className="userDatatable-title float-end"></span>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+                                            {pendingSessions && pendingSessions?.map((user,index) => (
+                                                <>
+                                                    <tr className="box_shadow1">
+                                                        <td>
+                                                            <div className="userDatatable-content">
+                                                            {sessions.expired?.length + ( index+1)}
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                        <div className="userDatatable-content">
+                                                                {new Date(user?.sessions_model.schedule_time).toDateString()}<br />
+                                                                {new Date(`${user?.sessions_model?.schedule_time.split(' ').join('T')}Z`).toLocaleTimeString()}
+                                                                {/* {moment(`${user?.sessions_model?.schedule_time.split(' ').join('T')}Z`).format("HH:MM A")} */}
+                                                                 {user?.sessions_model?.time_zone?.charAt(0) == "+" || "-" ? `GMT ${user?.sessions_model?.time_zone}` : user?.sessions_model?.time_zone}
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                            <div className="userDatatable-content">
+                                                                {/* {user.sessionUsers[0]?.name} */}
+                                                                {/* {user?.sessionUsers[0]?.name || ""} */}
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                            <div className="userDatatable-content">
+                                                            {user?.sessions_model.session_number}
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                            <div className="userDatatable-content">
+                                                                {user.skills}
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                            <div className="userDatatable-content">
+                                                            {wordsTruncate(user.objective, 30)}
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                            <div className="userDatatable-content">
+                                                                {user.programName}
+                                                            </div>
+                                                        </td>
+
+                                                        <td style={{display:'flex'}}>
+                                                            <button onClick={() => {
+                                                                setPayload(user)
+                                                                showModal2()
+                                                            } } className="btn btn-light-petrol ment_btn">
+                                                                Accept Session
+                                                            </button>
+                                                            {/* <button type='button' onClick={() => {
+                                                                setDeleteID(user)
+                                                                showModal1()
+                                                            }  } class="btn btn-icon btn-danger btn-squared ms-10">
+                                                                <img src="/admin/static/media/delete.b1b3f65b6ae97f82f445da289c28da65.svg" alt="layers" class="svg"></img>
+                                                                </button> */}
+                                                        </td>
+                                                    </tr>
+                                                    <br />
+                                                </>
+
+
+                                            ))}
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                    </div>
+                    <div className="row">
+                        <div className="col-lg-12">
+                            <div className="breadcrumb-main user-member justify-content-sm-between">
+                                <div className=" d-flex flex-wrap justify-content-center breadcrumb-main__wrapper">
+                                    <div className="d-flex align-items-center user-member__title justify-content-center me-sm-25">
                                         <h4 className="text-capitalize fw-500 breadcrumb-title">Upcoming Sessions</h4>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="row">
-                        <div className="col-lg-12">
-                            <div className="userDatatable w-100 mb-30">
+                        <div className="userDatatable w-100 mb-30">
                                 <div className="table-responsive">
                                     <table className="table mb-0 table-borderless">
                                         <thead>
@@ -204,7 +378,9 @@ function Session_list() {
                                                         <td>
                                                             <div className="userDatatable-content">
                                                                 {/* {user.sessionUsers[0]?.name} */}
-                                                                {user.sessionUsers[0]?.name || ""}
+                                                                {user?.sessionUsers?.length > 0 ? user?.sessionUsers?.map((i) => (
+                                                                    i.name
+                                                                ))  :""}
                                                             </div>
                                                         </td>
 
@@ -252,7 +428,8 @@ function Session_list() {
                                     </table>
                                 </div>
                             </div>
-
+                    </div>
+                    <div className="row">
                             <div className="col-lg-12">
                                 <h4 class="text-capitalize fw-500 mb-20">Past Sessions</h4>
                             </div>
@@ -352,8 +529,6 @@ function Session_list() {
                                     </table>
                                 </div>
                             </div>
-
-                        </div>
                     </div>
                 </div>
             </div>
@@ -411,6 +586,26 @@ function Session_list() {
             </div>
           </Modal.Body>
         </Modal>
+
+        
+        <Modal show={showHello2} onHide={closeModal2}>
+                <Modal.Header className="mentee_feedback" closeButton>
+                    <Modal.Title>Confirm Action</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className="text-center">
+                        <h4 class="text-capitalize fw-600 mb-10">Do you want to accept this session invitation?</h4>
+                        <h4 class="text-capitalize fw-600 mb-25">Session Details: {new Date(payload?.sessions_model?.schedule_time).toDateString()} {new Date(`${payload?.sessions_model?.schedule_time.split(' ').join('T')}Z`).toLocaleTimeString()}</h4>
+
+                        <div class="layout-button justify-content-center">
+                            <button onClick={() => acceptSession(0)} type="button" className="btn btn-no btn-default btn-squared">Reject</button>
+                            <button onClick={() => acceptSession(1)} type="button" className="btn btn-yes btn-default btn-squared">Accept</button>
+                            {/* <button onClick={() => navigate('/edit_calender')} type="button" className="btn btn-yes btn-default btn-squared">Accept</button> */}
+                        </div>
+                    </div>
+
+                </Modal.Body>
+            </Modal>
         </div>
 
     );

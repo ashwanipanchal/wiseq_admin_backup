@@ -4,6 +4,7 @@ import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from "react-router-dom";
 import Modal from 'react-bootstrap/Modal';
+import { BASE_URL } from '../../services/Config';
 
 const data = [
     { id: 1, name: "How to set...", category: "Lorem Ipsum", key_skills: "Corporate", external_link: "www.link.com", cover_photo: "View", user_status: "Active" },
@@ -45,7 +46,7 @@ function Resources_Screen() {
     const getList = async() => {
         const token = await localStorage.getItem("token")
         const btoken = `Bearer ${token}`;   
-        const res = await fetch(`https://api.wiseqglobal.com/api/resources`,{
+        const res = await fetch(`${BASE_URL}resources`,{
             method:'GET',
             headers:{
               "Accept": "application/json",
@@ -66,7 +67,7 @@ function Resources_Screen() {
         // return
         const token = await localStorage.getItem("token")
         const btoken = `Bearer ${token}`;   
-        const res = await fetch(`https://api.wiseqglobal.com/api/resources/${id}`,{
+        const res = await fetch(`${BASE_URL}resources/${id}`,{
             method:'DELETE',
             headers:{
               "Accept": "application/json",
@@ -271,7 +272,7 @@ function Resources_Screen() {
           <Modal.Body>
             <div className="text-center">
               <h4 class="text-capitalize fw-600 mb-25">
-                Are you sure you want to delete this profile?
+                Are you sure you want to delete this resource?
               </h4>
 
               <div class="layout-button justify-content-center">

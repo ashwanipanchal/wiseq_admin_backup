@@ -39,7 +39,7 @@ function Create_Time_Slot() {
         value: timezone,
         label: timezone,
       }));
-      console.log(allTimezones)
+      // console.log(allTimezones)
       setAllTimeZone(allTimezones)
     },[])
 
@@ -274,7 +274,7 @@ function Create_Time_Slot() {
         "timeZone": selectedTimezone?.value == undefined ? selectedTimezone : selectedTimezone?.value,
         // "timeZone": selectedZone,
       }
-      console.log(body)
+      // console.log(body)
       // return
       const token = localStorage.getItem("token")
         const btoken = `Bearer ${token}`;
@@ -289,7 +289,11 @@ function Create_Time_Slot() {
         })
         const response = await respRepos.json()
         console.log(response)
-        navigate('/')
+        if(response.success){
+          alert("You have successfully created your time slots")
+          getMySlots()
+        }
+        // navigate('/')
     }
 
     let selectedTimeSlot = []

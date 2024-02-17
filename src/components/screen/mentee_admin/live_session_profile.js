@@ -14,7 +14,7 @@ import { Rating } from 'react-simple-star-rating'
 import { io } from "socket.io-client";
 import record from '../../../img/record.png';
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
-import { BASE_URL } from '../../../services/Config';
+import { BASE_URL, BASE_URL_APPLSURE } from '../../../services/Config';
 
 const styleProps = {
   // iconSize: 100,
@@ -124,7 +124,7 @@ function Live_Session() {
     // },[])
 
     useEffect(() => {
-      const socket = io("https://api.wiseqglobal.com",{
+      const socket = io("https://api.wiseq.co",{
         transport:["websocket"],
         auth: {
             token: localStorage.getItem("token")
@@ -248,7 +248,7 @@ function Live_Session() {
             "mentorSkill": rating3,
             "feedbackText": feedbackText
         }
-        // console.log(body)
+        console.log(body)
         // return
         const res = await fetch(`${BASE_URL}session/mentee-feedback/${state.id}`, {
             method: 'PUT',
@@ -260,6 +260,35 @@ function Live_Session() {
             body: JSON.stringify(body)
         })
         const response = await res.json()
+
+        const body1 =
+        {
+            // "feedbackFor": state.sessionUsers[0].id,
+            // "contentQuality": rating1,
+            // "metObjective": rating2,
+            // "mentorSkill": rating3,
+            // "feedbackText": feedbackText
+
+            "user_id":state.scheduler?.id,
+            "user_role":"mentee",
+            "feedback_for":state.sessionUsers[0].id,
+            "session_id":state.id,
+            "question_no":[1,2,3],
+            "rating":[rating1,rating2,rating3]
+        }
+        console.log(body1)
+        // return
+        const res1 = await fetch(`${BASE_URL_APPLSURE}add-question-wise-rating`, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                'Content-Type': 'application/json',
+                "Authorization": btoken,
+            },
+            body: JSON.stringify(body1)
+        })
+        const response1 = await res1.json()
+        console.log(response1)
         console.log(response)
         const { success } = response
         if (success) {

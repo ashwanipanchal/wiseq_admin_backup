@@ -1,16 +1,13 @@
 import edit_img from '../../../img/clockss.svg';
 import Side_Bar from './sidebar';
 import { useEffect, useState } from 'react';
-import { NavLink } from "react-router-dom";
-import { CircularProgressbar } from 'react-circular-progressbar';
+import { NavLink, useLocation } from "react-router-dom";
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
+import { BASE_URL_APPLSURE_MENTORING } from '../../../services/Config';
+import moment from 'moment';
 
-const data = [
-    { id: 1, mentoring_hours: "Sessions Scheduled", mentoring_num: "40" },
-    { id: 2, mentoring_hours: "Sessions Completed", mentoring_num: "30" },
-    { id: 3, mentoring_hours: "Learnings Completed", mentoring_num: "20" },
-    { id: 4, mentoring_hours: "Assessments Completed", mentoring_num: "15" },
-];
+
 
 const data1 = [
     { id: 1, task_para: "Learning Added by admin", task_date: "02 Feb,23 10:05" },
@@ -20,11 +17,19 @@ const data1 = [
 ];
 
 function Program_Statistics() {
-
+    const {state} = useLocation()
+    console.log(state)
     const [sideBarOpen, setSideBarOpen] = useState(true)
+    const [fullDetails, setFullDetails] = useState()
     const toggle = () => {
         setSideBarOpen(!sideBarOpen)
     }
+    const [data, setData] = useState([
+        { id: 1, mentoring_hours: "Sessions Scheduled", mentoring_num: "40" },
+        { id: 2, mentoring_hours: "Sessions Completed", mentoring_num: "30" },
+        { id: 3, mentoring_hours: "Learnings Completed", mentoring_num: "20" },
+        { id: 4, mentoring_hours: "Assessments Completed", mentoring_num: "15" },
+    ]);
     const [windowSize, setWindowSize] = useState(getWindowSize());
     function getWindowSize() {
         const { innerWidth, innerHeight } = window;
@@ -43,6 +48,40 @@ function Program_Statistics() {
         };
     }, []);
 
+    useEffect(() => {
+        getStats()
+    },[])
+
+    const getStats = async () => {
+        const token = await localStorage.getItem("program_token_node")
+        const btoken = `Bearer ${token}`;
+        const body = {
+            "program_id": state?.program?.id
+        }
+        const res = await fetch(`${BASE_URL_APPLSURE_MENTORING}user/program-mentor-stats`, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": token,
+            },
+            body:JSON.stringify(body)
+        })
+        const response = await res.json()
+        console.log(response)
+        // const { success, allsession } = response
+        // console.log(allsession)
+        if (response.success) {
+            setData([
+                { id: 1, mentoring_hours: "Sessions Scheduled", mentoring_num: response.totalsessions },
+                { id: 2, mentoring_hours: "Sessions Completed", mentoring_num: response.totalsessionscompleted },
+                { id: 3, mentoring_hours: "Learnings Completed", mentoring_num: response.totallearningcompleted },
+                { id: 4, mentoring_hours: "Assessments Completed", mentoring_num: response.totallassement },
+            ])
+            setFullDetails(response)
+        }
+
+    }
     return (
 
         <div className="main-content">
@@ -54,7 +93,7 @@ function Program_Statistics() {
                                 <div className="breadcrumb-main user-member justify-content-sm-between">
                                     <div className=" d-flex flex-wrap justify-content-center breadcrumb-main__wrapper">
                                         <div className="d-flex align-items-center user-member__title justify-content-center me-sm-25">
-                                            <h4 className="text-capitalize fw-500 breadcrumb-title">High Potential Employee Mentoring Program</h4>
+                                            <h4 className="text-capitalize fw-500 breadcrumb-title">{state?.program?.name}</h4>
                                         </div>
                                     </div>
                                     <div class="layout-button">
@@ -77,9 +116,9 @@ function Program_Statistics() {
                                                     <CircularProgressbar
                                                         value={"44"}
                                                         text={`44%`}
-                                                        styles={{
+                                                        styles={buildStyles({
                                                             // Rotation of path and trail, in number of turns (0-1)
-                                                            rotation: 0.25,
+                                                            
 
                                                             // Whether to use rounded or flat corners on the ends - can use 'butt' or 'round'
                                                             strokeLinecap: 'butt',
@@ -94,11 +133,10 @@ function Program_Statistics() {
                                                             // pathTransition: 'none',
 
                                                             // Colors
-                                                            pathColor: `rgba(253, 239, 230, ${66 / 100})`,
-                                                            textColor: '#f8a046',
-                                                            trailColor: '#f8a046',
-                                                            backgroundColor: '#f8a046',
-                                                        }}
+                                                            pathColor:"#006666",
+                                                            textColor: "#323232",
+                                                            trailColor: "#ebf3f3",
+                                                        })}
                                                     />
                                                 </div>
                                             </div>
@@ -134,7 +172,7 @@ function Program_Statistics() {
                                         <div className=" ap-po-details-content d-flex flex-wrap justify-content-between">
                                             <div className="ap-po-details__titlebar">
                                                 <p>Program Ratings</p>
-                                                <h2><i class="las la-star color-warning fs-20"></i> 4.5</h2>
+                                                <h2><i class="las la-star color-warning fs-20"></i> {fullDetails?.rating?.overallAverageRating == null ? 0 : parseInt(fullDetails?.rating?.overallAverageRating)}</h2>
                                             </div>
                                         </div>
                                     </div>
@@ -153,28 +191,28 @@ function Program_Statistics() {
                                                 <table className="table table-borderless mb-1">
                                                     <tbody>
 
-                                                        {data1.map((user) => (
-
-                                                            <tr className="project-task-list program_history">
-                                                                <td>
-                                                                    <div className="notifi1">
-                                                                        <div className="event-Wrapper">
-                                                                            <div className="event-Wrapper__left">
-                                                                                <div className="event-wrapper-item">
-                                                                                    <img src={edit_img} className="svg" />
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="event-Wrapper__right">
-                                                                                <h6>{user.task_para}</h6>
-                                                                                <span>{user.task_date}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-
-
-                                                        ))}
+                                                    {fullDetails && fullDetails?.activitylog?.map((user) => (
+                                <tr className="project-task-list program_history">
+                                  <td>
+                                    <div className="notifi1">
+                                      <div className="event-Wrapper">
+                                        <div className="event-Wrapper__left">
+                                          <div className="event-wrapper-item">
+                                            <img
+                                              src={edit_img}
+                                              className="svg"
+                                            />
+                                          </div>
+                                        </div>
+                                        <div className="event-Wrapper__right">
+                                          <h6>{user.message}</h6>
+                                          <span>{moment(user.created_at).format("DD MMM, YY HH:MM")}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
 
                                                     </tbody>
                                                 </table>
